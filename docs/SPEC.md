@@ -11,8 +11,9 @@ Build and deploy a complete production-ready web application called Pokector.
 Do not create an MVP, prototype, mockup, demo-only application, or unfinished skeleton. Build a usable production version with all functionality defined below.
 
 ==================================================
+
 1. PRODUCT DEFINITION
-==================================================
+   \==================================================
 
 Product name:
 Pokector
@@ -37,6 +38,7 @@ Pokector is not affiliated with, endorsed by, sponsored by, or officially connec
 Do not copy Collectr's code, text, visual design, layout, brand assets, or proprietary data. The product may offer comparable collection-tracking functionality, but it must have its own architecture, interface, copy, and visual identity.
 
 This version supports:
+
 - Individual raw Pokémon TCG cards
 - English-language catalog data provided by the Pokémon TCG API
 - TCGplayer USD prices as the primary US valuation source
@@ -44,6 +46,7 @@ This version supports:
 - Price history collected by Pokector from the time tracking begins
 
 This version does not support:
+
 - PSA, BGS, CGC, ACE, or other graded-card prices
 - Sealed products
 - Marketplace transactions
@@ -56,13 +59,13 @@ This version does not support:
 - AI card recognition
 - Fake or generated historical price data
 
-==================================================
-2. REQUIRED OPERATING MODE
+================================================== 2. REQUIRED OPERATING MODE
 ==================================================
 
 Work in the current repository.
 
 First inspect:
+
 - Existing files
 - Git status
 - Installed Node.js version
@@ -82,6 +85,7 @@ Do not delete, overwrite, rename, or modify unrelated Cloudflare resources.
 Do not overwrite existing DNS records, Worker routes, D1 databases, KV namespaces, queues, or custom domains unless they are clearly associated with this project.
 
 If pokector.com contains conflicting production DNS or Worker routes:
+
 - Do not remove them
 - Deploy the project to a safe staging or workers.dev URL
 - Document the conflict and the exact manual resolution steps
@@ -89,6 +93,7 @@ If pokector.com contains conflicting production DNS or Worker routes:
 Do not stop after writing a plan.
 
 Create these files immediately:
+
 - docs/IMPLEMENTATION_STATUS.md
 - docs/ARCHITECTURE.md
 - docs/DECISIONS.md
@@ -102,6 +107,7 @@ Use IMPLEMENTATION_STATUS.md as a checklist and update it after every phase.
 Use DECISIONS.md to record important technical decisions and their reasons.
 
 Continue implementing phase by phase until:
+
 - All required features are complete
 - Automated tests pass
 - The staging deployment passes smoke tests
@@ -113,6 +119,7 @@ Do not ask broad planning questions.
 Use sensible production defaults when a decision can be made safely.
 
 Only require user interaction for:
+
 - Cloudflare login or authorization
 - Secret entry in the terminal
 - A missing domain ownership action
@@ -128,13 +135,13 @@ Before choosing package versions, Cloudflare configuration fields, authenticatio
 
 Use current stable package versions that are compatible with Cloudflare Workers.
 
-==================================================
-3. REQUIRED ARCHITECTURE
+================================================== 3. REQUIRED ARCHITECTURE
 ==================================================
 
 Build a Cloudflare-native full-stack application.
 
 Required stack:
+
 - React Router v8 full-stack framework
 - Server-side rendering
 - Cloudflare Workers
@@ -163,6 +170,7 @@ Required stack:
 - Prettier
 
 Do not use:
+
 - WordPress
 - WEDOS as the application backend
 - Supabase
@@ -183,6 +191,7 @@ https://pokector.com
 Public pages and the authenticated application must share the same origin. This avoids unnecessary CORS and cross-domain cookie complexity.
 
 Suggested path structure:
+
 - Public site at /
 - Authenticated application at /app/*
 - Administration at /admin/*
@@ -191,6 +200,7 @@ Suggested path structure:
 - Health endpoint at /health
 
 Use a single Worker entry point that supports:
+
 - fetch handler
 - scheduled handler
 - queue consumer handler
@@ -200,6 +210,7 @@ The fetch handler must delegate web requests to React Router while preserving th
 Use wrangler.jsonc, not wrangler.toml.
 
 For a new project:
+
 - Set compatibility_date to the current date
 - Enable the currently recommended nodejs compatibility flag
 - Enable Cloudflare observability
@@ -212,12 +223,14 @@ Create separate staging and production environments.
 Suggested Cloudflare resource names:
 
 Production:
+
 - Worker: pokector-production
 - D1: pokector-production
 - KV: pokector-cache-production
 - Queue: pokector-jobs-production
 
 Staging:
+
 - Worker: pokector-staging
 - D1: pokector-staging
 - KV: pokector-cache-staging
@@ -227,21 +240,23 @@ Use actual generated resource IDs in the correct environment configuration.
 
 Do not use R2 unless a real requirement is found. CSV exports should normally be streamed directly rather than stored.
 
-==================================================
-4. REQUIRED SECRETS AND CONFIGURATION
+================================================== 4. REQUIRED SECRETS AND CONFIGURATION
 ==================================================
 
 Required server-side secrets:
+
 - POKEMON_TCG_API_KEY
 - BETTER_AUTH_SECRET
 - TURNSTILE_SECRET_KEY
 
 Optional server-side secrets:
+
 - RESEND_API_KEY
 - GOOGLE_CLIENT_ID
 - GOOGLE_CLIENT_SECRET
 
 Required non-secret environment variables:
+
 - APP_NAME=Pokector
 - APP_URL
 - ENVIRONMENT
@@ -255,6 +270,7 @@ Required non-secret environment variables:
 Do not commit real values for secrets.
 
 Create:
+
 - .dev.vars.example
 - .env.example
 - docs/SECRETS.md
@@ -262,6 +278,7 @@ Create:
 Add real secret files to .gitignore.
 
 If POKEMON_TCG_API_KEY is unavailable:
+
 - Keep local development and automated tests working with fixtures
 - Disable real catalog synchronization
 - Show a clear admin warning
@@ -275,13 +292,13 @@ Do not print the entered secret afterward.
 
 Generate BETTER_AUTH_SECRET using a cryptographically secure method.
 
-==================================================
-5. BRAND AND DESIGN
+================================================== 5. BRAND AND DESIGN
 ==================================================
 
 Create an original visual identity for Pokector.
 
 Do not use:
+
 - Official Pokémon logos
 - Poké Ball designs
 - Official Pokémon fonts
@@ -292,6 +309,7 @@ Do not use:
 - Collectr copy
 
 Create:
+
 - A text wordmark for Pokector
 - An original abstract icon based on a card grid, binder slots, or portfolio chart
 - SVG logo files created from original geometric shapes
@@ -300,6 +318,7 @@ Create:
 - Social sharing image using only original Pokector brand elements
 
 Design direction:
+
 - Premium collector dashboard
 - Modern but not excessively futuristic
 - Original and restrained
@@ -313,6 +332,7 @@ Design direction:
 - Clear error messages
 
 Suggested original palette:
+
 - Deep ink background
 - Warm off-white surface
 - Mint accent
@@ -326,24 +346,26 @@ Use system fonts or locally bundled open-source fonts. Do not require Google Fon
 Meet WCAG 2.2 AA where practical.
 
 All interactive controls must support:
+
 - Keyboard navigation
 - Visible focus
 - Screen readers
 - Touch targets appropriate for mobile
 
 Charts must have:
+
 - Accessible text summary
 - A data table alternative
 - Keyboard-accessible time-range controls
 - Clear labels and tooltips
 
-==================================================
-6. PUBLIC WEBSITE
+================================================== 6. PUBLIC WEBSITE
 ==================================================
 
 Create these public routes:
 
 /
+
 - Original homepage
 - Product explanation
 - Main benefits
@@ -357,6 +379,7 @@ Create these public routes:
 - Trademark disclaimer
 
 /cards
+
 - Paginated catalog
 - Search
 - Filters
@@ -365,6 +388,7 @@ Create these public routes:
 - No external API request during a normal user search
 
 /cards/:cardSlug
+
 - Card image
 - Card name
 - Set
@@ -387,12 +411,14 @@ Create these public routes:
 - Clear raw-card valuation disclaimer
 
 /sets
+
 - Paginated set catalog
 - Filter by series
 - Sort by release date, name, and number of cards
 - Set logo and symbol where provided
 
 /sets/:setSlug
+
 - Set information
 - Release date
 - Printed total
@@ -407,6 +433,7 @@ Create these public routes:
 - Clear explanation when variant data may be incomplete
 
 /price-movers
+
 - 7-day price increases
 - 7-day price decreases
 - 30-day price increases
@@ -416,6 +443,7 @@ Create these public routes:
 - Never fabricate price changes
 
 /methodology
+
 - Explain data sources
 - Explain price normalization
 - Explain valuation limitations
@@ -425,16 +453,19 @@ Create these public routes:
 - Explain currency behavior
 
 /about
+
 - Original Pokector story and purpose
 - Independent project disclaimer
 
 /blog
+
 - MDX-based blog index
 - Pagination
 - Categories
 - RSS feed
 
 Create several useful original starter articles:
+
 - How to Track a Pokémon Card Collection
 - How Pokémon Card Market Prices Work
 - How to Organize a Pokémon Card Binder
@@ -456,13 +487,13 @@ Use configuration variables for operator and contact information.
 
 Clearly mark the legal documentation as requiring operator review before public launch if required values are missing.
 
-==================================================
-7. AUTHENTICATION AND USERS
+================================================== 7. AUTHENTICATION AND USERS
 ==================================================
 
 Use Better Auth with D1 and Drizzle.
 
 Implement:
+
 - Email and password registration
 - Email and password login
 - Logout
@@ -479,12 +510,14 @@ Implement:
 - Re-authentication before destructive account actions
 
 If RESEND_API_KEY is configured:
+
 - Send email verification
 - Send password reset email
 - Send optional price alerts
 - Use a provider abstraction so the email provider can be replaced later
 
 If no email provider is configured:
+
 - Login and registration must still work in the configured non-verification mode
 - Admin must see a production warning
 - Password-reset email functionality must show a clear unavailable state
@@ -493,6 +526,7 @@ If no email provider is configured:
 Protect registration and sensitive auth forms using Turnstile.
 
 Add rate limits for:
+
 - Registration
 - Login
 - Password reset
@@ -504,6 +538,7 @@ Add rate limits for:
 - Admin jobs
 
 Create user roles:
+
 - user
 - admin
 
@@ -513,6 +548,7 @@ Create a secure CLI or admin provisioning command:
 pnpm admin:grant --email user@example.com
 
 The command must:
+
 - Find an existing verified user
 - Update the role server-side
 - Require explicit confirmation
@@ -523,8 +559,7 @@ Every user-owned query must include the authenticated user ID.
 
 Never trust a user ID supplied by the browser.
 
-==================================================
-8. AUTHENTICATED APPLICATION
+================================================== 8. AUTHENTICATED APPLICATION
 ==================================================
 
 Create these authenticated routes:
@@ -566,14 +601,14 @@ Account and application settings
 First-use onboarding
 
 All /app routes must:
+
 - Require authentication
 - Use private no-store caching
 - Include noindex metadata
 - Have route-level error boundaries
 - Handle expired sessions cleanly
 
-==================================================
-9. DASHBOARD AND PORTFOLIO
+================================================== 9. DASHBOARD AND PORTFOLIO
 ==================================================
 
 The dashboard must show:
@@ -599,6 +634,7 @@ The dashboard must show:
 - Recent collection activity
 
 Portfolio chart ranges:
+
 - 7D
 - 1M
 - 3M
@@ -609,6 +645,7 @@ Portfolio chart ranges:
 Do not create fake historical values.
 
 When no history exists:
+
 - Show the current value as the first point
 - Explain that portfolio tracking started on that date
 - Do not backfill previous dates
@@ -618,9 +655,11 @@ Financial calculations must use integer minor currency units.
 Do not use floating-point arithmetic for stored monetary values.
 
 For USD:
+
 - Store cents as integers
 
 For percentages:
+
 - Calculate with sufficient precision
 - Format only at display time
 
@@ -638,6 +677,7 @@ Only calculate against entries that have both a recorded purchase price and an a
 Do not treat a missing purchase price as zero for ROI purposes.
 
 Show:
+
 - Market value
 - Cost basis coverage
 - Valuation coverage
@@ -645,8 +685,7 @@ Show:
 
 An unavailable card price must not silently become zero.
 
-==================================================
-10. COLLECTION MANAGEMENT
+================================================== 10. COLLECTION MANAGEMENT
 ==================================================
 
 Users must be able to:
@@ -672,6 +711,7 @@ Users must be able to:
 - Export filtered or full collection
 
 Supported condition values:
+
 - Near Mint
 - Lightly Played
 - Moderately Played
@@ -685,6 +725,7 @@ Do not automatically apply condition multipliers to market value.
 Clearly state that the displayed market value is an estimated raw market price and may not represent the user's exact physical card condition.
 
 Supported variants must be derived from actual available source data where possible, including:
+
 - normal
 - holofoil
 - reverseHolofoil
@@ -695,8 +736,7 @@ Do not show a variant as available if no catalog or price evidence exists for it
 
 Use cursor or indexed pagination. Do not load an entire large collection in one request.
 
-==================================================
-11. BINDERS
+================================================== 11. BINDERS
 ==================================================
 
 Implement full binder management:
@@ -725,18 +765,19 @@ Use an accessible drag-and-drop implementation or provide explicit move controls
 A user must never be able to edit another user's binder by changing a route parameter.
 
 Public or unlisted binders must never expose:
+
 - Purchase price
 - Personal notes
 - User email
 - Private account information
 
-==================================================
-12. SET CHECKLISTS
+================================================== 12. SET CHECKLISTS
 ==================================================
 
 Implement automatic set completion based on collection data.
 
 Standard checklist mode:
+
 - A card is owned when the user has quantity greater than zero for the card ID
 - Completion counts unique card IDs
 - Display owned count
@@ -748,11 +789,13 @@ Standard checklist mode:
 - Add owned card directly from checklist
 
 Estimated variant checklist mode:
+
 - Derive variants only from available source data
 - Clearly label the mode as estimated
 - Explain that API variant coverage may be incomplete
 
 Allow users to:
+
 - Pin favorite sets
 - Create a set completion goal
 - Add target date
@@ -764,11 +807,11 @@ Cache progress where useful, but collection data remains the source of truth.
 
 Invalidate or update progress cache when collection entries change.
 
-==================================================
-13. WISHLIST AND PRICE ALERTS
+================================================== 13. WISHLIST AND PRICE ALERTS
 ==================================================
 
 Users can:
+
 - Add cards to wishlist
 - Choose variant
 - Set target price
@@ -780,6 +823,7 @@ Users can:
 - Add wishlist item to collection
 
 Price alert behavior:
+
 - Trigger only when the price crosses the threshold
 - Do not send the same alert every day
 - Store the prior comparison state
@@ -789,13 +833,13 @@ Price alert behavior:
 - Record delivery status
 - Handle unavailable prices gracefully
 
-==================================================
-14. CSV IMPORT AND EXPORT
+================================================== 14. CSV IMPORT AND EXPORT
 ==================================================
 
 Create a documented Pokector CSV format.
 
 Required export columns:
+
 - pokector_card_id
 - card_name
 - set_id
@@ -812,6 +856,7 @@ Required export columns:
 - binder_name
 
 CSV export:
+
 - Stream the response
 - Escape CSV correctly
 - Support current filter export
@@ -820,6 +865,7 @@ CSV export:
 - Do not expose another user's data
 
 CSV import:
+
 - Upload or paste CSV
 - Validate content type and size
 - Parse safely
@@ -838,8 +884,7 @@ CSV import:
 
 Do not allow spreadsheet-formula injection in exported values. Prefix dangerous cells where required.
 
-==================================================
-15. POKÉMON TCG API INTEGRATION
+================================================== 15. POKÉMON TCG API INTEGRATION
 ==================================================
 
 API base:
@@ -848,6 +893,7 @@ https://api.pokemontcg.io/v2
 Send the API key only through the server-side X-Api-Key header.
 
 Never expose the key to:
+
 - Browser JavaScript
 - HTML
 - React loader data
@@ -858,6 +904,7 @@ Never expose the key to:
 - Error messages
 
 Create a typed API client with:
+
 - Request timeout
 - Retry handling
 - 429 handling
@@ -876,6 +923,7 @@ Use a maximum page size supported by the current API documentation.
 Catalog search used by normal visitors must query D1, not the external API.
 
 Initial catalog synchronization:
+
 1. Fetch all sets
 2. Upsert sets
 3. Fetch all cards using pagination
@@ -888,6 +936,7 @@ Initial catalog synchronization:
 10. Mark a complete sync only after all pages succeed
 
 Daily synchronization:
+
 - Refresh the catalog in paginated batches
 - Use queues where available
 - Use D1-backed jobs as fallback
@@ -904,13 +953,13 @@ Cache external responses only where useful.
 Do not perform an external API request on every card page view.
 
 When the external API is unavailable:
+
 - Serve the most recent D1 data
 - Show the source update timestamp
 - Log the error
 - Keep the public site functioning
 
-==================================================
-16. PRICE NORMALIZATION
+================================================== 16. PRICE NORMALIZATION
 ==================================================
 
 Store all source prices separately.
@@ -920,11 +969,13 @@ Never combine TCGplayer USD and Cardmarket EUR into a single numeric value witho
 Primary USD valuation:
 
 For each available TCGplayer variant, choose:
+
 1. market
 2. mid
 3. low
 
 Store:
+
 - low
 - mid
 - high
@@ -937,6 +988,7 @@ Store:
 Optional EUR valuation:
 
 For Cardmarket, choose:
+
 1. trendPrice
 2. averageSellPrice
 3. lowPrice
@@ -947,6 +999,7 @@ Default user portfolio valuation:
 USD using TCGplayer.
 
 If an item does not have an available price for its selected variant:
+
 - Mark it unpriced
 - Do not silently use another variant
 - Offer the user an explicit option to change the selected variant
@@ -957,13 +1010,13 @@ Convert external decimal values to minor units using a tested decimal-safe parse
 
 Do not calculate money using JavaScript binary floating point.
 
-==================================================
-17. PRICE HISTORY
+================================================== 17. PRICE HISTORY
 ==================================================
 
 Create price history only from real observations collected by Pokector.
 
 Track price history for:
+
 - Cards present in any user collection
 - Cards present in any wishlist
 - Cards recently viewed often enough to be considered popular
@@ -974,6 +1027,7 @@ Do not necessarily store daily history for every inactive catalog card forever.
 Use a tracked-card reference table.
 
 For each tracked card and variant:
+
 - Insert at most one observation per source, currency, and calendar day
 - Use a unique database constraint
 - Store a new value when the normalized price changes
@@ -982,6 +1036,7 @@ For each tracked card and variant:
 - Store the source's own updatedAt date separately
 
 Retention:
+
 - Keep daily observations for at least 400 days
 - Aggregate older history into monthly observations
 - Do not remove the only historical value for a period
@@ -989,6 +1044,7 @@ Retention:
 - Document retention behavior
 
 Card chart ranges:
+
 - 7D
 - 1M
 - 3M
@@ -998,13 +1054,13 @@ Card chart ranges:
 
 If only one observation exists, display one point and an honest empty-history message.
 
-==================================================
-18. PORTFOLIO HISTORY
+================================================== 18. PORTFOLIO HISTORY
 ==================================================
 
 Create daily portfolio snapshots.
 
 Snapshot fields include:
+
 - User ID
 - Snapshot date
 - Currency
@@ -1020,6 +1076,7 @@ Snapshot fields include:
 Use a unique constraint for user, date, and currency.
 
 Snapshots must be:
+
 - Idempotent
 - Recalculable
 - Created after price synchronization
@@ -1032,13 +1089,13 @@ For active users, keep daily history.
 
 Aggregate older portfolio snapshots to monthly points when appropriate and documented.
 
-==================================================
-19. DATABASE SCHEMA
+================================================== 19. DATABASE SCHEMA
 ==================================================
 
 Use Drizzle schema and SQL migrations.
 
 Use Better Auth's generated or documented schema for:
+
 - user
 - session
 - account
@@ -1047,6 +1104,7 @@ Use Better Auth's generated or documented schema for:
 Create application tables equivalent to:
 
 user_profiles
+
 - user_id primary key and foreign key
 - role
 - display_name
@@ -1060,6 +1118,7 @@ user_profiles
 - updated_at
 
 pokemon_sets
+
 - id primary key using external set ID
 - slug unique
 - name
@@ -1075,6 +1134,7 @@ pokemon_sets
 - active
 
 pokemon_cards
+
 - id primary key using external card ID
 - slug unique
 - set_id foreign key
@@ -1100,6 +1160,7 @@ pokemon_cards
 - active
 
 card_prices_current
+
 - card_id
 - source
 - variant
@@ -1117,6 +1178,7 @@ card_prices_current
 - primary key or unique constraint across card_id, source, variant, currency
 
 tracked_cards
+
 - card_id primary key
 - collection_reference_count
 - wishlist_reference_count
@@ -1126,6 +1188,7 @@ tracked_cards
 - updated_at
 
 card_price_history
+
 - id
 - card_id
 - source
@@ -1138,6 +1201,7 @@ card_price_history
 - unique constraint across card_id, source, variant, currency, recorded_date
 
 collection_entries
+
 - id
 - user_id
 - card_id
@@ -1153,6 +1217,7 @@ collection_entries
 - updated_at
 
 binders
+
 - id
 - user_id
 - name
@@ -1163,6 +1228,7 @@ binders
 - updated_at
 
 binder_slots
+
 - id
 - binder_id
 - collection_entry_id nullable
@@ -1175,6 +1241,7 @@ binder_slots
 - unique constraint across binder_id, page_number, side, slot_number
 
 wishlist_items
+
 - id
 - user_id
 - card_id
@@ -1190,6 +1257,7 @@ wishlist_items
 - unique constraint across user_id, card_id, variant, currency
 
 set_goals
+
 - id
 - user_id
 - set_id
@@ -1201,6 +1269,7 @@ set_goals
 - unique constraint across user_id, set_id, checklist_mode
 
 set_progress_cache
+
 - user_id
 - set_id
 - checklist_mode
@@ -1212,6 +1281,7 @@ set_progress_cache
 - unique constraint across user_id, set_id, checklist_mode
 
 portfolio_snapshots
+
 - id
 - user_id
 - snapshot_date
@@ -1227,6 +1297,7 @@ portfolio_snapshots
 - unique constraint across user_id, snapshot_date, currency
 
 notifications
+
 - id
 - user_id
 - type
@@ -1237,6 +1308,7 @@ notifications
 - created_at
 
 price_alert_events
+
 - id
 - wishlist_item_id
 - card_id
@@ -1249,6 +1321,7 @@ price_alert_events
 - triggered_at
 
 import_jobs
+
 - id
 - user_id
 - status
@@ -1263,6 +1336,7 @@ import_jobs
 - completed_at
 
 sync_jobs
+
 - id
 - type
 - status
@@ -1276,6 +1350,7 @@ sync_jobs
 - completed_at
 
 sync_job_logs
+
 - id
 - job_id
 - level
@@ -1284,6 +1359,7 @@ sync_job_logs
 - created_at
 
 admin_audit_logs
+
 - id
 - admin_user_id
 - action
@@ -1297,6 +1373,7 @@ Use foreign keys with appropriate cascading behavior.
 Do not cascade-delete shared catalog cards when a user is deleted.
 
 Create indexes for all hot query paths, including:
+
 - cards by set
 - cards by normalized name
 - cards by rarity
@@ -1316,14 +1393,14 @@ Use EXPLAIN QUERY PLAN for major queries.
 
 Do not use SELECT * in production hot paths.
 
-==================================================
-20. JSON API
+================================================== 20. JSON API
 ==================================================
 
 Create a versioned same-origin API under:
 /api/v1
 
 Required public endpoints:
+
 - GET /api/v1/cards
 - GET /api/v1/cards/:id
 - GET /api/v1/cards/:id/prices
@@ -1333,6 +1410,7 @@ Required public endpoints:
 - GET /api/v1/price-movers
 
 Required authenticated endpoints:
+
 - GET /api/v1/me
 - GET /api/v1/collection
 - POST /api/v1/collection
@@ -1359,6 +1437,7 @@ Required authenticated endpoints:
 - GET /api/v1/export
 
 Required admin endpoints:
+
 - GET /api/v1/admin/status
 - POST /api/v1/admin/sync/catalog
 - POST /api/v1/admin/sync/prices
@@ -1370,6 +1449,7 @@ Required admin endpoints:
 - GET /api/v1/admin/audit-log
 
 Use:
+
 - Zod validation
 - Consistent error schema
 - Appropriate HTTP status codes
@@ -1384,13 +1464,13 @@ Use:
 
 Do not expose stack traces in production.
 
-==================================================
-21. ADMINISTRATION
+================================================== 21. ADMINISTRATION
 ==================================================
 
 Create a protected administration interface at /admin.
 
 Admin dashboard must show:
+
 - Total users
 - Active users
 - Total collection entries
@@ -1413,6 +1493,7 @@ Admin dashboard must show:
 - Application version
 
 Admin actions:
+
 - Start catalog sync
 - Start price sync
 - Start portfolio snapshot job
@@ -1424,6 +1505,7 @@ Admin actions:
 - View audit log
 
 Do not expose:
+
 - Password hashes
 - Session tokens
 - API keys
@@ -1432,13 +1514,13 @@ Do not expose:
 
 All admin mutations must create audit records.
 
-==================================================
-22. SECURITY REQUIREMENTS
+================================================== 22. SECURITY REQUIREMENTS
 ==================================================
 
 Follow current Cloudflare Workers and web security best practices.
 
 Required:
+
 - Strict TypeScript
 - No any in platform bindings or security-sensitive code
 - No unsafe double casts
@@ -1485,6 +1567,7 @@ Do not allow arbitrary remote image hosts from user input.
 Create a security.txt route or static file.
 
 Create a threat model in docs/SECURITY.md covering:
+
 - Account takeover
 - Credential stuffing
 - Broken object-level authorization
@@ -1501,13 +1584,13 @@ Create a threat model in docs/SECURITY.md covering:
 - Enumeration of private binders
 - Public share-link guessing
 
-==================================================
-23. SEO REQUIREMENTS
+================================================== 23. SEO REQUIREMENTS
 ==================================================
 
 Public pages must use server-side rendering.
 
 Implement:
+
 - Unique title tags
 - Unique meta descriptions
 - Canonical URLs
@@ -1533,6 +1616,7 @@ Implement:
 - noindex for admin pages
 
 Avoid:
+
 - Doorway pages
 - Thin automatically generated text
 - Keyword stuffing
@@ -1548,15 +1632,16 @@ Create a dynamic sitemap architecture that can handle the complete catalog.
 Use pokector.com as the production canonical host.
 
 Redirect:
+
 - www.pokector.com to pokector.com
 - HTTP to HTTPS
 - Duplicate trailing-slash variants consistently
 
-==================================================
-24. PERFORMANCE AND 10,000-USER READINESS
+================================================== 24. PERFORMANCE AND 10,000-USER READINESS
 ==================================================
 
 Design for at least:
+
 - 10,000 registered users
 - Hundreds of daily active users
 - At least 1,000,000 collection entries
@@ -1572,6 +1657,7 @@ Do not make claims about current free-plan quotas until verifying official curre
 Document current limits in docs/COST_AND_SCALING.md with retrieval date.
 
 Performance requirements:
+
 - Cache public HTML where safe
 - Use Cloudflare Cache API or supported framework caching
 - Cache public catalog responses
@@ -1596,6 +1682,7 @@ Performance requirements:
 - Create database maintenance and retention jobs
 
 Implement configurable abuse limits:
+
 - Maximum collection entries per user
 - Maximum binders per user
 - Maximum wishlist items per user
@@ -1607,6 +1694,7 @@ Implement configurable abuse limits:
 Use generous but finite defaults suitable for normal collectors.
 
 Create a local synthetic data generator capable of producing:
+
 - 10,000 test users
 - 1,000,000 collection entries
 - Portfolio snapshots
@@ -1617,13 +1705,13 @@ Do not run this generator against production.
 
 Create a performance test script and document measured local or staging results.
 
-==================================================
-25. OBSERVABILITY AND RELIABILITY
+================================================== 25. OBSERVABILITY AND RELIABILITY
 ==================================================
 
 Enable Cloudflare observability using current supported configuration.
 
 Use structured JSON logs containing:
+
 - Request ID
 - Environment
 - Route
@@ -1633,6 +1721,7 @@ Use structured JSON logs containing:
 - Job ID where relevant
 
 Do not log:
+
 - Passwords
 - Session tokens
 - API keys
@@ -1641,6 +1730,7 @@ Do not log:
 - Full imported CSV data
 
 Implement:
+
 - Global React error boundary
 - Route error boundaries
 - API error normalization
@@ -1655,13 +1745,13 @@ Implement:
 
 The /health endpoint must not expose sensitive configuration.
 
-==================================================
-26. TESTING
+================================================== 26. TESTING
 ==================================================
 
 Create automated tests for all critical behavior.
 
 Unit tests:
+
 - Decimal-to-minor-unit parsing
 - TCGplayer price selection
 - Cardmarket price selection
@@ -1683,6 +1773,7 @@ Unit tests:
 - Permissions helpers
 
 Integration tests:
+
 - D1 migrations
 - Auth session handling
 - User data isolation
@@ -1700,6 +1791,7 @@ Integration tests:
 - Account deletion cascade
 
 End-to-end tests:
+
 - Browse homepage
 - Search public catalog
 - Open card page
@@ -1724,6 +1816,7 @@ End-to-end tests:
 - Logout
 
 Accessibility tests:
+
 - Homepage
 - Catalog
 - Card page
@@ -1737,6 +1830,7 @@ Use mocked Pokémon API fixtures for deterministic automated tests.
 Add an optional real API smoke test that runs only when the API secret is available.
 
 Before declaring completion, all must pass:
+
 - pnpm lint
 - pnpm typecheck
 - pnpm test
@@ -1747,13 +1841,13 @@ Before declaring completion, all must pass:
 - wrangler check, or the current official equivalent
 - wrangler deploy --dry-run
 
-==================================================
-27. CI AND GIT
+================================================== 27. CI AND GIT
 ==================================================
 
 Initialize Git if needed.
 
 Create:
+
 - .gitignore
 - .editorconfig
 - .nvmrc
@@ -1764,6 +1858,7 @@ Create:
 - Issue templates
 
 CI must run:
+
 - Install with frozen lockfile
 - Lint
 - Format check
@@ -1776,6 +1871,7 @@ CI must run:
 Do not deploy pull requests to production.
 
 Support:
+
 - Local environment
 - Staging environment
 - Production environment
@@ -1784,13 +1880,13 @@ Use small logical commits after each passing implementation phase when Git ident
 
 Do not commit broken intermediate states unless required for recovery.
 
-==================================================
-28. DEPLOYMENT
+================================================== 28. DEPLOYMENT
 ==================================================
 
 Use Cloudflare MCP and Wrangler to create or configure required resources.
 
 Deployment order:
+
 1. Local build and tests
 2. Local D1 migrations
 3. Staging resources
@@ -1807,6 +1903,7 @@ Deployment order:
 14. Production smoke tests
 
 Do not attach pokector.com if:
+
 - The zone is unavailable
 - Ownership is not verified
 - A conflicting Worker route exists
@@ -1815,11 +1912,13 @@ Do not attach pokector.com if:
 - Required production secrets are missing
 
 In that situation:
+
 - Keep the working deployment on a safe URL
 - Document exact remaining actions
 - Do not claim the custom domain is live
 
 When the zone is available and safe:
+
 - Attach pokector.com
 - Configure www redirect
 - Preserve unrelated DNS records
@@ -1834,13 +1933,13 @@ When the zone is available and safe:
 
 Create a release version and deployment summary.
 
-==================================================
-29. EXECUTION PHASES
+================================================== 29. EXECUTION PHASES
 ==================================================
 
 Execute these phases in order.
 
 Phase 0:
+
 - Repository and Cloudflare inspection
 - Current official documentation verification
 - Architecture and implementation plan
@@ -1848,6 +1947,7 @@ Phase 0:
 - No stopping after the plan
 
 Phase 1:
+
 - Cloudflare React Router scaffold
 - TypeScript strict configuration
 - Tailwind and design system
@@ -1856,6 +1956,7 @@ Phase 1:
 - CI foundation
 
 Phase 2:
+
 - Drizzle schema
 - Better Auth schema
 - Migrations
@@ -1864,6 +1965,7 @@ Phase 2:
 - Seed fixtures
 
 Phase 3:
+
 - Authentication
 - Roles
 - Turnstile
@@ -1872,6 +1974,7 @@ Phase 3:
 - Account settings
 
 Phase 4:
+
 - Pokémon TCG API client
 - Normalization
 - Catalog synchronization
@@ -1879,6 +1982,7 @@ Phase 4:
 - Admin synchronization UI
 
 Phase 5:
+
 - Public card and set catalog
 - Search and filters
 - Card pages
@@ -1886,6 +1990,7 @@ Phase 5:
 - SEO, sitemaps, metadata, RSS
 
 Phase 6:
+
 - Collection CRUD
 - Portfolio calculations
 - Portfolio snapshots
@@ -1893,6 +1998,7 @@ Phase 6:
 - Charts
 
 Phase 7:
+
 - Binders
 - Set completion
 - Wishlist
@@ -1900,12 +2006,14 @@ Phase 7:
 - Notifications
 
 Phase 8:
+
 - CSV import and export
 - Account data export
 - Account deletion
 - Admin dashboards and audit logs
 
 Phase 9:
+
 - Unit tests
 - Integration tests
 - E2E tests
@@ -1915,6 +2023,7 @@ Phase 9:
 - Synthetic scale tests
 
 Phase 10:
+
 - Staging deployment
 - Smoke tests
 - Bug fixes
@@ -1922,6 +2031,7 @@ Phase 10:
 - Final documentation
 
 After every phase:
+
 - Update IMPLEMENTATION_STATUS.md
 - Run relevant linting and tests
 - Fix failures before continuing
@@ -1930,8 +2040,7 @@ After every phase:
 - Record decisions
 - Create a logical commit when possible
 
-==================================================
-30. DEFINITION OF DONE
+================================================== 30. DEFINITION OF DONE
 ==================================================
 
 Do not call the project finished unless all applicable requirements below are true:
@@ -1981,8 +2090,7 @@ Do not call the project finished unless all applicable requirements below are tr
 - No fake price history exists
 - No Collectr design or text is copied
 
-==================================================
-31. FINAL RESPONSE FORMAT
+================================================== 31. FINAL RESPONSE FORMAT
 ==================================================
 
 At the end, provide a concise but complete report containing:

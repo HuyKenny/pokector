@@ -1,0 +1,17 @@
+# Copy to .dev.vars for local development. Never commit .dev.vars.
+# Secrets (server-side only):
+
+# Pokémon TCG API key from https://dev.pokemontcg.io — optional locally; without it,
+# real catalog sync is disabled and fixtures are used.
+POKEMON_TCG_API_KEY=""
+
+# Generate with: openssl rand -base64 32
+BETTER_AUTH_SECRET=""
+
+# Official Cloudflare Turnstile TEST secret (always passes) — fine for local dev:
+TURNSTILE_SECRET_KEY="1x0000000000000000000000000000000AA"
+
+# Optional — leave empty to run in honest degraded mode (no e-mails, no Google OAuth):
+RESEND_API_KEY=""
+GOOGLE_CLIENT_ID=""
+GOOGLE_CLIENT_SECRET=""

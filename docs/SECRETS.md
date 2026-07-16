@@ -1,40 +1,41 @@
 # Pokector — Secrets & Configuration
 
 Never commit real secret values. Real values live only in:
+
 - Cloudflare Worker secrets (`wrangler secret put NAME --env <staging|production>`)
 - Local `.dev.vars` (gitignored)
 - Owner's workspace credentials store (`~/ai/credentials/.pokector-credentials.env`, outside this repo)
 
 ## Required secrets
 
-| Name | Purpose | Status | How to set |
-|---|---|---|---|
-| `POKEMON_TCG_API_KEY` | PTCG API `X-Api-Key` (server-only) | provided by owner 2026-07-16 (stored in workspace credentials; **rotate after launch** — it transited chat) | `wrangler secret put POKEMON_TCG_API_KEY --env production` |
-| `BETTER_AUTH_SECRET` | Better Auth signing secret | generate per env: `openssl rand -base64 32` | `wrangler secret put BETTER_AUTH_SECRET --env production` |
-| `TURNSTILE_SECRET_KEY` | Turnstile siteverify | provisioned via CF API during deployment (per-env widget) | `wrangler secret put TURNSTILE_SECRET_KEY --env production` |
+| Name                   | Purpose                            | Status                                                                                                      | How to set                                                  |
+| ---------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- |
+| `POKEMON_TCG_API_KEY`  | PTCG API `X-Api-Key` (server-only) | provided by owner 2026-07-16 (stored in workspace credentials; **rotate after launch** — it transited chat) | `wrangler secret put POKEMON_TCG_API_KEY --env production`  |
+| `BETTER_AUTH_SECRET`   | Better Auth signing secret         | generate per env: `openssl rand -base64 32`                                                                 | `wrangler secret put BETTER_AUTH_SECRET --env production`   |
+| `TURNSTILE_SECRET_KEY` | Turnstile siteverify               | provisioned via CF API during deployment (per-env widget)                                                   | `wrangler secret put TURNSTILE_SECRET_KEY --env production` |
 
 ## Optional secrets
 
-| Name | Purpose | Status |
-|---|---|---|
-| `RESEND_API_KEY` | e-mail (verification, reset, alerts) | **not configured** → honest degraded mode (see DECISIONS D10) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth | **not configured** → provider hidden |
+| Name                                        | Purpose                              | Status                                                        |
+| ------------------------------------------- | ------------------------------------ | ------------------------------------------------------------- |
+| `RESEND_API_KEY`                            | e-mail (verification, reset, alerts) | **not configured** → honest degraded mode (see DECISIONS D10) |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                         | **not configured** → provider hidden                          |
 
 ## Non-secret environment variables (wrangler.jsonc `vars`, per environment)
 
-| Name | Production value |
-|---|---|
-| `APP_NAME` | `Pokector` |
-| `APP_URL` | `https://pokector.com` |
-| `ENVIRONMENT` | `production` / `staging` / `development` |
-| `DEFAULT_CURRENCY` | `USD` |
-| `DEFAULT_LOCALE` | `en-US` |
-| `TURNSTILE_SITE_KEY` | per-env widget sitekey (public, not secret) |
-| `SUPPORT_EMAIL` | `info@pokector.com` |
-| `LEGAL_OPERATOR_NAME` | `Ha Duy Huy` |
-| `LEGAL_CONTACT_EMAIL` | `info@pokector.com` |
+| Name                     | Production value                             |
+| ------------------------ | -------------------------------------------- |
+| `APP_NAME`               | `Pokector`                                   |
+| `APP_URL`                | `https://pokector.com`                       |
+| `ENVIRONMENT`            | `production` / `staging` / `development`     |
+| `DEFAULT_CURRENCY`       | `USD`                                        |
+| `DEFAULT_LOCALE`         | `en-US`                                      |
+| `TURNSTILE_SITE_KEY`     | per-env widget sitekey (public, not secret)  |
+| `SUPPORT_EMAIL`          | `info@pokector.com`                          |
+| `LEGAL_OPERATOR_NAME`    | `Ha Duy Huy`                                 |
+| `LEGAL_CONTACT_EMAIL`    | `info@pokector.com`                          |
 | `LEGAL_OPERATOR_ADDRESS` | `Bartáková 36, 140 00 Praha, Czech Republic` |
-| `LEGAL_OPERATOR_ID` | `IČO 07876823` |
+| `LEGAL_OPERATOR_ID`      | `IČO 07876823`                               |
 
 ## Local development
 

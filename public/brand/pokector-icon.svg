@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Pokector">
+  <!-- Original Pokector mark: a 3×3 binder-pocket grid with one highlighted card
+       slot. Geometric shapes only; no third-party or franchise imagery. -->
+  <rect width="64" height="64" rx="14" fill="#161c26"/>
+  <g fill="#323d4d">
+    <rect x="8"  y="7"  width="12" height="14" rx="2.5"/>
+    <rect x="26" y="7"  width="12" height="14" rx="2.5"/>
+    <rect x="44" y="7"  width="12" height="14" rx="2.5"/>
+    <rect x="8"  y="25" width="12" height="14" rx="2.5"/>
+    <rect x="26" y="25" width="12" height="14" rx="2.5"/>
+    <rect x="8"  y="43" width="12" height="14" rx="2.5"/>
+    <rect x="26" y="43" width="12" height="14" rx="2.5"/>
+    <rect x="44" y="43" width="12" height="14" rx="2.5"/>
+  </g>
+  <rect x="44" y="25" width="12" height="14" rx="2.5" fill="#3ecfa5"/>
+  <path d="M11 52.5 L18 46 L29 49 L37 41 L47 44 L53 33.5" fill="none"
+        stroke="#f2836f" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+</svg>

@@ -4,13 +4,13 @@ Last updated: 2026-07-17 (Phase 0 — plan; statuses updated in Phase 10)
 
 ## Environments & resources
 
-| Resource | Staging | Production |
-|---|---|---|
-| Worker | `pokector-staging` | `pokector-production` |
-| D1 | `pokector-staging` | `pokector-production` |
-| KV | `pokector-cache-staging` | `pokector-cache-production` |
-| URL | workers.dev (noindex) | `https://pokector.com` |
-| Crons | none (manual triggers) | `*/5 * * * *`, `17 5 * * *` |
+| Resource | Staging                  | Production                  |
+| -------- | ------------------------ | --------------------------- |
+| Worker   | `pokector-staging`       | `pokector-production`       |
+| D1       | `pokector-staging`       | `pokector-production`       |
+| KV       | `pokector-cache-staging` | `pokector-cache-production` |
+| URL      | workers.dev (noindex)    | `https://pokector.com`      |
+| Crons    | none (manual triggers)   | `*/5 * * * *`, `17 5 * * *` |
 
 Account: huy.kenny@gmail.com (`7dcd021a0f64e56889505c60c878f3ab`), zone
 `pokector.com` (`37a0953c5759fbbff63b2da27250b099`, Free plan).
@@ -55,11 +55,18 @@ Rollback: parking record values documented above — recreate A/AAAA to restore.
 source scripts/env.sh                      # Node 22 + pnpm on PATH (Raspberry Pi)
 pnpm install
 pnpm dev                                   # local dev (vite + workerd)
-pnpm exec wrangler d1 migrations apply pokector-staging --env staging --remote
-pnpm exec wrangler deploy --env staging
-pnpm exec wrangler deploy --env production
+pnpm db:migrate:staging                    # remote D1 migrations (staging)
+pnpm deploy:staging                        # CLOUDFLARE_ENV=staging build + deploy
+pnpm db:migrate:production
+pnpm deploy:production                     # CLOUDFLARE_ENV=production build + deploy
 pnpm admin:grant --email user@example.com  # first admin (confirms interactively)
 ```
+
+Note (verified 2026-07-17): with `@cloudflare/vite-plugin`, the target environment is
+selected at BUILD time via `CLOUDFLARE_ENV` — the build emits a resolved
+`build/server/wrangler.json` (plus a `.wrangler/deploy/config.json` redirect), so
+`wrangler deploy` runs without `--env`. Passing only `--env` to deploy would ship the
+previously built environment.
 
 ## Post-launch (owner actions, optional)
 

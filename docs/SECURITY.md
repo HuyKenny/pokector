@@ -41,23 +41,23 @@ the catalog — user input can never introduce another image origin.
 
 ## Threat model
 
-| Threat | Mitigations |
-|---|---|
-| Account takeover | scrypt password hashing, rate limits + progressive backoff, Turnstile, session revocation on password change, secure cookies, (email verification when provider configured) |
-| Credential stuffing | per-IP + per-identifier rate limits (cf-connecting-ip), Turnstile, no user-enumeration in error copy/timing on login & reset |
-| Broken object-level authorization (BOLA) | every repository method takes `userId` from session; route params never trusted; isolation integration tests for collection/binders/wishlist/notifications/import jobs |
-| SQL injection | Drizzle parameterized queries only; no string-built SQL; migrations reviewed |
-| XSS | React auto-escaping; notes stored/rendered as plain text (no HTML/markdown rendering); strict CSP; JSON responses `nosniff` |
-| CSRF | SameSite=Lax cookies + Origin/Host validation on mutations + no wildcard CORS |
-| CSV injection | export cells starting with `= + - @ \t \r` prefixed with `'`; import treated as data only |
-| API-key leakage | PTCG key server-only (secret binding), never in loader data/logs/errors; client bundle scanned for secrets in CI/deploy checks |
-| Import abuse | content-type + size caps, row caps, streaming parse limits, per-user import rate limit, background job isolation, error report capped |
-| Search abuse | rate limit per IP, bounded page size, indexed queries only, no external API fan-out from search |
-| Queue duplication | job execution idempotent; D1 is single source of truth; lease (`locked_until`) + attempt counter; unique constraints on observations/snapshots |
-| Price-data corruption | Zod validation of external API payloads; decimal-safe parsing; per-record failure isolation (skip + log malformed); unique constraints; complete-sync marker only after all pages succeed |
-| Admin privilege escalation | role checked server-side per request; admin routes/API double-guarded (session + role); no client-supplied role; audit log on every admin mutation; admin grant only via CLI/audited API |
-| Private binder enumeration | binder access checks owner OR visibility; unlisted share slugs = 128-bit random (crypto), regenerable, revocable; 404 (not 403) for unauthorized guesses; no sequential IDs exposed |
-| Share-link guessing | 22-char base64url (128-bit) slugs; rate limit on public binder fetches; regenerate + disable controls |
+| Threat                                   | Mitigations                                                                                                                                                                               |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Account takeover                         | scrypt password hashing, rate limits + progressive backoff, Turnstile, session revocation on password change, secure cookies, (email verification when provider configured)               |
+| Credential stuffing                      | per-IP + per-identifier rate limits (cf-connecting-ip), Turnstile, no user-enumeration in error copy/timing on login & reset                                                              |
+| Broken object-level authorization (BOLA) | every repository method takes `userId` from session; route params never trusted; isolation integration tests for collection/binders/wishlist/notifications/import jobs                    |
+| SQL injection                            | Drizzle parameterized queries only; no string-built SQL; migrations reviewed                                                                                                              |
+| XSS                                      | React auto-escaping; notes stored/rendered as plain text (no HTML/markdown rendering); strict CSP; JSON responses `nosniff`                                                               |
+| CSRF                                     | SameSite=Lax cookies + Origin/Host validation on mutations + no wildcard CORS                                                                                                             |
+| CSV injection                            | export cells starting with `= + - @ \t \r` prefixed with `'`; import treated as data only                                                                                                 |
+| API-key leakage                          | PTCG key server-only (secret binding), never in loader data/logs/errors; client bundle scanned for secrets in CI/deploy checks                                                            |
+| Import abuse                             | content-type + size caps, row caps, streaming parse limits, per-user import rate limit, background job isolation, error report capped                                                     |
+| Search abuse                             | rate limit per IP, bounded page size, indexed queries only, no external API fan-out from search                                                                                           |
+| Queue duplication                        | job execution idempotent; D1 is single source of truth; lease (`locked_until`) + attempt counter; unique constraints on observations/snapshots                                            |
+| Price-data corruption                    | Zod validation of external API payloads; decimal-safe parsing; per-record failure isolation (skip + log malformed); unique constraints; complete-sync marker only after all pages succeed |
+| Admin privilege escalation               | role checked server-side per request; admin routes/API double-guarded (session + role); no client-supplied role; audit log on every admin mutation; admin grant only via CLI/audited API  |
+| Private binder enumeration               | binder access checks owner OR visibility; unlisted share slugs = 128-bit random (crypto), regenerable, revocable; 404 (not 403) for unauthorized guesses; no sequential IDs exposed       |
+| Share-link guessing                      | 22-char base64url (128-bit) slugs; rate limit on public binder fetches; regenerate + disable controls                                                                                     |
 
 ## Logging & privacy
 

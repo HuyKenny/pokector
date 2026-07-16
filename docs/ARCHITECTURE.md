@@ -32,15 +32,15 @@ Cloudflare Worker (pokector-production / pokector-staging)
 
 ## Routing structure
 
-| Path | Purpose | Caching / indexing |
-|---|---|---|
-| `/`, `/cards`, `/cards/:slug`, `/sets`, `/sets/:slug`, `/price-movers`, `/methodology`, `/about`, `/blog/*`, legal | Public SSR | cacheable, indexed (except filter combos) |
-| `/app/*` | Authenticated app | `private, no-store`, noindex |
-| `/admin/*` | Admin UI | auth+role, noindex |
-| `/api/auth/*` | Better Auth handler | — |
-| `/api/v1/*` | Versioned JSON API | public endpoints cacheable |
-| `/health` | Health endpoint | no secrets |
-| `/robots.txt`, `/sitemap*.xml`, `/rss.xml`, `/.well-known/security.txt` | SEO/security | resource routes |
+| Path                                                                                                               | Purpose             | Caching / indexing                        |
+| ------------------------------------------------------------------------------------------------------------------ | ------------------- | ----------------------------------------- |
+| `/`, `/cards`, `/cards/:slug`, `/sets`, `/sets/:slug`, `/price-movers`, `/methodology`, `/about`, `/blog/*`, legal | Public SSR          | cacheable, indexed (except filter combos) |
+| `/app/*`                                                                                                           | Authenticated app   | `private, no-store`, noindex              |
+| `/admin/*`                                                                                                         | Admin UI            | auth+role, noindex                        |
+| `/api/auth/*`                                                                                                      | Better Auth handler | —                                         |
+| `/api/v1/*`                                                                                                        | Versioned JSON API  | public endpoints cacheable                |
+| `/health`                                                                                                          | Health endpoint     | no secrets                                |
+| `/robots.txt`, `/sitemap*.xml`, `/rss.xml`, `/.well-known/security.txt`                                            | SEO/security        | resource routes                           |
 
 ## Server module layout (`app/`)
 
@@ -90,12 +90,12 @@ Verified 2026-07-17: the account's other 4 workers use 0 crons.
 
 ## Environments
 
-| | local | staging | production |
-|---|---|---|---|
-| Worker | `wrangler dev`/vite | `pokector-staging` | `pokector-production` |
-| D1 | local miniflare | `pokector-staging` | `pokector-production` |
-| KV | local | `pokector-cache-staging` | `pokector-cache-production` |
-| URL | localhost | `pokector-staging.<subdomain>.workers.dev` (noindex) | `https://pokector.com` |
-| Secrets | `.dev.vars` | `wrangler secret put --env staging` | `wrangler secret put --env production` |
+|         | local               | staging                                              | production                             |
+| ------- | ------------------- | ---------------------------------------------------- | -------------------------------------- |
+| Worker  | `wrangler dev`/vite | `pokector-staging`                                   | `pokector-production`                  |
+| D1      | local miniflare     | `pokector-staging`                                   | `pokector-production`                  |
+| KV      | local               | `pokector-cache-staging`                             | `pokector-cache-production`            |
+| URL     | localhost           | `pokector-staging.<subdomain>.workers.dev` (noindex) | `https://pokector.com`                 |
+| Secrets | `.dev.vars`         | `wrangler secret put --env staging`                  | `wrangler secret put --env production` |
 
 wrangler.jsonc gotchas honored: bindings + `vars` are NOT inherited by named envs (must be re-declared per env); `triggers`/`routes` ARE inherited (staging overrides to empty).

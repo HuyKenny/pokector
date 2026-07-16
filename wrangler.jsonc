@@ -1,41 +1,162 @@
 /**
- * For more details on how to configure Wrangler, refer to:
- * https://developers.cloudflare.com/workers/wrangler/configuration/
+ * Pokector — Cloudflare Workers configuration.
+ *
+ * Environments: top-level = local dev defaults; env.staging / env.production are
+ * separate Workers. NOTE (verified against current docs): bindings and `vars` are
+ * NOT inherited by named environments — they must be fully re-declared per env.
+ * `triggers` and `routes` ARE inherited, so staging explicitly overrides crons to [].
  */
 {
-	"$schema": "node_modules/wrangler/config-schema.json",
-	"name": "pokector-scaffold",
-	"compatibility_date": "2026-07-16",
-	"main": "./workers/app.ts",
-	"vars": {
-		"VALUE_FROM_CLOUDFLARE": "Hello from Cloudflare"
-	},
-	"observability": {
-		"enabled": true
-	},
-	"upload_source_maps": true,
-	"compatibility_flags": [
-		"nodejs_compat"
-	]
-	/**
-	 * Smart Placement
-	 * https://developers.cloudflare.com/workers/configuration/smart-placement/#smart-placement
-	 */
-	// "placement": {  "mode": "smart" }
-	/**
-	 * Bindings
-	 * Bindings allow your Worker to interact with resources on the Cloudflare Developer Platform, including
-	 * databases, object storage, AI inference, real-time communication and more.
-	 * https://developers.cloudflare.com/workers/runtime-apis/bindings/
-	 */
-	/**
-	 * Static Assets
-	 * https://developers.cloudflare.com/workers/static-assets/binding/
-	 */
-	// "assets": {  "directory": "./public/",  "binding": "ASSETS" }
-	/**
-	 * Service Bindings (communicate between multiple Workers)
-	 * https://developers.cloudflare.com/workers/wrangler/configuration/#service-bindings
-	 */
-	// "services": [  {   "binding": "MY_SERVICE",   "service": "my-service"  } ]
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "pokector",
+  "compatibility_date": "2026-07-16",
+  "main": "./workers/app.ts",
+  "compatibility_flags": ["nodejs_compat"],
+  "upload_source_maps": true,
+  "observability": {
+    "enabled": true,
+  },
+  // Local dev triggers (staging/production override below). Test locally via:
+  // curl "http://localhost:8787/cdn-cgi/handler/scheduled?cron=*/5+*+*+*+*"
+  "triggers": {
+    "crons": ["*/5 * * * *", "17 5 * * *"],
+  },
+  "vars": {
+    "APP_NAME": "Pokector",
+    "APP_URL": "http://localhost:5173",
+    "ENVIRONMENT": "development",
+    "DEFAULT_CURRENCY": "USD",
+    "DEFAULT_LOCALE": "en-US",
+    // Official Cloudflare Turnstile visible always-pass TEST sitekey (public)
+    "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    "SUPPORT_EMAIL": "info@pokector.com",
+    "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
+    "LEGAL_CONTACT_EMAIL": "info@pokector.com",
+    "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
+    "LEGAL_OPERATOR_ID": "IČO 07876823",
+  },
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "pokector-staging",
+      "database_id": "f897188b-f8a4-43be-a78f-7a8adf7a9614",
+      "migrations_dir": "./drizzle/migrations",
+    },
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "KV",
+      "id": "44d6009a011b435db357b0984f6c7ec3",
+    },
+  ],
+  "queues": {
+    "producers": [{ "binding": "JOBS_QUEUE", "queue": "pokector-jobs-staging" }],
+    "consumers": [
+      {
+        "queue": "pokector-jobs-staging",
+        "max_batch_size": 10,
+        "max_batch_timeout": 5,
+        "max_retries": 3,
+      },
+    ],
+  },
+  "env": {
+    "staging": {
+      "name": "pokector-staging",
+      // crons are inherited by default — staging runs none (manual admin triggers)
+      "triggers": {
+        "crons": [],
+      },
+      "workers_dev": true,
+      "vars": {
+        "APP_NAME": "Pokector",
+        // updated to the real workers.dev URL after first deploy
+        "APP_URL": "https://pokector-staging.huy-kenny.workers.dev",
+        "ENVIRONMENT": "staging",
+        "DEFAULT_CURRENCY": "USD",
+        "DEFAULT_LOCALE": "en-US",
+        // staging uses the Turnstile TEST sitekey (always pass) until a real
+        // staging widget is provisioned in Phase 10
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "SUPPORT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
+        "LEGAL_CONTACT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
+        "LEGAL_OPERATOR_ID": "IČO 07876823",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pokector-staging",
+          "database_id": "f897188b-f8a4-43be-a78f-7a8adf7a9614",
+          "migrations_dir": "./drizzle/migrations",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "44d6009a011b435db357b0984f6c7ec3",
+        },
+      ],
+      "queues": {
+        "producers": [{ "binding": "JOBS_QUEUE", "queue": "pokector-jobs-staging" }],
+        "consumers": [
+          {
+            "queue": "pokector-jobs-staging",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+          },
+        ],
+      },
+    },
+    "production": {
+      "name": "pokector-production",
+      "workers_dev": true,
+      "triggers": {
+        "crons": ["*/5 * * * *", "17 5 * * *"],
+      },
+      // Custom domain attached in Phase 10 (after parking DNS replacement):
+      // "routes": [{ "pattern": "pokector.com", "custom_domain": true }],
+      "vars": {
+        "APP_NAME": "Pokector",
+        "APP_URL": "https://pokector.com",
+        "ENVIRONMENT": "production",
+        "DEFAULT_CURRENCY": "USD",
+        "DEFAULT_LOCALE": "en-US",
+        // replaced with the real production widget sitekey in Phase 10
+        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "SUPPORT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
+        "LEGAL_CONTACT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
+        "LEGAL_OPERATOR_ID": "IČO 07876823",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pokector-production",
+          "database_id": "de00baa4-de9b-42f7-8428-75f998d313a0",
+          "migrations_dir": "./drizzle/migrations",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "44314bee2a4740aaabd6e009846f3aed",
+        },
+      ],
+      "queues": {
+        "producers": [{ "binding": "JOBS_QUEUE", "queue": "pokector-jobs-production" }],
+        "consumers": [
+          {
+            "queue": "pokector-jobs-production",
+            "max_batch_size": 10,
+            "max_batch_timeout": 5,
+            "max_retries": 3,
+          },
+        ],
+      },
+    },
+  },
 }
