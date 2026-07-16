@@ -3,7 +3,7 @@
 > Living checklist. Update after every phase. Do not mark items complete until
 > implemented AND verified. Spec contract: [SPEC.md](SPEC.md).
 
-Last updated: 2026-07-17 (Phase 0 in progress)
+Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 0 — Inspection, docs, plan
 
@@ -36,10 +36,12 @@ Last updated: 2026-07-17 (Phase 0 in progress)
 
 ## Phase 2 — Database
 
-- [ ] Drizzle schema (all SPEC §19 tables + Better Auth tables)
-- [ ] Migrations generated + applied locally
-- [ ] Repository layer
-- [ ] Seed fixtures (real API snapshots for deterministic tests)
+- [x] Drizzle schema: 24 tables — Better Auth core (generated via `auth generate` CLI, admin plugin fields) + all SPEC §19 tables + `sync_runs` bookkeeping; 46 indexes incl. all spec hot paths
+- [x] Migration `0000_known_human_torch.sql` generated (drizzle-kit) + applied to local D1 (71 statements)
+- [x] DB factory `createDb` (per-request drizzle over D1) + slug/normalization helpers
+- [x] Seed fixtures: real PTCG API snapshots (173 sets, 102 base1 + 60 sv1 cards incl. TCGplayer/Cardmarket price blocks) via scripts/fetch-fixtures.mjs
+- [x] Test infra: vitest projects (unit + integration via `cloudflareTest()` with D1 migrations in setup); 11 unit + 3 integration tests green (unique constraints verified)
+- Note: feature repositories land with their phases (catalog→P4, collection/portfolio→P6, …) on top of createDb
 
 ## Phase 3 — Auth & security foundation
 

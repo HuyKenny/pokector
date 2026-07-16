@@ -43,5 +43,19 @@ export default tseslint.config(
     files: ["**/*.js", "**/*.mjs"],
     ...tseslint.configs.disableTypeChecked,
   },
+  {
+    files: ["scripts/**/*.mjs"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        console: "readonly",
+        fetch: "readonly",
+        setTimeout: "readonly",
+        AbortSignal: "readonly",
+        URL: "readonly",
+        crypto: "readonly",
+      },
+    },
+  },
   prettier,
 );
