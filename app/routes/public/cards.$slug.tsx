@@ -104,6 +104,30 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   };
 }
 
+/** eBay wordmark in the four official brand colors (e red, b blue, a gold, y
+ * green). Inline SVG — no external request, so it passes the strict img CSP and
+ * stays crisp at any size. Decorative here; the link carries the localized label. */
+function EbayLogo({ className }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 92 40" className={className} aria-hidden="true" focusable="false">
+      <text
+        x="0"
+        y="31"
+        fontFamily="Arial, Helvetica, sans-serif"
+        fontSize="36"
+        fontWeight="900"
+        fontStyle="italic"
+        letterSpacing="-1.5"
+      >
+        <tspan fill="#E53238">e</tspan>
+        <tspan fill="#0064D2">b</tspan>
+        <tspan fill="#F5AF02">a</tspan>
+        <tspan fill="#86B817">y</tspan>
+      </text>
+    </svg>
+  );
+}
+
 /** Variant key → dictionary key. Values are localized in the component. */
 const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"]> = {
   normal: "variantNormal",
@@ -321,10 +345,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 href={ebayUrl}
                 target="_blank"
                 rel="sponsored noopener"
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-fg px-5 py-2 font-semibold text-canvas hover:opacity-90"
+                aria-label={t.buyOnEbay}
+                title={t.buyOnEbay}
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 bg-white px-5 py-2 shadow-sm hover:bg-neutral-50"
               >
-                {t.buyOnEbay}
-                <span aria-hidden>↗</span>
+                <EbayLogo className="h-6 w-auto" />
+                <span aria-hidden className="text-lg text-neutral-500">
+                  ↗
+                </span>
               </a>
             ) : null}
             <fetcher.Form method="post" action="/api/v1/collection/quick-add">
