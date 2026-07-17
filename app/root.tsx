@@ -52,6 +52,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
         <meta name="theme-color" content="#fcfaf6" />
+        {/* Impact.com affiliate network site verification. Impact matches a
+            `value` attribute (not the usual `content`); spread it so the
+            non-standard meta attribute passes TS and renders verbatim. */}
+        <meta
+          name="impact-site-verification"
+          {...{ value: "292d478d-48bb-436d-b314-60365b6206b8" }}
+        />
         <Meta />
         <Links />
         {/* Pre-hydration theme selection; carries the CSP nonce. */}
