@@ -1,9 +1,331 @@
-/**
- * fr dictionary — STUB (falls back to English until translated in i18n phase 6).
- * Typed `satisfies Dict` so any drift from the English key shape fails typecheck.
- */
-import en, { type Dict } from "./en";
+/** French (fr) dictionary. Card/set/rarity proper terms stay English.
+ * Placeholders preserved. */
+import { type Dict } from "./en";
 
-const fr: Dict = en;
+const fr: Dict = {
+  common: {
+    home: "Accueil",
+    previous: "← Précédent",
+    next: "Suivant →",
+    pageOf: "Page {page} sur {pageCount}",
+    pageShort: "Page {page} / {pageCount}",
+    apply: "Appliquer",
+    noImage: "Pas d’image",
+    any: "Tous",
+    signIn: "Se connecter",
+  },
+
+  layout: {
+    skipToContent: "Aller au contenu",
+    homeAria: "Accueil Pokector",
+    navMain: "Principal",
+    navCards: "Cartes",
+    navSets: "Sets",
+    navPriceMovers: "Mouvements de prix",
+    navBlog: "Blog",
+    searchCards: "Rechercher des cartes",
+    searchCardsPlaceholder: "Rechercher des cartes…",
+    myCollection: "Ma collection",
+    signIn: "Se connecter",
+    getStarted: "Commencer",
+    footerAbout: "À propos",
+    footerMethodology: "Données et méthodologie",
+    footerBlog: "Blog",
+    footerContact: "Contact",
+    footerPrivacy: "Confidentialité",
+    footerTerms: "Conditions",
+    footerDisclaimer: "Avertissement",
+    footerRss: "RSS",
+    languageLabel: "Langue",
+    disclaimer:
+      "Pokector est un outil de suivi de collection indépendant et n’est ni affilié, ni approuvé, ni parrainé, ni officiellement lié à Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket ou l’API Pokémon TCG. Pokémon et les noms des personnages Pokémon sont des marques de Nintendo. Les images des cartes et les données du catalogue proviennent de leurs sources respectives. Les prix affichés sont des estimations pour des cartes non gradées et ne constituent pas un conseil financier.",
+  },
+
+  home: {
+    metaTitle: "Pokector — suivi de collection Pokémon TCG et portefeuille de prix",
+    metaDescription:
+      "Suivez votre collection Pokémon TCG, surveillez la valeur marchande estimée avec les prix TCGplayer, complétez les listes de sets, organisez des classeurs et observez votre portefeuille dans le temps. Gratuit et indépendant.",
+    heroTitlePre: "Suivez chaque carte",
+    heroTitleAccent: "comme un actif",
+    heroSubtitle:
+      "Votre collection Pokémon TCG comme un portefeuille : valeurs marchandes TCGplayer en direct, historique de prix réel, gains et pertes — des chiffres honnêtes, sans battage.",
+    heroSearchLabel: "Rechercher dans le catalogue de cartes",
+    heroSearchPlaceholder: "Recherchez une carte, p. ex. Charizard…",
+    heroSearchButton: "Rechercher",
+    ctaStartTracking: "Commencer gratuitement",
+    ctaBrowseCards: "Parcourir les cartes",
+    tickerAria: "Plus gros mouvements de prix sur 7 jours",
+    tickerAllMovers: "Tous les mouvements →",
+    featuresHeading: "Conçu pour les collectionneurs, pas pour les spéculateurs",
+    feature1Title: "Sachez ce que vaut votre collection",
+    feature1Body:
+      "Chaque carte suivie est évaluée avec les estimations de marché TCGplayer actuelles en USD (Cardmarket EUR affiché à côté si disponible). La couverture est toujours transparente : les cartes sans prix sont signalées et jamais comptées comme zéro.",
+    feature2Title: "Observez la valeur dans le temps",
+    feature2Body:
+      "Pokector enregistre de véritables observations de prix dès le jour où vous commencez le suivi et construit l’historique de votre portefeuille à partir de celles-ci. Aucune donnée rétroactive ni inventée — votre graphique commence quand vous commencez.",
+    feature3Title: "Complétez vos sets",
+    feature3Body:
+      "Des listes automatiques montrent ce que vous possédez, ce qui manque et environ combien coûteraient les cartes manquantes — pour chaque set du catalogue.",
+    feature4Title: "Organisez comme un classeur",
+    feature4Body:
+      "Rangez vos cartes dans des pages de classeur visuelles à 9 emplacements, gardez les classeurs privés ou partagez-les par un lien.",
+    latestSetsHeading: "Derniers sets",
+    allSets: "Tous les sets →",
+    cardsCount: "{count} cartes",
+    noImage: "Pas d’image",
+    setsEmpty: "Le catalogue est en cours de synchronisation. Revenez dans un instant.",
+    recentCardsHeading: "Cartes récemment mises à jour",
+    recentCardsEmpty:
+      "Les données des cartes apparaîtront ici après la première synchronisation du catalogue.",
+    valuationHeading: "Comment fonctionne l’évaluation",
+    valuation1Lead: "Estimations fondées sur le marché.",
+    valuation1Body:
+      " Les valeurs des cartes utilisent les prix TCGplayer actuels (prix du marché si disponible, sinon moyen ou bas) par variante d’impression — normal, holofoil, reverse holofoil et first edition.",
+    valuation2Lead: "Cartes non gradées uniquement.",
+    valuation2Body:
+      " Les estimations décrivent des prix non gradés proches du Near Mint. L’état réel de votre carte peut changer son prix de vente réel — l’état est suivi, mais ne modifie jamais l’estimation en silence.",
+    valuation3Lead: "Historique honnête.",
+    valuation3Body:
+      " L’historique des prix commence lorsque Pokector observe une carte pour la première fois, et l’historique du portefeuille commence avec vous. Les prix manquants sont affichés comme manquants — jamais comme zéro. ",
+    valuationReadMethodology: "Lire la méthodologie complète",
+    finalCtaHeading: "Prêt à découvrir ce que vaut votre classeur ?",
+    finalCtaBody:
+      "Créez un compte gratuit, ajoutez vos premières cartes en quelques minutes et laissez Pokector tenir le score à partir de maintenant.",
+    finalCtaButton: "Créer un compte gratuit",
+  },
+
+  cards: {
+    metaTitle: "Catalogue de cartes Pokémon{suffix} | Pokector",
+    metaTitleSuffix: " — Page {page}",
+    metaDescription:
+      "Parcourez et recherchez le catalogue complet de cartes Pokémon TCG en anglais avec les prix de marché estimés actuels, les raretés, les sets et les variantes.",
+    collectionName: "Catalogue de cartes Pokémon",
+    collectionDescription:
+      "Catalogue complet de cartes Pokémon TCG en anglais avec estimations de prix de marché.",
+    breadcrumb: "Cartes",
+    heading: "Catalogue de cartes Pokémon",
+    searchLabel: "Rechercher",
+    searchPlaceholder: "Nom de carte, set ou numéro…",
+    rarityLabel: "Rareté",
+    cardTypeLabel: "Type de carte",
+    typePokemon: "Pokémon",
+    typeTrainer: "Dresseur",
+    typeEnergy: "Énergie",
+    sortLabel: "Trier par",
+    sortName: "Nom",
+    sortNumber: "Numéro de set",
+    sortNewest: "Récemment mises à jour",
+    resultCount: "{count} cartes",
+    resultCountMatching: "{count} cartes correspondant à « {q} » · page {page} sur {pageCount}",
+    resultCountPlain: "{count} cartes · page {page} sur {pageCount}",
+    emptyTitle: "Aucune carte trouvée",
+    emptyBody:
+      "Essayez un terme de recherche plus court ou vérifiez l’orthographe. Le catalogue couvre les cartes Pokémon TCG en anglais.",
+    paginationAria: "Pagination",
+  },
+
+  cardDetail: {
+    notFoundTitle: "Carte introuvable | Pokector",
+    notFoundDescription: "Carte introuvable.",
+    metaTitle: "{name} — {setName} #{number} prix et détails | Pokector",
+    metaDescription:
+      "{name} ({setName} #{number}{rarityPart}){pricePart}. Variantes, historique de prix et suivi de collection sur Pokector.",
+    metaRarityPart: ", {rarity}",
+    metaPricePart: " — prix de marché estimé actuel {price}",
+    breadcrumbCards: "Cartes",
+    factCardType: "Type de carte",
+    factSubtypes: "Sous-types",
+    factEnergyType: "Type d’énergie",
+    factHp: "PV",
+    factArtist: "Illustrateur",
+    factSetReleased: "Set sorti",
+    factRegulationMark: "Marque de réglementation",
+    pricesHeading: "Prix de marché actuels (USD)",
+    pricesEmpty:
+      "Aucun prix de marché n’est actuellement disponible pour cette carte. Elle reste sans prix — Pokector ne substitue jamais une estimation.",
+    colVariant: "Variante",
+    colMarket: "Est. marché",
+    colLow: "Bas",
+    colMid: "Moyen",
+    colHigh: "Haut",
+    sourceTcgplayer: "Source : données de prix TCGplayer",
+    sourceUpdated: ", mis à jour le {date}",
+    trackedSince: " Pokector suit cette carte depuis le {date}.",
+    trackingStarts: " Le suivi des prix de Pokector commence avec la première observation.",
+    viewOnTcgplayer: "Voir sur TCGplayer ↗",
+    cardmarketTrend: "Cardmarket (EUR) : tendance {price}",
+    viewOnCardmarket: "Voir sur Cardmarket ↗",
+    addToCollection: "Ajouter à la collection",
+    addToWishlist: "Ajouter à la liste de souhaits",
+    priceDisclaimer:
+      "Les valeurs affichées sont des prix de marché estimés pour des cartes non gradées et peuvent ne pas refléter la valeur exacte de votre exemplaire, qui dépend de son état physique et des conditions de vente réelles. Ceci n’est pas un conseil financier.",
+    historyVariantAria: "Variante de l’historique des prix",
+    historyTitle: "Historique des prix — {variant}",
+    historyEmpty:
+      "Pas encore d’historique de prix. Pokector n’enregistre que de véritables observations — le suivi commence dès que cette carte est dans une collection, une liste de souhaits ou consultée régulièrement.",
+    historyStartNote:
+      "Suivi depuis le {date}. Les valeurs entre les observations reportent le dernier prix connu.",
+    relatedHeading: "Plus de {setName}",
+    variantNormal: "Normal",
+    variantHolofoil: "Holofoil",
+    variantReverseHolofoil: "Reverse Holofoil",
+    variantFirstEdition: "1re édition",
+    variantFirstEditionHolofoil: "1re édition Holofoil",
+  },
+
+  sets: {
+    metaTitle: "Sets Pokémon TCG{suffix} | Pokector",
+    metaTitleSuffix: " — Page {page}",
+    metaDescription:
+      "Toutes les extensions Pokémon TCG en anglais avec dates de sortie, nombres de cartes et symboles de set — du Base Set à la série la plus récente.",
+    collectionName: "Sets Pokémon TCG",
+    collectionDescription: "Toutes les extensions Pokémon TCG en anglais.",
+    breadcrumb: "Sets",
+    heading: "Sets Pokémon TCG",
+    seriesLabel: "Série",
+    seriesAll: "Toutes les séries",
+    sortLabel: "Trier par",
+    sortRelease: "Date de sortie (plus récentes)",
+    sortName: "Nom",
+    sortCards: "Nombre de cartes",
+    resultCount: "{count} sets · page {page} sur {pageCount}",
+    empty: "Le catalogue de sets est en cours de synchronisation — revenez dans un instant.",
+    unknownRelease: "Date de sortie inconnue",
+    cardsCount: "{count} cartes",
+    printedSuffix: " ({count} imprimées)",
+    paginationAria: "Pagination",
+  },
+
+  setDetail: {
+    notFoundTitle: "Set introuvable | Pokector",
+    notFoundDescription: "Set introuvable.",
+    metaTitle: "{name} — liste des cartes, prix et valeur du set | Pokector",
+    metaDescription:
+      "{name} ({series}{released}) — liste complète des cartes avec {total} cartes, estimations de prix de marché et liste de collection sur Pokector.",
+    metaReleased: ", sorti le {date}",
+    metaAllCards: "toutes les",
+    breadcrumbSets: "Sets",
+    released: " · Sorti le {date}",
+    cardsCount: " · {count} cartes",
+    printedSuffix: " ({count} dans la numérotation imprimée du set)",
+    estimatedValuePre: "Valeur marchande estimée du set complet : ",
+    estimatedValueNote:
+      "(somme de la variante la moins chère avec prix pour {priced} des {total} cartes ; non gradées)",
+    noValueCoverage:
+      "Pas encore assez de couverture de prix pour estimer la valeur du set complet.",
+    completionHeading: "Votre progression du set",
+    completionAria: "Progression du set : {owned} sur {total} cartes",
+    owned: "possédées",
+    missing: "manquantes",
+    complete: "{percent}% complété",
+    missingValuePre: " · cartes manquantes ≈ ",
+    missingValueNote: " ({priced}/{missing} avec prix, variantes les moins chères)",
+    checklistNote:
+      "Liste standard : une carte compte comme possédée dès que vous avez au moins un exemplaire de n’importe quelle variante. Les listes au niveau des variantes sont estimées à partir des données de marché disponibles et peuvent être incomplètes.",
+    signInPre:
+      " pour voir votre progression sur ce set et le coût estimé des cartes qui vous manquent.",
+    filtersAria: "Filtres de la liste des cartes",
+    filterAll: "Toutes",
+    filterOwned: "Possédées",
+    filterMissing: "Manquantes",
+    filterAnyRarity: "Toute rareté",
+    filterRarePlus: "Rare+",
+    filterAnyType: "Tout type",
+    rarityCommon: "Common",
+    rarityUncommon: "Uncommon",
+    typePokemon: "Pokémon",
+    typeTrainer: "Dresseur",
+    typeEnergy: "Énergie",
+    showingCount: "Affichage de {visible} sur {total} cartes",
+    badgeOwned: "Possédée",
+    badgeMissing: "Manquante",
+    setCardList: "Liste des cartes de {name}",
+    setCardListDescription: "Toutes les cartes du set Pokémon TCG {name}.",
+  },
+
+  priceMovers: {
+    metaTitle: "Mouvements de prix des cartes Pokémon — plus fortes hausses et baisses | Pokector",
+    metaDescription:
+      "Quelles cartes Pokémon ont gagné ou perdu le plus de valeur marchande au cours des 7 et 30 derniers jours — d’après de véritables observations de prix enregistrées par Pokector.",
+    breadcrumb: "Mouvements de prix",
+    heading: "Mouvements de prix",
+    intro:
+      "Les plus gros mouvements de marché des cartes non gradées parmi celles que Pokector suit activement. Les variations sont calculées uniquement à partir de véritables observations enregistrées — une carte a besoin d’au moins une semaine (ou un mois) d’historique suivi pour apparaître ici.",
+    emptyTitle: "Pas encore assez d’historique de prix",
+    emptyBodyPre:
+      "Pokector ne fabrique jamais de variations de prix. Les mouvements apparaissent une fois que les cartes suivies ont accumulé au moins 7 jours de véritables observations. Commencez à suivre des cartes dans votre ",
+    emptyBodyLink: "collection",
+    emptyBodyPost: " pour contribuer à la couverture.",
+    gainers7: "Hausses sur 7 jours",
+    decliners7: "Baisses sur 7 jours",
+    gainers30: "Hausses sur 30 jours",
+    decliners30: "Baisses sur 30 jours",
+    sectionEmpty:
+      "Aucun mouvement qualifiant sur cette période pour l’instant — plus d’historique suivi est nécessaire.",
+  },
+
+  auth: {
+    verifyHuman: "Veuillez compléter la vérification humaine ci-dessous.",
+    tooManyAttempts: "Trop de tentatives. Veuillez patienter une minute et réessayer.",
+    signInMetaTitle: "Se connecter — Pokector",
+    signInHeading: "Se connecter",
+    signInInvalid: "E-mail ou mot de passe invalide.",
+    emailLabel: "E-mail",
+    passwordLabel: "Mot de passe",
+    signingIn: "Connexion…",
+    signInButton: "Se connecter",
+    forgotPassword: "Mot de passe oublié ?",
+    newToPokector: "Nouveau sur Pokector ? ",
+    createAnAccount: "Créer un compte",
+    registerMetaTitle: "Créer un compte — Pokector",
+    registerHeading: "Créez votre compte",
+    registerSubtitle:
+      "Suivez votre collection, la valeur de votre portefeuille et la progression de vos sets — gratuitement.",
+    passwordsNoMatch: "Les mots de passe ne correspondent pas.",
+    passwordTooShort: "Le mot de passe doit comporter au moins 8 caractères.",
+    registerFailed: "L’inscription a échoué. Veuillez réessayer.",
+    displayNameLabel: "Nom affiché",
+    passwordHint8: "Au moins 8 caractères.",
+    confirmPasswordLabel: "Confirmer le mot de passe",
+    creatingAccount: "Création du compte…",
+    createAccountButton: "Créer un compte",
+    alreadyHaveAccount: "Vous avez déjà un compte ? ",
+    byCreatingPre: "En créant un compte, vous acceptez les ",
+    termsOfService: "conditions d’utilisation",
+    and: " et la ",
+    privacyPolicy: "politique de confidentialité",
+    forgotMetaTitle: "Réinitialiser le mot de passe — Pokector",
+    forgotHeading: "Réinitialisez votre mot de passe",
+    forgotTooMany: "Trop de tentatives. Veuillez patienter quelques minutes et réessayer.",
+    forgotError: "Impossible de traiter la demande. Veuillez réessayer.",
+    emailUnavailablePre:
+      "Les e-mails automatiques de réinitialisation du mot de passe sont actuellement indisponibles. Veuillez contacter le support à ",
+    emailUnavailablePost: " pour récupérer l’accès à votre compte.",
+    backToSignIn: "Retour à la connexion",
+    resetSent:
+      "Si un compte existe pour cette adresse e-mail, un lien de réinitialisation est en route. Vérifiez votre boîte de réception.",
+    sending: "Envoi…",
+    sendResetLink: "Envoyer le lien de réinitialisation",
+    resetMetaTitle: "Choisir un nouveau mot de passe — Pokector",
+    resetHeading: "Choisissez un nouveau mot de passe",
+    resetMissingToken:
+      "Il manque le jeton à ce lien de réinitialisation. Utilisez le lien de votre e-mail ou demandez-en un nouveau.",
+    requestNewLink: "Demander un nouveau lien",
+    resetInvalid:
+      "Ce lien de réinitialisation est invalide ou a expiré. Veuillez en demander un nouveau.",
+    newPasswordLabel: "Nouveau mot de passe",
+    newPasswordHint: "Au moins 8 caractères. Toutes les autres sessions seront déconnectées.",
+    confirmNewPasswordLabel: "Confirmer le nouveau mot de passe",
+    saving: "Enregistrement…",
+    setNewPassword: "Définir le nouveau mot de passe",
+  },
+
+  notFound: {
+    metaTitle: "Page introuvable | Pokector",
+    heading: "Page introuvable",
+    body: "La page que vous recherchez n’existe pas ou a peut-être été déplacée.",
+    backHome: "Retour à la page d’accueil",
+  },
+};
 
 export default fr;

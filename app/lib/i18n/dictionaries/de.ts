@@ -1,9 +1,330 @@
-/**
- * de dictionary — STUB (falls back to English until translated in i18n phase 6).
- * Typed `satisfies Dict` so any drift from the English key shape fails typecheck.
- */
-import en, { type Dict } from "./en";
+/** German (de) dictionary. Card/set/rarity proper terms stay English (they are
+ * catalog data or franchise-neutral technical terms). Placeholders preserved. */
+import { type Dict } from "./en";
 
-const de: Dict = en;
+const de: Dict = {
+  common: {
+    home: "Startseite",
+    previous: "← Zurück",
+    next: "Weiter →",
+    pageOf: "Seite {page} von {pageCount}",
+    pageShort: "Seite {page} / {pageCount}",
+    apply: "Anwenden",
+    noImage: "Kein Bild",
+    any: "Alle",
+    signIn: "Anmelden",
+  },
+
+  layout: {
+    skipToContent: "Zum Inhalt springen",
+    homeAria: "Pokector Startseite",
+    navMain: "Hauptmenü",
+    navCards: "Karten",
+    navSets: "Sets",
+    navPriceMovers: "Kursbewegungen",
+    navBlog: "Blog",
+    searchCards: "Karten suchen",
+    searchCardsPlaceholder: "Karten suchen…",
+    myCollection: "Meine Sammlung",
+    signIn: "Anmelden",
+    getStarted: "Loslegen",
+    footerAbout: "Über uns",
+    footerMethodology: "Daten & Methodik",
+    footerBlog: "Blog",
+    footerContact: "Kontakt",
+    footerPrivacy: "Datenschutz",
+    footerTerms: "AGB",
+    footerDisclaimer: "Haftungsausschluss",
+    footerRss: "RSS",
+    languageLabel: "Sprache",
+    disclaimer:
+      "Pokector ist ein unabhängiger Sammlungs-Tracker und steht in keiner Verbindung zu Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket oder der Pokémon TCG API und wird von diesen weder unterstützt noch gesponsert. Pokémon und Pokémon-Charakternamen sind Marken von Nintendo. Kartenbilder und Katalogdaten stammen von den jeweiligen Quellen. Angezeigte Preise sind Schätzungen für ungegradete Karten und stellen keine Finanzberatung dar.",
+  },
+
+  home: {
+    metaTitle: "Pokector — Pokémon-TCG-Sammlungs-Tracker & Kartenpreis-Portfolio",
+    metaDescription:
+      "Verfolge deine Pokémon-TCG-Sammlung, überwache den geschätzten Marktwert mit TCGplayer-Preisen, vervollständige Set-Checklisten, organisiere Ordner und beobachte dein Portfolio über die Zeit. Kostenlos und unabhängig.",
+    heroTitlePre: "Verfolge jede Karte",
+    heroTitleAccent: "wie ein Wertpapier",
+    heroSubtitle:
+      "Deine Pokémon-TCG-Sammlung als Portfolio: aktuelle TCGplayer-Marktwerte, echte Preishistorie, Gewinn & Verlust — ehrliche Zahlen, kein Hype.",
+    heroSearchLabel: "Kartenkatalog durchsuchen",
+    heroSearchPlaceholder: "Nach einer Karte suchen, z. B. Charizard…",
+    heroSearchButton: "Suchen",
+    ctaStartTracking: "Kostenlos starten",
+    ctaBrowseCards: "Karten durchstöbern",
+    tickerAria: "Größte Kursbewegungen der letzten 7 Tage",
+    tickerAllMovers: "Alle Bewegungen →",
+    featuresHeading: "Für Sammler gemacht, nicht für Spekulanten",
+    feature1Title: "Wisse, was deine Sammlung wert ist",
+    feature1Body:
+      "Jede erfasste Karte wird mit aktuellen TCGplayer-Marktschätzungen in USD bewertet (Cardmarket EUR wird daneben angezeigt, sofern verfügbar). Die Abdeckung ist stets transparent — Karten ohne Preis werden gekennzeichnet und nie als Null gewertet.",
+    feature2Title: "Beobachte den Wert über die Zeit",
+    feature2Body:
+      "Pokector erfasst echte Preisbeobachtungen ab dem Tag, an dem du zu tracken beginnst, und baut daraus deine Portfolio-Historie auf. Keine nachträglich eingefügten oder erfundenen Daten — dein Chart beginnt, wenn du beginnst.",
+    feature3Title: "Vervollständige deine Sets",
+    feature3Body:
+      "Automatische Checklisten zeigen, was du besitzt, was fehlt und ungefähr, was die fehlenden Karten kosten würden — für jedes Set im Katalog.",
+    feature4Title: "Organisiere wie im Ordner",
+    feature4Body:
+      "Ordne deine Karten in visuelle 9er-Ordnerseiten, halte Ordner privat oder teile sie per Link.",
+    latestSetsHeading: "Neueste Sets",
+    allSets: "Alle Sets →",
+    cardsCount: "{count} Karten",
+    noImage: "Kein Bild",
+    setsEmpty: "Der Katalog wird gerade synchronisiert. Schau in Kürze wieder vorbei.",
+    recentCardsHeading: "Kürzlich aktualisierte Karten",
+    recentCardsEmpty: "Kartendaten erscheinen hier nach der ersten Katalog-Synchronisierung.",
+    valuationHeading: "So funktioniert die Bewertung",
+    valuation1Lead: "Marktbasierte Schätzungen.",
+    valuation1Body:
+      " Kartenwerte nutzen aktuelle TCGplayer-Preise (Marktpreis sofern verfügbar, sonst Mittel- oder Tiefpreis) je Druckvariante — Normal, Holofoil, Reverse Holofoil und First Edition.",
+    valuation2Lead: "Nur ungegradete Karten.",
+    valuation2Body:
+      " Die Schätzungen beschreiben ungegradete Preise nahe Near-Mint. Der tatsächliche Zustand deiner Karte kann den echten Verkaufspreis verändern — der Zustand wird erfasst, verändert die Schätzung aber nie stillschweigend.",
+    valuation3Lead: "Ehrliche Historie.",
+    valuation3Body:
+      " Die Preishistorie beginnt, sobald Pokector eine Karte erstmals beobachtet, und die Portfolio-Historie beginnt mit dir. Fehlende Preise werden als fehlend angezeigt — nie als Null. ",
+    valuationReadMethodology: "Vollständige Methodik lesen",
+    finalCtaHeading: "Bereit zu sehen, was dein Ordner wert ist?",
+    finalCtaBody:
+      "Erstelle ein kostenloses Konto, füge in Minuten deine ersten Karten hinzu und lass Pokector ab hier mitzählen.",
+    finalCtaButton: "Kostenloses Konto erstellen",
+  },
+
+  cards: {
+    metaTitle: "Pokémon-Kartenkatalog{suffix} | Pokector",
+    metaTitleSuffix: " — Seite {page}",
+    metaDescription:
+      "Durchsuche den vollständigen englischen Pokémon-TCG-Kartenkatalog mit aktuellen geschätzten Marktpreisen, Seltenheiten, Sets und Varianten.",
+    collectionName: "Pokémon-Kartenkatalog",
+    collectionDescription:
+      "Vollständiger englischer Pokémon-TCG-Kartenkatalog mit geschätzten Marktpreisen.",
+    breadcrumb: "Karten",
+    heading: "Pokémon-Kartenkatalog",
+    searchLabel: "Suche",
+    searchPlaceholder: "Kartenname, Set oder Nummer…",
+    rarityLabel: "Seltenheit",
+    cardTypeLabel: "Kartentyp",
+    typePokemon: "Pokémon",
+    typeTrainer: "Trainer",
+    typeEnergy: "Energie",
+    sortLabel: "Sortieren nach",
+    sortName: "Name",
+    sortNumber: "Set-Nummer",
+    sortNewest: "Kürzlich aktualisiert",
+    resultCount: "{count} Karten",
+    resultCountMatching: "{count} Karten für „{q}“ · Seite {page} von {pageCount}",
+    resultCountPlain: "{count} Karten · Seite {page} von {pageCount}",
+    emptyTitle: "Keine Karten gefunden",
+    emptyBody:
+      "Versuche einen kürzeren Suchbegriff oder prüfe die Schreibweise. Der Katalog umfasst englischsprachige Pokémon-TCG-Karten.",
+    paginationAria: "Seitennavigation",
+  },
+
+  cardDetail: {
+    notFoundTitle: "Karte nicht gefunden | Pokector",
+    notFoundDescription: "Karte nicht gefunden.",
+    metaTitle: "{name} — {setName} #{number} Preis & Details | Pokector",
+    metaDescription:
+      "{name} ({setName} #{number}{rarityPart}){pricePart}. Varianten, Preishistorie und Sammlungs-Tracking auf Pokector.",
+    metaRarityPart: ", {rarity}",
+    metaPricePart: " — aktueller geschätzter Marktpreis {price}",
+    breadcrumbCards: "Karten",
+    factCardType: "Kartentyp",
+    factSubtypes: "Untertypen",
+    factEnergyType: "Energietyp",
+    factHp: "KP",
+    factArtist: "Illustrator",
+    factSetReleased: "Set erschienen",
+    factRegulationMark: "Regulierungssymbol",
+    pricesHeading: "Aktuelle Marktpreise (USD)",
+    pricesEmpty:
+      "Für diese Karte ist derzeit kein Marktpreis verfügbar. Sie bleibt ohne Preis — Pokector setzt niemals eine Schätzung an ihre Stelle.",
+    colVariant: "Variante",
+    colMarket: "Marktschätzung",
+    colLow: "Tief",
+    colMid: "Mittel",
+    colHigh: "Hoch",
+    sourceTcgplayer: "Quelle: TCGplayer-Preisdaten",
+    sourceUpdated: ", aktualisiert {date}",
+    trackedSince: " Pokector verfolgt diese Karte seit {date}.",
+    trackingStarts: " Das Preis-Tracking von Pokector beginnt mit der ersten Beobachtung.",
+    viewOnTcgplayer: "Auf TCGplayer ansehen ↗",
+    cardmarketTrend: "Cardmarket (EUR): Trend {price}",
+    viewOnCardmarket: "Auf Cardmarket ansehen ↗",
+    addToCollection: "Zur Sammlung hinzufügen",
+    addToWishlist: "Zur Wunschliste hinzufügen",
+    priceDisclaimer:
+      "Angezeigte Werte sind geschätzte Marktpreise für ungegradete Karten und spiegeln möglicherweise nicht den genauen Wert deines Exemplars wider, der vom physischen Zustand und den tatsächlichen Verkaufsbedingungen abhängt. Dies ist keine Finanzberatung.",
+    historyVariantAria: "Variante der Preishistorie",
+    historyTitle: "Preishistorie — {variant}",
+    historyEmpty:
+      "Noch keine Preishistorie. Pokector erfasst nur echte Beobachtungen — das Tracking beginnt, sobald diese Karte in einer Sammlung, Wunschliste oder regelmäßig aufgerufen wird.",
+    historyStartNote:
+      "Tracking seit {date}. Werte zwischen Beobachtungen führen den zuletzt bekannten Preis fort.",
+    relatedHeading: "Mehr aus {setName}",
+    variantNormal: "Normal",
+    variantHolofoil: "Holofoil",
+    variantReverseHolofoil: "Reverse Holofoil",
+    variantFirstEdition: "1st Edition",
+    variantFirstEditionHolofoil: "1st Edition Holofoil",
+  },
+
+  sets: {
+    metaTitle: "Pokémon-TCG-Sets{suffix} | Pokector",
+    metaTitleSuffix: " — Seite {page}",
+    metaDescription:
+      "Alle englischen Pokémon-TCG-Erweiterungen mit Erscheinungsdaten, Kartenzahlen und Set-Symbolen — vom Base Set bis zur neuesten Serie.",
+    collectionName: "Pokémon-TCG-Sets",
+    collectionDescription: "Alle englischen Pokémon-TCG-Erweiterungen.",
+    breadcrumb: "Sets",
+    heading: "Pokémon-TCG-Sets",
+    seriesLabel: "Serie",
+    seriesAll: "Alle Serien",
+    sortLabel: "Sortieren nach",
+    sortRelease: "Erscheinungsdatum (neueste)",
+    sortName: "Name",
+    sortCards: "Anzahl der Karten",
+    resultCount: "{count} Sets · Seite {page} von {pageCount}",
+    empty: "Der Set-Katalog wird gerade synchronisiert — schau in Kürze wieder vorbei.",
+    unknownRelease: "Unbekanntes Erscheinungsdatum",
+    cardsCount: "{count} Karten",
+    printedSuffix: " ({count} gedruckt)",
+    paginationAria: "Seitennavigation",
+  },
+
+  setDetail: {
+    notFoundTitle: "Set nicht gefunden | Pokector",
+    notFoundDescription: "Set nicht gefunden.",
+    metaTitle: "{name} — Kartenliste, Preise & Set-Wert | Pokector",
+    metaDescription:
+      "{name} ({series}{released}) — vollständige Kartenliste mit {total} Karten, Marktpreisschätzungen und Sammlungs-Checkliste auf Pokector.",
+    metaReleased: ", erschienen {date}",
+    metaAllCards: "allen",
+    breadcrumbSets: "Sets",
+    released: " · Erschienen {date}",
+    cardsCount: " · {count} Karten",
+    printedSuffix: " ({count} in der gedruckten Set-Nummerierung)",
+    estimatedValuePre: "Geschätzter Marktwert des vollständigen Sets: ",
+    estimatedValueNote:
+      "(Summe der günstigsten bepreisten Variante für {priced} von {total} Karten; ungegradet)",
+    noValueCoverage:
+      "Noch nicht genug Preisabdeckung, um einen Wert für das vollständige Set zu schätzen.",
+    completionHeading: "Dein Set-Fortschritt",
+    completionAria: "Set-Fortschritt: {owned} von {total} Karten",
+    owned: "im Besitz",
+    missing: "fehlend",
+    complete: "{percent}% vollständig",
+    missingValuePre: " · fehlende Karten ≈ ",
+    missingValueNote: " ({priced}/{missing} bepreist, günstigste Varianten)",
+    checklistNote:
+      "Standard-Checkliste: Eine Karte gilt als besessen, sobald du mindestens ein Exemplar einer beliebigen Variante hast. Checklisten auf Variantenebene werden aus verfügbaren Marktdaten geschätzt und können unvollständig sein.",
+    signInPre:
+      ", um deinen Fortschritt für dieses Set und die geschätzten Kosten deiner fehlenden Karten zu sehen.",
+    filtersAria: "Filter für Kartenliste",
+    filterAll: "Alle",
+    filterOwned: "Besessen",
+    filterMissing: "Fehlend",
+    filterAnyRarity: "Jede Seltenheit",
+    filterRarePlus: "Rare+",
+    filterAnyType: "Jeder Typ",
+    rarityCommon: "Common",
+    rarityUncommon: "Uncommon",
+    typePokemon: "Pokémon",
+    typeTrainer: "Trainer",
+    typeEnergy: "Energie",
+    showingCount: "{visible} von {total} Karten werden angezeigt",
+    badgeOwned: "Besessen",
+    badgeMissing: "Fehlend",
+    setCardList: "{name} Kartenliste",
+    setCardListDescription: "Alle Karten im Pokémon-TCG-Set {name}.",
+  },
+
+  priceMovers: {
+    metaTitle: "Pokémon-Kartenkursbewegungen — Größte Gewinner & Verlierer | Pokector",
+    metaDescription:
+      "Welche Pokémon-Karten in den letzten 7 und 30 Tagen am meisten an Marktwert gewonnen oder verloren haben — basierend auf echten von Pokector erfassten Preisbeobachtungen.",
+    breadcrumb: "Kursbewegungen",
+    heading: "Kursbewegungen",
+    intro:
+      "Die größten Marktbewegungen ungegradeter Karten unter den von Pokector aktiv verfolgten Karten. Änderungen werden nur aus echten erfassten Beobachtungen berechnet — eine Karte benötigt mindestens eine Woche (oder einen Monat) Tracking-Historie, um hier zu erscheinen.",
+    emptyTitle: "Noch nicht genug Preishistorie",
+    emptyBodyPre:
+      "Pokector erfindet niemals Preisänderungen. Bewegungen erscheinen, sobald verfolgte Karten mindestens 7 Tage echter Beobachtungen gesammelt haben. Beginne, Karten in deiner ",
+    emptyBodyLink: "Sammlung",
+    emptyBodyPost: " zu verfolgen, um die Abdeckung zu verbessern.",
+    gainers7: "Gewinner (7 Tage)",
+    decliners7: "Verlierer (7 Tage)",
+    gainers30: "Gewinner (30 Tage)",
+    decliners30: "Verlierer (30 Tage)",
+    sectionEmpty:
+      "In diesem Zeitraum noch keine qualifizierenden Bewegungen — es wird mehr Tracking-Historie benötigt.",
+  },
+
+  auth: {
+    verifyHuman: "Bitte schließe unten die Verifizierung ab.",
+    tooManyAttempts: "Zu viele Versuche. Bitte warte eine Minute und versuche es erneut.",
+    signInMetaTitle: "Anmelden — Pokector",
+    signInHeading: "Anmelden",
+    signInInvalid: "Ungültige E-Mail oder ungültiges Passwort.",
+    emailLabel: "E-Mail",
+    passwordLabel: "Passwort",
+    signingIn: "Anmeldung läuft…",
+    signInButton: "Anmelden",
+    forgotPassword: "Passwort vergessen?",
+    newToPokector: "Neu bei Pokector? ",
+    createAnAccount: "Konto erstellen",
+    registerMetaTitle: "Konto erstellen — Pokector",
+    registerHeading: "Erstelle dein Konto",
+    registerSubtitle:
+      "Verfolge deine Sammlung, deinen Portfolio-Wert und Set-Fortschritt — kostenlos.",
+    passwordsNoMatch: "Die Passwörter stimmen nicht überein.",
+    passwordTooShort: "Das Passwort muss mindestens 8 Zeichen lang sein.",
+    registerFailed: "Registrierung fehlgeschlagen. Bitte versuche es erneut.",
+    displayNameLabel: "Anzeigename",
+    passwordHint8: "Mindestens 8 Zeichen.",
+    confirmPasswordLabel: "Passwort bestätigen",
+    creatingAccount: "Konto wird erstellt…",
+    createAccountButton: "Konto erstellen",
+    alreadyHaveAccount: "Bereits ein Konto? ",
+    byCreatingPre: "Mit der Erstellung eines Kontos stimmst du den ",
+    termsOfService: "Nutzungsbedingungen",
+    and: " und der ",
+    privacyPolicy: "Datenschutzerklärung",
+    forgotMetaTitle: "Passwort zurücksetzen — Pokector",
+    forgotHeading: "Passwort zurücksetzen",
+    forgotTooMany: "Zu viele Versuche. Bitte warte einige Minuten und versuche es erneut.",
+    forgotError: "Die Anfrage konnte nicht verarbeitet werden. Bitte versuche es erneut.",
+    emailUnavailablePre:
+      "Automatische E-Mails zum Zurücksetzen des Passworts sind derzeit nicht verfügbar. Bitte kontaktiere den Support unter ",
+    emailUnavailablePost: ", um wieder Zugriff auf dein Konto zu erhalten.",
+    backToSignIn: "Zurück zur Anmeldung",
+    resetSent:
+      "Falls ein Konto für diese E-Mail-Adresse existiert, ist ein Link zum Zurücksetzen unterwegs. Prüfe dein Postfach.",
+    sending: "Wird gesendet…",
+    sendResetLink: "Link zum Zurücksetzen senden",
+    resetMetaTitle: "Neues Passwort wählen — Pokector",
+    resetHeading: "Neues Passwort wählen",
+    resetMissingToken:
+      "Diesem Link zum Zurücksetzen fehlt das Token. Bitte nutze den Link aus deiner E-Mail oder fordere einen neuen an.",
+    requestNewLink: "Neuen Link anfordern",
+    resetInvalid:
+      "Dieser Link zum Zurücksetzen ist ungültig oder abgelaufen. Bitte fordere einen neuen an.",
+    newPasswordLabel: "Neues Passwort",
+    newPasswordHint: "Mindestens 8 Zeichen. Alle anderen Sitzungen werden abgemeldet.",
+    confirmNewPasswordLabel: "Neues Passwort bestätigen",
+    saving: "Wird gespeichert…",
+    setNewPassword: "Neues Passwort festlegen",
+  },
+
+  notFound: {
+    metaTitle: "Seite nicht gefunden | Pokector",
+    heading: "Seite nicht gefunden",
+    body: "Die gesuchte Seite existiert nicht oder wurde möglicherweise verschoben.",
+    backHome: "Zurück zur Startseite",
+  },
+};
 
 export default de;
