@@ -134,6 +134,10 @@ export const en = {
     notFoundTitle: "Card not found | Pokector",
     notFoundDescription: "Card not found.",
     metaTitle: "{name} — {setName} #{number} Price & Details | Pokector",
+    metaDescription:
+      "{name} ({setName} #{number}{rarityPart}){pricePart}. Variants, price history, and collection tracking on Pokector.",
+    metaRarityPart: ", {rarity}",
+    metaPricePart: " — current estimated market price {price}",
     breadcrumbCards: "Cards",
     factCardType: "Card type",
     factSubtypes: "Subtypes",

@@ -7,7 +7,7 @@ import { createDb } from "~/lib/db/index.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { formatMinor } from "~/lib/money/decimal";
@@ -27,13 +27,18 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
       noindex: true,
     });
   }
-  const { set } = data;
+  const { set, t } = data;
+  const released = set.releaseDate ? interpolate(t.metaReleased, { date: set.releaseDate }) : "";
   return pageMeta({
-    title: `${set.name} — Card List, Prices & Set Value | Pokector`,
-    description: `${set.name} (${set.series}${set.releaseDate ? `, released ${set.releaseDate}` : ""}) — complete card list with ${
-      set.total ?? "all"
-    } cards, market price estimates, and collection checklist on Pokector.`,
+    title: interpolate(t.metaTitle, { name: set.name }),
+    description: interpolate(t.metaDescription, {
+      name: set.name,
+      series: set.series,
+      released,
+      total: set.total ?? t.metaAllCards,
+    }),
     canonical: data.canonical,
+    alternates: { appUrl: data.appUrl, path: `/sets/${set.slug}` },
     image: set.logoUrl ?? undefined,
   });
 }
@@ -87,7 +92,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
           ownedCardIds: progress.ownedCardIds,
         }
       : null,
-    canonical: canonicalUrl(env.APP_URL, `/sets/${data.set.slug}`),
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, `/sets/${data.set.slug}`)),
     appUrl: env.APP_URL,
   };
 
@@ -144,17 +149,17 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
       <JsonLd
         data={[
           breadcrumbJsonLd(appUrl, [
-            { name: "Home", path: "/" },
-            { name: "Sets", path: "/sets" },
-            { name: set.name, path: `/sets/${set.slug}` },
+            { name: c.home, path: lp("/") },
+            { name: t.breadcrumbSets, path: lp("/sets") },
+            { name: set.name, path: lp(`/sets/${set.slug}`) },
           ]),
           collectionPageJsonLd(appUrl, {
-            name: `${set.name} card list`,
-            description: `All cards in the Pokémon TCG set ${set.name}.`,
-            path: `/sets/${set.slug}`,
+            name: interpolate(t.setCardList, { name: set.name }),
+            description: interpolate(t.setCardListDescription, { name: set.name }),
+            path: lp(`/sets/${set.slug}`),
             items: cards
               .slice(0, 10)
-              .map((card) => ({ name: card.name, path: `/cards/${card.slug}` })),
+              .map((card) => ({ name: card.name, path: lp(`/cards/${card.slug}`) })),
           }),
         ]}
       />

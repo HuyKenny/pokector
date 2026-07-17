@@ -96,3 +96,19 @@ export function stripLocalePrefix(pathname: string): string {
   }
   return pathname;
 }
+
+/**
+ * hreflang alternates for one unprefixed path: every locale + x-default, as
+ * `{ hreflang, href }` pairs for building `<xhtml:link>` sitemap entries or
+ * `<link rel=alternate>` tags. `origin` is the site origin (no trailing slash).
+ */
+export function localeAlternates(
+  origin: string,
+  path: string,
+): { hreflang: string; href: string }[] {
+  const href = (p: string) => `${origin}${p === "/" ? "" : p}`;
+  return [
+    ...LOCALES.map((l) => ({ hreflang: LANG_TAGS[l], href: href(localePath(l, path)) })),
+    { hreflang: "x-default", href: href(path) },
+  ];
+}

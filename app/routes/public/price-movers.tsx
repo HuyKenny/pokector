@@ -12,10 +12,10 @@ import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
-    title: "Pokémon Card Price Movers — Biggest Gainers & Decliners | Pokector",
-    description:
-      "Which Pokémon cards gained or lost the most market value in the last 7 and 30 days — based on real price observations recorded by Pokector.",
+    title: data?.t.metaTitle ?? "Pokector",
+    description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
+    alternates: data ? { appUrl: data.appUrl, path: "/price-movers" } : undefined,
   });
 }
 
@@ -41,7 +41,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     locale,
     t: getDict(locale).priceMovers,
     c: getDict(locale).common,
-    canonical: canonicalUrl(env.APP_URL, "/price-movers"),
+    appUrl: env.APP_URL,
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/price-movers")),
   };
 }
 

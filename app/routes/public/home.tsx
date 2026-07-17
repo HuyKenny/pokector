@@ -5,7 +5,7 @@ import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getHomepageData, getPriceMovers } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
@@ -13,10 +13,10 @@ import { canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
-    title: "Pokector — Pokémon TCG Collection Tracker & Card Price Portfolio",
-    description:
-      "Track your Pokémon TCG collection, monitor estimated market value with TCGplayer prices, complete set checklists, organize binders, and watch your portfolio over time. Free and independent.",
+    title: data?.t.metaTitle ?? "Pokector",
+    description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
+    alternates: data ? { appUrl: data.appUrl, path: "/" } : undefined,
     image: "/brand/pokector-icon-512.png",
   });
 }
@@ -42,7 +42,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return {
     locale,
     t: getDict(locale).home,
-    canonical: canonicalUrl(env.APP_URL, "/"),
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/")),
     appUrl: env.APP_URL,
     popularSets,
     recentCards,

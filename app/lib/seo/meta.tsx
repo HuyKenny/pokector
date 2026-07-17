@@ -3,6 +3,8 @@
  * Open Graph + Twitter cards, JSON-LD structured data, noindex helpers.
  */
 
+import { LANG_TAGS, LOCALES, localePath } from "~/lib/i18n/locales";
+
 export const SITE_NAME = "Pokector";
 export const DEFAULT_OG_IMAGE = "/brand/pokector-og.png";
 
@@ -14,6 +16,13 @@ export interface PageMetaInput {
   image?: string;
   noindex?: boolean;
   type?: "website" | "article";
+  /**
+   * When set, emit hreflang alternates for all locales + x-default. `path` is
+   * the UNPREFIXED path (e.g. "/cards/base1-4"); each locale's alternate is
+   * built with localePath(). Omit on noindex pages (hreflang must only point at
+   * indexable URLs).
+   */
+  alternates?: { appUrl: string; path: string };
 }
 
 type MetaDescriptor = Record<string, string> | { title: string };
@@ -50,6 +59,24 @@ export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
   }
   if (input.noindex) {
     meta.push({ name: "robots", content: "noindex, nofollow" });
+  } else if (input.alternates) {
+    // Bidirectional hreflang: every locale (incl. English) lists all locales +
+    // x-default. x-default points at the unprefixed English URL.
+    const { appUrl, path } = input.alternates;
+    for (const locale of LOCALES) {
+      meta.push({
+        tagName: "link",
+        rel: "alternate",
+        hreflang: LANG_TAGS[locale],
+        href: canonicalUrl(appUrl, localePath(locale, path)),
+      });
+    }
+    meta.push({
+      tagName: "link",
+      rel: "alternate",
+      hreflang: "x-default",
+      href: canonicalUrl(appUrl, path),
+    });
   }
   return meta;
 }

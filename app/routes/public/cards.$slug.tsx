@@ -17,7 +17,7 @@ import {
   getCardPriceHistory,
 } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { formatMinor } from "~/lib/money/decimal";
@@ -32,13 +32,29 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     });
   }
   const { card, set } = data.detail;
+  const { t } = data;
   const price = data.headlinePriceMinor;
+  const langTag = LANG_TAGS[data.locale];
+  const rarityPart = card.rarity ? interpolate(t.metaRarityPart, { rarity: card.rarity }) : "";
+  const pricePart =
+    price !== null
+      ? interpolate(t.metaPricePart, { price: formatMinor(price, "USD", langTag) })
+      : "";
   return pageMeta({
-    title: `${card.name} — ${set.name} #${card.number} Price & Details | Pokector`,
-    description: `${card.name} (${set.name} #${card.number}${card.rarity ? `, ${card.rarity}` : ""})${
-      price !== null ? ` — current estimated market price ${formatMinor(price)}` : ""
-    }. Variants, price history, and collection tracking on Pokector.`,
+    title: interpolate(t.metaTitle, {
+      name: card.name,
+      setName: set.name,
+      number: card.number,
+    }),
+    description: interpolate(t.metaDescription, {
+      name: card.name,
+      setName: set.name,
+      number: card.number,
+      rarityPart,
+      pricePart,
+    }),
     canonical: data.canonical,
+    alternates: { appUrl: data.appUrl, path: `/cards/${card.slug}` },
     image: card.imageLargeUrl ?? card.imageSmallUrl ?? undefined,
   });
 }
@@ -74,7 +90,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     locale,
     t: getDict(locale).cardDetail,
     c: getDict(locale).common,
-    canonical: canonicalUrl(env.APP_URL, `/cards/${detail.card.slug}`),
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, `/cards/${detail.card.slug}`)),
     appUrl: env.APP_URL,
   };
 }
@@ -121,10 +137,10 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
       <JsonLd
         data={[
           breadcrumbJsonLd(appUrl, [
-            { name: "Home", path: "/" },
-            { name: "Cards", path: "/cards" },
-            { name: set.name, path: `/sets/${set.slug}` },
-            { name: card.name, path: `/cards/${card.slug}` },
+            { name: c.home, path: lp("/") },
+            { name: t.breadcrumbCards, path: lp("/cards") },
+            { name: set.name, path: lp(`/sets/${set.slug}`) },
+            { name: card.name, path: lp(`/cards/${card.slug}`) },
           ]),
         ]}
       />

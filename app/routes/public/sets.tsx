@@ -5,19 +5,20 @@ import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { listSets } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { resolveLocale } from "~/lib/i18n/locales";
+import { localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { canonicalUrl, collectionPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   const page = data?.result.page ?? 1;
+  const suffix = data && page > 1 ? interpolate(data.t.metaTitleSuffix, { page }) : "";
   return pageMeta({
-    title: `Pokémon TCG Sets${page > 1 ? ` — Page ${page}` : ""} | Pokector`,
-    description:
-      "All English Pokémon TCG expansions with release dates, card counts, and set symbols — from Base Set to the newest series.",
+    title: data ? interpolate(data.t.metaTitle, { suffix }) : "Pokector",
+    description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
     noindex: Boolean(data?.filtered),
+    alternates: data ? { appUrl: data.appUrl, path: "/sets" } : undefined,
   });
 }
 
@@ -43,7 +44,7 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     t: getDict(locale).sets,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
-    canonical: canonicalUrl(env.APP_URL, "/sets"),
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/sets")),
   };
 }
 
@@ -64,12 +65,12 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
     <div className="flex flex-col gap-6">
       <JsonLd
         data={collectionPageJsonLd(appUrl, {
-          name: "Pokémon TCG Sets",
-          description: "All English Pokémon TCG expansions.",
-          path: "/sets",
+          name: t.collectionName,
+          description: t.collectionDescription,
+          path: lp("/sets"),
           items: result.items
             .slice(0, 10)
-            .map((set) => ({ name: set.name, path: `/sets/${set.slug}` })),
+            .map((set) => ({ name: set.name, path: lp(`/sets/${set.slug}`) })),
         })}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">

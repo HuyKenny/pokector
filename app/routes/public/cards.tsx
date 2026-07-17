@@ -5,7 +5,7 @@ import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { searchCards } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { canonicalUrl, collectionPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
@@ -13,14 +13,15 @@ import { clientIp, enforceRateLimit } from "~/lib/security/rate-limit.server";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   const page = data?.result.page ?? 1;
-  const suffix = page > 1 ? ` — Page ${page}` : "";
+  const suffix = data && page > 1 ? interpolate(data.t.metaTitleSuffix, { page }) : "";
   return pageMeta({
-    title: `Pokémon Card Catalog${suffix} | Pokector`,
-    description:
-      "Browse and search the complete English Pokémon TCG card catalog with current estimated market prices, rarities, sets, and variants.",
+    title: data ? interpolate(data.t.metaTitle, { suffix }) : "Pokector",
+    description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
-    // Search results and filter combinations must not be indexed.
+    // Search results and filter combinations must not be indexed (and get no
+    // hreflang — pageMeta skips alternates when noindex).
     noindex: Boolean(data?.filtered),
+    alternates: data ? { appUrl: data.appUrl, path: "/cards" } : undefined,
   });
 }
 
@@ -56,7 +57,7 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     t: getDict(locale).cards,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
-    canonical: canonicalUrl(env.APP_URL, "/cards"),
+    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/cards")),
   };
 }
 
@@ -81,12 +82,12 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
     <div className="flex flex-col gap-6">
       <JsonLd
         data={collectionPageJsonLd(appUrl, {
-          name: "Pokémon Card Catalog",
-          description: "Complete English Pokémon TCG card catalog with market price estimates.",
-          path: "/cards",
+          name: t.collectionName,
+          description: t.collectionDescription,
+          path: lp("/cards"),
           items: result.items.slice(0, 10).map((card) => ({
             name: card.name,
-            path: `/cards/${card.slug}`,
+            path: lp(`/cards/${card.slug}`),
           })),
         })}
       />
