@@ -151,3 +151,21 @@ chart has data.
   the daily orchestrator still handles price history / snapshots / alerts (cheap /
   delta-only). Prices and history therefore refresh weekly. If more frequency is ever
   wanted, the mitigation is Workers Paid (raises D1 write limits) or a delta catalog sync.
+
+### D16. eBay Partner Network "Buy on eBay" affiliate links (owner request 2026-07-18)
+
+Each card detail page gets a "Buy on eBay" button linking to an EPN-tracked eBay
+search for the card, so visitors can buy a copy and qualifying sales earn commission.
+
+- **No API, no secret**: the link is built from public EPN tracking params
+  (`app/lib/affiliate/ebay.ts`); the Campaign ID (`5339136550`) is public — it appears
+  in every affiliate link — so it lives in `wrangler.jsonc` `vars` as `EBAY_CAMPAIGN_ID`,
+  not in secrets. Fail-closed: no campaign id → button hidden. Marketplace defaults to
+  US (ebay.com), matching our English cards + USD pricing; `EBAY_DE` is ready for a switch.
+- **SEO/compliance**: link carries `rel="sponsored noopener"` (Google's paid-link
+  requirement) and a visible affiliate disclosure (EPN network agreement); the disclosure
+  + button label are localized in all 11 dictionaries.
+- **Not eBay Developer API**: the eBay *Browse* API (live lowest listing + price on the
+  page) needs real developer creds (App ID + OAuth) and rate-limit handling — deferred.
+  NB: the "Account SID / Auth Token" the owner first supplied are Twilio-style, not eBay,
+  and are unused (stored in workspace credentials with a note; recommend rotation).

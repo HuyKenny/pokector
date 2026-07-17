@@ -159,6 +159,9 @@ const es: Dict = {
     addToWishlist: "Añadir a la lista de deseos",
     priceDisclaimer:
       "Los valores mostrados son precios de mercado estimados para cartas sin gradar y pueden no reflejar el valor exacto de tu ejemplar, que depende de su estado físico y de las condiciones reales de venta. Esto no es asesoramiento financiero.",
+    buyOnEbay: "Comprar en eBay",
+    ebayDisclosure:
+      "«Comprar en eBay» es un enlace de afiliado: Pokector puede ganar una comisión por compras que cumplan los requisitos, sin coste adicional para ti.",
     historyVariantAria: "Variante del historial de precios",
     historyTitle: "Historial de precios — {variant}",
     historyEmpty:

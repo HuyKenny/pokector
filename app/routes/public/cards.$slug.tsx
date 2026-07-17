@@ -16,6 +16,7 @@ import {
   getCardBySlug,
   getCardPriceHistory,
 } from "~/lib/catalog/queries.server";
+import { buildEbaySearchUrl, ebayCardQuery } from "~/lib/affiliate/ebay";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
@@ -83,10 +84,18 @@ export async function loader({ params, context }: Route.LoaderArgs) {
       ? Math.max(...tcgplayerPrices.map((p) => p.normalizedPriceMinor))
       : null;
 
+  // eBay Partner Network affiliate search link (US marketplace). Null when the
+  // campaign id isn't configured → the button is hidden.
+  const ebayUrl = buildEbaySearchUrl(
+    ebayCardQuery(detail.card.name, detail.set.name),
+    env.EBAY_CAMPAIGN_ID,
+  );
+
   return {
     detail,
     history,
     headlinePriceMinor,
+    ebayUrl,
     locale,
     t: getDict(locale).cardDetail,
     c: getDict(locale).common,
@@ -105,7 +114,7 @@ const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"
 };
 
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
-  const { detail, history, appUrl, locale, t, c } = loaderData;
+  const { detail, history, ebayUrl, appUrl, locale, t, c } = loaderData;
   const { card, set, prices, related, trackingSince } = detail;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
@@ -307,6 +316,17 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
 
           {/* CTAs */}
           <div className="flex flex-wrap gap-3">
+            {ebayUrl ? (
+              <a
+                href={ebayUrl}
+                target="_blank"
+                rel="sponsored noopener"
+                className="inline-flex min-h-11 items-center gap-2 rounded-lg bg-fg px-5 py-2 font-semibold text-canvas hover:opacity-90"
+              >
+                {t.buyOnEbay}
+                <span aria-hidden>↗</span>
+              </a>
+            ) : null}
             <fetcher.Form method="post" action="/api/v1/collection/quick-add">
               <input type="hidden" name="cardId" value={card.id} />
               <button
@@ -333,6 +353,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
           ) : null}
 
           <p className="text-xs text-fg-faint">{t.priceDisclaimer}</p>
+          {ebayUrl ? <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p> : null}
         </div>
       </div>
 

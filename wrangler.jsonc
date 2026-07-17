@@ -27,6 +27,8 @@
     "ENVIRONMENT": "development",
     "DEFAULT_CURRENCY": "USD",
     "DEFAULT_LOCALE": "en-US",
+    // eBay Partner Network Campaign ID (public — appears in every affiliate link)
+    "EBAY_CAMPAIGN_ID": "5339136550",
     // Official Cloudflare Turnstile visible always-pass TEST sitekey (public)
     "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
     // Local dev / E2E only: skip the browser Turnstile gate so automated flows
@@ -78,6 +80,7 @@
         "ENVIRONMENT": "staging",
         "DEFAULT_CURRENCY": "USD",
         "DEFAULT_LOCALE": "en-US",
+        "EBAY_CAMPAIGN_ID": "5339136550",
         // staging uses the Turnstile TEST sitekey (always pass) until a real
         // staging widget is provisioned in Phase 10
         "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
@@ -131,6 +134,7 @@
         "ENVIRONMENT": "production",
         "DEFAULT_CURRENCY": "USD",
         "DEFAULT_LOCALE": "en-US",
+        "EBAY_CAMPAIGN_ID": "5339136550",
         // replaced with the real production widget sitekey in Phase 10
         "TURNSTILE_SITE_KEY": "0x4AAAAAAD33n0rHJcspIYG9",
         "SUPPORT_EMAIL": "info@pokector.com",

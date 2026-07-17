@@ -157,6 +157,9 @@ const ja: Dict = {
     addToWishlist: "ウィッシュリストに追加",
     priceDisclaimer:
       "表示される値は未鑑定カードの推定市場価格であり、実際の状態や取引条件に左右されるため、お手持ちの個体の正確な価値を反映しない場合があります。これは金融アドバイスではありません。",
+    buyOnEbay: "eBayで購入する",
+    ebayDisclosure:
+      "「eBayで購入する」はアフィリエイトリンクです。対象の購入により Pokector が手数料を得る場合がありますが、追加費用はかかりません。",
     historyVariantAria: "価格履歴のバリアント",
     historyTitle: "価格履歴 — {variant}",
     historyEmpty:

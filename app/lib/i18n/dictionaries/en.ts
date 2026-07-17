@@ -165,6 +165,9 @@ export const en = {
     addToWishlist: "Add to wishlist",
     priceDisclaimer:
       "Displayed values are estimated market prices for raw (ungraded) cards and may not reflect the exact value of your copy, which depends on its physical condition and actual sale conditions. This is not financial advice.",
+    buyOnEbay: "Buy on eBay",
+    ebayDisclosure:
+      "“Buy on eBay” is an affiliate link — Pokector may earn a commission from qualifying purchases, at no extra cost to you.",
     historyVariantAria: "Price history variant",
     historyTitle: "Price history — {variant}",
     historyEmpty:

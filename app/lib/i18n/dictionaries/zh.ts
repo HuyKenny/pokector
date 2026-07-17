@@ -153,6 +153,9 @@ const zh: Dict = {
     addToWishlist: "加入愿望单",
     priceDisclaimer:
       "所显示的数值是未评级卡牌的估算市场价格，可能无法反映你手中卡牌的确切价值，其取决于实体品相和实际成交条件。此内容不构成财务建议。",
+    buyOnEbay: "在 eBay 上购买",
+    ebayDisclosure:
+      "“在 eBay 上购买”是联盟推广链接——Pokector 可能从符合条件的购买中获得佣金，您无需支付额外费用。",
     historyVariantAria: "价格历史版本",
     historyTitle: "价格历史 — {variant}",
     historyEmpty:

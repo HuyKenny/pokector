@@ -158,6 +158,9 @@ const de: Dict = {
     addToWishlist: "Zur Wunschliste hinzufügen",
     priceDisclaimer:
       "Angezeigte Werte sind geschätzte Marktpreise für ungegradete Karten und spiegeln möglicherweise nicht den genauen Wert deines Exemplars wider, der vom physischen Zustand und den tatsächlichen Verkaufsbedingungen abhängt. Dies ist keine Finanzberatung.",
+    buyOnEbay: "Auf eBay kaufen",
+    ebayDisclosure:
+      "„Auf eBay kaufen“ ist ein Affiliate-Link – Pokector erhält ggf. eine Provision für qualifizierte Käufe, ohne Mehrkosten für dich.",
     historyVariantAria: "Variante der Preishistorie",
     historyTitle: "Preishistorie — {variant}",
     historyEmpty:

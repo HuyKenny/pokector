@@ -157,6 +157,9 @@ const cs: Dict = {
     addToWishlist: "Přidat do seznamu přání",
     priceDisclaimer:
       "Zobrazené hodnoty jsou odhadované tržní ceny pro negradované karty a nemusí odpovídat přesné hodnotě vašeho kusu, která závisí na jeho fyzickém stavu a skutečných podmínkách prodeje. Nejedná se o finanční poradenství.",
+    buyOnEbay: "Koupit na eBay",
+    ebayDisclosure:
+      "„Koupit na eBay“ je affiliate odkaz — Pokector může získat provizi z odpovídajících nákupů, bez příplatku pro tebe.",
     historyVariantAria: "Varianta historie cen",
     historyTitle: "Historie cen — {variant}",
     historyEmpty:
