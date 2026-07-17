@@ -10,8 +10,12 @@
  *      deployed environment exercises the nonce-based CSP path),
  *   3. no console/page errors.
  *
- * Requires puppeteer-core (available in the workspace root node_modules) and
- * system Chromium. Run from the workspace root: cd ~/ai && node pokector/scripts/smoke-live.mjs <url>
+ * Requires puppeteer-core (a devDependency of this package) and a system
+ * Chromium/Chrome binary. The binary path is picked up from $CHROME_PATH
+ * (set by the CI runner) and falls back to the Raspberry Pi's system
+ * Chromium at /usr/bin/chromium for local/manual runs.
+ *
+ *   node scripts/smoke-live.mjs https://pokector.com
  */
 import puppeteer from "puppeteer-core";
 
@@ -21,9 +25,10 @@ if (!base.startsWith("http")) {
   process.exit(1);
 }
 const target = `${base}/sets/pitch-black-me5`;
+const executablePath = process.env.CHROME_PATH || "/usr/bin/chromium";
 
 const browser = await puppeteer.launch({
-  executablePath: "/usr/bin/chromium",
+  executablePath,
   args: ["--no-sandbox", "--disable-gpu"],
 });
 const failures = [];
