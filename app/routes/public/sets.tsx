@@ -4,6 +4,10 @@ import type { Route } from "./+types/sets";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { listSets } from "~/lib/catalog/queries.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
+import { interpolate } from "~/lib/i18n/t";
 import { canonicalUrl, collectionPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
@@ -21,8 +25,9 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" };
 }
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ params: routeParams, request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
+  const locale = resolveLocale(routeParams.locale);
   const url = new URL(request.url);
   const params = {
     series: url.searchParams.get("series") ?? undefined,
@@ -34,21 +39,25 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     result,
     filtered: Boolean(params.series || params.sort),
+    locale,
+    t: getDict(locale).sets,
+    c: getDict(locale).common,
     appUrl: env.APP_URL,
     canonical: canonicalUrl(env.APP_URL, "/sets"),
   };
 }
 
 export default function Sets({ loaderData }: Route.ComponentProps) {
-  const { result, appUrl } = loaderData;
+  const { result, appUrl, t, c } = loaderData;
   const [searchParams] = useSearchParams();
+  const lp = useLocalePath();
 
   function pageLink(page: number): string {
     const next = new URLSearchParams(searchParams);
     if (page <= 1) next.delete("page");
     else next.set("page", String(page));
     const qs = next.toString();
-    return qs ? `/sets?${qs}` : "/sets";
+    return qs ? `${lp("/sets")}?${qs}` : lp("/sets");
   }
 
   return (
@@ -64,21 +73,21 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
         })}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">
-        <Link to="/" className="hover:text-fg">
-          Home
+        <Link to={lp("/")} className="hover:text-fg">
+          {c.home}
         </Link>
         <span aria-hidden="true"> / </span>
         <span aria-current="page" className="text-fg">
-          Sets
+          {t.breadcrumb}
         </span>
       </nav>
 
-      <h1 className="text-3xl font-bold text-fg">Pokémon TCG sets</h1>
+      <h1 className="text-3xl font-bold text-fg">{t.heading}</h1>
 
       <Form method="get" className="flex flex-wrap items-end gap-3">
         <div className="flex flex-col gap-1">
           <label htmlFor="series" className="text-sm font-medium text-fg">
-            Series
+            {t.seriesLabel}
           </label>
           <select
             id="series"
@@ -86,7 +95,7 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
             defaultValue={searchParams.get("series") ?? ""}
             className="min-h-11 rounded-lg border border-edge bg-surface px-3 text-fg"
           >
-            <option value="">All series</option>
+            <option value="">{t.seriesAll}</option>
             {result.seriesOptions.map((series) => (
               <option key={series} value={series}>
                 {series}
@@ -96,7 +105,7 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="sort" className="text-sm font-medium text-fg">
-            Sort by
+            {t.sortLabel}
           </label>
           <select
             id="sort"
@@ -104,33 +113,37 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
             defaultValue={searchParams.get("sort") ?? "release"}
             className="min-h-11 rounded-lg border border-edge bg-surface px-3 text-fg"
           >
-            <option value="release">Release date (newest)</option>
-            <option value="name">Name</option>
-            <option value="cards">Number of cards</option>
+            <option value="release">{t.sortRelease}</option>
+            <option value="name">{t.sortName}</option>
+            <option value="cards">{t.sortCards}</option>
           </select>
         </div>
         <button
           type="submit"
           className="min-h-11 rounded-lg bg-accent px-5 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
-          Apply
+          {c.apply}
         </button>
       </Form>
 
       <p className="text-sm text-fg-muted" role="status">
-        {result.total} sets · page {result.page} of {result.pageCount}
+        {interpolate(t.resultCount, {
+          count: result.total,
+          page: result.page,
+          pageCount: result.pageCount,
+        })}
       </p>
 
       {result.items.length === 0 ? (
         <div className="rounded-(--radius-card) border border-edge bg-surface p-10 text-center text-fg-muted">
-          The set catalog is being synchronized — check back shortly.
+          {t.empty}
         </div>
       ) : (
         <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {result.items.map((set) => (
             <li key={set.id}>
               <Link
-                to={`/sets/${set.slug}`}
+                to={lp(`/sets/${set.slug}`)}
                 className="flex h-full items-center gap-4 rounded-(--radius-card) border border-edge bg-surface p-4 hover:border-accent"
               >
                 {set.symbolUrl ? (
@@ -149,9 +162,10 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
                   <p className="truncate font-semibold text-fg">{set.name}</p>
                   <p className="truncate text-sm text-fg-muted">{set.series}</p>
                   <p className="text-xs text-fg-faint">
-                    {set.releaseDate ?? "Unknown release"} · {set.total ?? "?"} cards
+                    {set.releaseDate ?? t.unknownRelease} ·{" "}
+                    {interpolate(t.cardsCount, { count: set.total ?? "?" })}
                     {set.printedTotal && set.total && set.printedTotal !== set.total
-                      ? ` (${set.printedTotal} printed)`
+                      ? interpolate(t.printedSuffix, { count: set.printedTotal })
                       : ""}
                   </p>
                 </div>
@@ -162,24 +176,24 @@ export default function Sets({ loaderData }: Route.ComponentProps) {
       )}
 
       {result.pageCount > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center justify-center gap-2">
+        <nav aria-label={t.paginationAria} className="flex items-center justify-center gap-2">
           {result.page > 1 ? (
             <Link
               to={pageLink(result.page - 1)}
               className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
             >
-              ← Previous
+              {c.previous}
             </Link>
           ) : null}
           <span className="px-2 text-sm text-fg-muted">
-            Page {result.page} / {result.pageCount}
+            {interpolate(c.pageShort, { page: result.page, pageCount: result.pageCount })}
           </span>
           {result.page < result.pageCount ? (
             <Link
               to={pageLink(result.page + 1)}
               className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
             >
-              Next →
+              {c.next}
             </Link>
           ) : null}
         </nav>

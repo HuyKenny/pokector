@@ -1,46 +1,63 @@
-import { Form, Link, NavLink, Outlet, useNavigation } from "react-router";
+import { Form, Link, NavLink, Outlet, useLocation, useNavigation } from "react-router";
 
 import type { Route } from "./+types/layout";
 import { PokectorWordmark } from "~/components/brand";
 import { optionalUser } from "~/lib/auth/guards.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import {
+  LOCALE_NAMES,
+  LOCALES,
+  localePath,
+  resolveLocale,
+  stripLocalePrefix,
+} from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
 
-export async function loader({ request, context }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const session = await optionalUser(context, request);
-  return { signedIn: session !== null };
+  const locale = resolveLocale(params.locale);
+  const d = getDict(locale);
+  return { signedIn: session !== null, locale, t: d.layout };
 }
 
-const NAV = [
-  { to: "/cards", label: "Cards" },
-  { to: "/sets", label: "Sets" },
-  { to: "/price-movers", label: "Price movers" },
-  { to: "/blog", label: "Blog" },
-];
-
 export default function PublicLayout({ loaderData }: Route.ComponentProps) {
-  const { signedIn } = loaderData;
+  const { signedIn, locale, t } = loaderData;
   const navigation = useNavigation();
+  const lp = useLocalePath();
+  const location = useLocation();
+  // Unprefixed path so the language switcher can point at the same page in
+  // another locale (English-only pages 301 back to their root form — harmless).
+  const barePath = stripLocalePrefix(location.pathname);
+
+  const nav = [
+    { to: lp("/cards"), label: t.navCards },
+    { to: lp("/sets"), label: t.navSets },
+    { to: lp("/price-movers"), label: t.navPriceMovers },
+    { to: "/blog", label: t.navBlog }, // blog is English-only
+  ];
 
   return (
     <div className="flex min-h-screen flex-col">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-(color:--color-on-accent)"
+        className="sr-only focus:not-sr-only focus:absolute focus:start-2 focus:top-2 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-(color:--color-on-accent)"
       >
-        Skip to content
+        {t.skipToContent}
       </a>
       <header className="border-b border-edge bg-surface">
         <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <Link to="/" aria-label="Pokector home">
+          <Link to={lp("/")} aria-label={t.homeAria}>
             <PokectorWordmark className="h-8" />
           </Link>
           <nav
-            aria-label="Main"
+            aria-label={t.navMain}
             className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto"
           >
-            {NAV.map((item) => (
+            {nav.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
+                end={item.to === lp("/")}
                 className={({ isActive }) =>
                   `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
                     isActive ? "bg-accent-soft text-accent-strong" : "text-fg-muted hover:text-fg"
@@ -51,39 +68,40 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               </NavLink>
             ))}
           </nav>
-          <div className="ml-auto flex items-center gap-2">
-            <Form method="get" action="/cards" role="search" className="hidden md:block">
+          <div className="ms-auto flex items-center gap-2">
+            <Form method="get" action={lp("/cards")} role="search" className="hidden md:block">
               <label htmlFor="header-search" className="sr-only">
-                Search cards
+                {t.searchCards}
               </label>
               <input
                 id="header-search"
                 type="search"
                 name="q"
-                placeholder="Search cards…"
+                placeholder={t.searchCardsPlaceholder}
                 className="w-44 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint"
               />
             </Form>
+            <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
             {signedIn ? (
               <Link
                 to="/app"
                 className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
               >
-                My collection
+                {t.myCollection}
               </Link>
             ) : (
               <>
                 <Link
-                  to="/login"
+                  to={lp("/login")}
                   className="rounded-lg px-3 py-2 text-sm font-medium text-fg-muted hover:text-fg"
                 >
-                  Sign in
+                  {t.signIn}
                 </Link>
                 <Link
-                  to="/register"
+                  to={lp("/register")}
                   className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
                 >
-                  Get started
+                  {t.getStarted}
                 </Link>
               </>
             )}
@@ -102,41 +120,75 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
       <footer className="border-t border-edge bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 text-sm text-fg-muted">
           <div className="flex flex-wrap gap-x-8 gap-y-2">
+            {/* Footer targets (About, legal, blog, RSS) are English-only pages. */}
             <Link to="/about" className="hover:text-fg">
-              About
+              {t.footerAbout}
             </Link>
             <Link to="/methodology" className="hover:text-fg">
-              Data &amp; methodology
+              {t.footerMethodology}
             </Link>
             <Link to="/blog" className="hover:text-fg">
-              Blog
+              {t.footerBlog}
             </Link>
             <Link to="/contact" className="hover:text-fg">
-              Contact
+              {t.footerContact}
             </Link>
             <Link to="/privacy" className="hover:text-fg">
-              Privacy
+              {t.footerPrivacy}
             </Link>
             <Link to="/terms" className="hover:text-fg">
-              Terms
+              {t.footerTerms}
             </Link>
             <Link to="/disclaimer" className="hover:text-fg">
-              Disclaimer
+              {t.footerDisclaimer}
             </Link>
             <a href="/rss.xml" className="hover:text-fg">
-              RSS
+              {t.footerRss}
             </a>
           </div>
-          <p className="max-w-3xl text-xs text-fg-faint">
-            Pokector is an independent collection tracker and is not affiliated with, endorsed by,
-            sponsored by, or officially connected to Nintendo, The Pokémon Company, Game Freak,
-            Creatures, TCGplayer, Cardmarket, or the Pokémon TCG API. Pokémon and Pokémon character
-            names are trademarks of Nintendo. Card images and catalog data are provided by their
-            respective sources. Displayed prices are estimates for raw (ungraded) cards and are not
-            financial advice.
-          </p>
+          <p className="max-w-3xl text-xs text-fg-faint">{t.disclaimer}</p>
         </div>
       </footer>
     </div>
+  );
+}
+
+/** Native <details> disclosure — works without JS (SSR-friendly) and keeps the
+ * header light. Each entry links to the same page in the target locale. */
+function LanguageSwitcher({
+  current,
+  barePath,
+  label,
+}: {
+  current: (typeof LOCALES)[number];
+  barePath: string;
+  label: string;
+}) {
+  return (
+    <details className="relative">
+      <summary
+        aria-label={label}
+        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
+      >
+        <span aria-hidden="true">🌐</span>
+        <span className="uppercase">{current}</span>
+      </summary>
+      <ul className="absolute end-0 z-50 mt-1 max-h-80 w-40 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+        {LOCALES.map((l) => (
+          <li key={l}>
+            <a
+              href={localePath(l, barePath)}
+              hrefLang={l}
+              aria-current={l === current ? "true" : undefined}
+              className={`block px-3 py-2 text-sm hover:bg-surface-raised ${
+                l === current ? "font-semibold text-accent" : "text-fg"
+              }`}
+            >
+              {LOCALE_NAMES[l]}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </details>
   );
 }

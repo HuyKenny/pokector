@@ -6,6 +6,10 @@ import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
 import { computeSetProgress } from "~/lib/sets/progress.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
+import { interpolate } from "~/lib/i18n/t";
 import { formatMinor } from "~/lib/money/decimal";
 import {
   breadcrumbJsonLd,
@@ -46,6 +50,7 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
+  const locale = resolveLocale(params.locale);
   const data = await getSetBySlug(db, params.slug);
   if (!data) throw new Response("Set not found", { status: 404 });
 
@@ -53,6 +58,9 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const progress = session ? await computeSetProgress(db, session.user.id, data.set.id) : null;
 
   const payload = {
+    locale,
+    t: getDict(locale).setDetail,
+    c: getDict(locale).common,
     set: {
       id: data.set.id,
       slug: data.set.slug,
@@ -95,7 +103,12 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 const RARITY_GROUPS = ["Common", "Uncommon", "Rare"];
 
 export default function SetDetail({ loaderData }: Route.ComponentProps) {
-  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl } = loaderData;
+  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl, locale, t, c } =
+    loaderData;
+  const lp = useLocalePath();
+  const langTag = LANG_TAGS[locale];
+  const money = (minor: number, currency: "USD" | "EUR" = "USD") =>
+    formatMinor(minor, currency, langTag);
   const [searchParams, setSearchParams] = useSearchParams();
   const ownedFilter = searchParams.get("show"); // "owned" | "missing" | null
   const rarityFilter = searchParams.get("rarity");
@@ -146,12 +159,12 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
         ]}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">
-        <Link to="/" className="hover:text-fg">
-          Home
+        <Link to={lp("/")} className="hover:text-fg">
+          {c.home}
         </Link>
         <span aria-hidden="true"> / </span>
-        <Link to="/sets" className="hover:text-fg">
-          Sets
+        <Link to={lp("/sets")} className="hover:text-fg">
+          {t.breadcrumbSets}
         </Link>
         <span aria-hidden="true"> / </span>
         <span aria-current="page" className="text-fg">
@@ -171,24 +184,25 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
           </h1>
           <p className="text-fg-muted">
             {set.series}
-            {set.releaseDate ? ` · Released ${set.releaseDate}` : ""} · {set.total ?? "?"} cards
+            {set.releaseDate ? interpolate(t.released, { date: set.releaseDate }) : ""}
+            {interpolate(t.cardsCount, { count: set.total ?? "?" })}
             {set.printedTotal && set.total && set.printedTotal !== set.total
-              ? ` (${set.printedTotal} in printed set numbering)`
+              ? interpolate(t.printedSuffix, { count: set.printedTotal })
               : ""}
           </p>
           {estimatedValueMinor !== null ? (
             <p className="mt-1 text-sm text-fg-muted">
-              Estimated full-set market value:{" "}
-              <strong className="text-fg">{formatMinor(estimatedValueMinor)}</strong>{" "}
+              {t.estimatedValuePre}
+              <strong className="text-fg">{money(estimatedValueMinor)}</strong>{" "}
               <span className="text-fg-faint">
-                (sum of cheapest priced variant for {pricedCount} of {cards.length} cards; raw
-                cards)
+                {interpolate(t.estimatedValueNote, {
+                  priced: pricedCount,
+                  total: cards.length,
+                })}
               </span>
             </p>
           ) : (
-            <p className="mt-1 text-sm text-fg-faint">
-              Not enough price coverage yet to estimate a full-set value.
-            </p>
+            <p className="mt-1 text-sm text-fg-faint">{t.noValueCoverage}</p>
           )}
         </div>
       </div>
@@ -200,46 +214,46 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
           className="rounded-(--radius-card) border border-accent/40 bg-accent-soft p-5"
         >
           <h2 id="progress-heading" className="mb-2 font-semibold text-fg">
-            Your set completion
+            {t.completionHeading}
           </h2>
           <div
             role="progressbar"
             aria-valuenow={Math.round(progress.completionPercent)}
             aria-valuemin={0}
             aria-valuemax={100}
-            aria-label={`Set completion: ${progress.ownedCount} of ${progress.totalCount} cards`}
+            aria-label={interpolate(t.completionAria, {
+              owned: progress.ownedCount,
+              total: progress.totalCount,
+            })}
             className="mb-2 h-3 w-full overflow-hidden rounded-full bg-surface"
           >
             <div className="h-full bg-accent" style={{ width: `${progress.completionPercent}%` }} />
           </div>
           <p className="text-sm text-fg-muted">
-            <strong className="text-fg">{progress.ownedCount}</strong> owned ·{" "}
-            <strong className="text-fg">{progress.missingCount}</strong> missing ·{" "}
-            {progress.completionPercent.toFixed(1)}% complete
+            <strong className="text-fg">{progress.ownedCount}</strong> {t.owned} ·{" "}
+            <strong className="text-fg">{progress.missingCount}</strong> {t.missing} ·{" "}
+            {interpolate(t.complete, { percent: progress.completionPercent.toFixed(1) })}
             {progress.missingValueMinor !== null ? (
               <>
-                {" "}
-                · missing cards ≈{" "}
-                <strong className="text-fg">{formatMinor(progress.missingValueMinor)}</strong>
+                {t.missingValuePre}
+                <strong className="text-fg">{money(progress.missingValueMinor)}</strong>
                 <span className="text-fg-faint">
-                  {" "}
-                  ({progress.missingPricedCount}/{progress.missingCount} priced, cheapest variants)
+                  {interpolate(t.missingValueNote, {
+                    priced: progress.missingPricedCount,
+                    missing: progress.missingCount,
+                  })}
                 </span>
               </>
             ) : null}
           </p>
-          <p className="mt-1 text-xs text-fg-faint">
-            Standard checklist: a card counts as owned when you have at least one copy of any
-            variant. Variant-level checklists are estimated from available market data and may be
-            incomplete.
-          </p>
+          <p className="mt-1 text-xs text-fg-faint">{t.checklistNote}</p>
         </section>
       ) : (
         <p className="rounded-lg border border-edge bg-surface p-4 text-sm text-fg-muted">
-          <Link to="/login" className="text-accent hover:underline">
-            Sign in
-          </Link>{" "}
-          to see your completion progress for this set and the estimated cost of your missing cards.
+          <Link to={lp("/login")} className="text-accent hover:underline">
+            {c.signIn}
+          </Link>
+          {t.signInPre}
         </p>
       )}
 
@@ -254,17 +268,17 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
             <FilterChip
               active={ownedFilter === null}
               onClick={() => setFilter("show", null)}
-              label="All"
+              label={t.filterAll}
             />
             <FilterChip
               active={ownedFilter === "owned"}
               onClick={() => setFilter("show", "owned")}
-              label="Owned"
+              label={t.filterOwned}
             />
             <FilterChip
               active={ownedFilter === "missing"}
               onClick={() => setFilter("show", "missing")}
-              label="Missing"
+              label={t.filterMissing}
             />
             <span aria-hidden="true" className="mx-1 text-fg-faint">
               |
@@ -274,14 +288,20 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
         <FilterChip
           active={rarityFilter === null}
           onClick={() => setFilter("rarity", null)}
-          label="Any rarity"
+          label={t.filterAnyRarity}
         />
         {RARITY_GROUPS.map((rarity) => (
           <FilterChip
             key={rarity}
             active={rarityFilter === rarity}
             onClick={() => setFilter("rarity", rarity)}
-            label={rarity === "Rare" ? "Rare+" : rarity}
+            label={
+              rarity === "Rare"
+                ? t.filterRarePlus
+                : rarity === "Common"
+                  ? t.rarityCommon
+                  : t.rarityUncommon
+            }
           />
         ))}
         <span aria-hidden="true" className="mx-1 text-fg-faint">
@@ -290,37 +310,41 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
         <FilterChip
           active={typeFilter === null}
           onClick={() => setFilter("type", null)}
-          label="Any type"
+          label={t.filterAnyType}
         />
-        {["Pokémon", "Trainer", "Energy"].map((supertype) => (
+        {[
+          { value: "Pokémon", label: t.typePokemon },
+          { value: "Trainer", label: t.typeTrainer },
+          { value: "Energy", label: t.typeEnergy },
+        ].map((st) => (
           <FilterChip
-            key={supertype}
-            active={typeFilter === supertype}
-            onClick={() => setFilter("type", supertype)}
-            label={supertype}
+            key={st.value}
+            active={typeFilter === st.value}
+            onClick={() => setFilter("type", st.value)}
+            label={st.label}
           />
         ))}
       </div>
 
       {/* Card list */}
       <p className="text-sm text-fg-muted" role="status">
-        Showing {visibleCards.length} of {cards.length} cards
+        {interpolate(t.showingCount, { visible: visibleCards.length, total: cards.length })}
       </p>
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {visibleCards.map((card) => {
           const owned = ownedSet.has(card.id);
           return (
             <li key={card.id} className="relative">
-              <Link to={`/cards/${card.slug}`} className="group flex h-full flex-col gap-2">
+              <Link to={lp(`/cards/${card.slug}`)} className="group flex h-full flex-col gap-2">
                 {progress ? (
                   <span
-                    className={`absolute left-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                    className={`absolute start-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
                       owned
                         ? "bg-accent text-(color:--color-on-accent)"
                         : "bg-surface text-fg-muted border border-edge"
                     }`}
                   >
-                    {owned ? "Owned" : "Missing"}
+                    {owned ? t.badgeOwned : t.badgeMissing}
                   </span>
                 ) : null}
                 {card.imageSmallUrl ? (
@@ -334,7 +358,7 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
                   />
                 ) : (
                   <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint">
-                    No image
+                    {c.noImage}
                   </span>
                 )}
                 <div>
@@ -344,7 +368,7 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
                   <p className="text-xs text-fg-faint">
                     #{card.number}
                     {card.rarity ? ` · ${card.rarity}` : ""}
-                    {card.priceMinor !== null ? ` · ${formatMinor(card.priceMinor)}` : ""}
+                    {card.priceMinor !== null ? ` · ${money(card.priceMinor)}` : ""}
                   </p>
                 </div>
               </Link>

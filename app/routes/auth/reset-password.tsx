@@ -5,13 +5,25 @@ import type { Route } from "./+types/reset-password";
 import { PokectorWordmark } from "~/components/brand";
 import { Alert, Button, Card, Input } from "~/components/ui";
 import { authClient } from "~/lib/auth-client";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
 
-export function meta(_args: Route.MetaArgs) {
-  return [{ title: "Choose a new password — Pokector" }, { name: "robots", content: "noindex" }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: loaderData?.t.resetMetaTitle ?? "Choose a new password — Pokector" },
+    { name: "robots", content: "noindex" },
+  ];
 }
 
-export default function ResetPassword() {
+export function loader({ params }: Route.LoaderArgs) {
+  return { t: getDict(resolveLocale(params.locale)).auth };
+}
+
+export default function ResetPassword({ loaderData }: Route.ComponentProps) {
+  const { t } = loaderData;
   const navigate = useNavigate();
+  const lp = useLocalePath();
   const [searchParams] = useSearchParams();
   const token = searchParams.get("token");
   const [password, setPassword] = useState("");
@@ -24,34 +36,31 @@ export default function ResetPassword() {
     setError(null);
     if (!token) return;
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError(t.passwordsNoMatch);
       return;
     }
     setSubmitting(true);
     const { error: apiError } = await authClient.resetPassword({ newPassword: password, token });
     setSubmitting(false);
     if (apiError) {
-      setError("This reset link is invalid or has expired. Please request a new one.");
+      setError(t.resetInvalid);
       return;
     }
-    await navigate("/login", { replace: true });
+    await navigate(lp("/login"), { replace: true });
   }
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col justify-center gap-6 px-4 py-12">
-      <Link to="/" className="self-center">
+      <Link to={lp("/")} className="self-center">
         <PokectorWordmark className="h-9" />
       </Link>
       <Card>
-        <h1 className="mb-4 text-xl font-bold text-fg">Choose a new password</h1>
+        <h1 className="mb-4 text-xl font-bold text-fg">{t.resetHeading}</h1>
         {!token ? (
           <div className="flex flex-col gap-4">
-            <Alert tone="error">
-              This reset link is missing its token. Please use the link from your e-mail, or request
-              a new one.
-            </Alert>
-            <Link className="text-sm text-accent hover:underline" to="/forgot-password">
-              Request a new link
+            <Alert tone="error">{t.resetMissingToken}</Alert>
+            <Link className="text-sm text-accent hover:underline" to={lp("/forgot-password")}>
+              {t.requestNewLink}
             </Link>
           </div>
         ) : (
@@ -63,19 +72,19 @@ export default function ResetPassword() {
             ) : null}
             <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
               <Input
-                label="New password"
+                label={t.newPasswordLabel}
                 id="password"
                 type="password"
                 autoComplete="new-password"
                 required
                 minLength={8}
                 maxLength={128}
-                hint="At least 8 characters. All other sessions will be signed out."
+                hint={t.newPasswordHint}
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
               />
               <Input
-                label="Confirm new password"
+                label={t.confirmNewPasswordLabel}
                 id="confirm"
                 type="password"
                 autoComplete="new-password"
@@ -84,7 +93,7 @@ export default function ResetPassword() {
                 onChange={(e) => setConfirm(e.target.value)}
               />
               <Button type="submit" disabled={submitting}>
-                {submitting ? "Saving…" : "Set new password"}
+                {submitting ? t.saving : t.setNewPassword}
               </Button>
             </form>
           </>

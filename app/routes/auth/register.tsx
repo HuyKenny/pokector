@@ -8,22 +8,31 @@ import { Alert, Button, Card, Input } from "~/components/ui";
 import { authClient } from "~/lib/auth-client";
 import { captchaEnabled } from "~/lib/auth/captcha";
 import { getCloudflare } from "~/lib/context";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
 
-export function meta(_args: Route.MetaArgs) {
-  return [{ title: "Create account — Pokector" }, { name: "robots", content: "noindex" }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: loaderData?.t.registerMetaTitle ?? "Create account — Pokector" },
+    { name: "robots", content: "noindex" },
+  ];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
+export function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
+  const locale = resolveLocale(params.locale);
   return {
     siteKey: env.TURNSTILE_SITE_KEY,
     captchaRequired: captchaEnabled(env),
+    t: getDict(locale).auth,
   };
 }
 
 export default function Register({ loaderData }: Route.ComponentProps) {
-  const { siteKey, captchaRequired } = loaderData;
+  const { siteKey, captchaRequired, t } = loaderData;
   const navigate = useNavigate();
+  const lp = useLocalePath();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -36,15 +45,15 @@ export default function Register({ loaderData }: Route.ComponentProps) {
     event.preventDefault();
     setError(null);
     if (password !== confirm) {
-      setError("Passwords do not match.");
+      setError(t.passwordsNoMatch);
       return;
     }
     if (password.length < 8) {
-      setError("Password must be at least 8 characters long.");
+      setError(t.passwordTooShort);
       return;
     }
     if (captchaRequired && !captchaToken) {
-      setError("Please complete the human verification below.");
+      setError(t.verifyHuman);
       return;
     }
     setSubmitting(true);
@@ -57,9 +66,7 @@ export default function Register({ loaderData }: Route.ComponentProps) {
     setSubmitting(false);
     if (apiError) {
       setError(
-        apiError.status === 429
-          ? "Too many attempts. Please wait a minute and try again."
-          : (apiError.message ?? "Registration failed. Please try again."),
+        apiError.status === 429 ? t.tooManyAttempts : (apiError.message ?? t.registerFailed),
       );
       setCaptchaToken(null);
       return;
@@ -69,14 +76,12 @@ export default function Register({ loaderData }: Route.ComponentProps) {
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col justify-center gap-6 px-4 py-12">
-      <Link to="/" className="self-center">
+      <Link to={lp("/")} className="self-center">
         <PokectorWordmark className="h-9" />
       </Link>
       <Card>
-        <h1 className="mb-1 text-xl font-bold text-fg">Create your account</h1>
-        <p className="mb-4 text-sm text-fg-muted">
-          Track your collection, portfolio value, and set completion — free.
-        </p>
+        <h1 className="mb-1 text-xl font-bold text-fg">{t.registerHeading}</h1>
+        <p className="mb-4 text-sm text-fg-muted">{t.registerSubtitle}</p>
         {error ? (
           <div className="mb-4">
             <Alert tone="error">{error}</Alert>
@@ -84,7 +89,7 @@ export default function Register({ loaderData }: Route.ComponentProps) {
         ) : null}
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <Input
-            label="Display name"
+            label={t.displayNameLabel}
             id="name"
             autoComplete="nickname"
             required
@@ -93,7 +98,7 @@ export default function Register({ loaderData }: Route.ComponentProps) {
             onChange={(e) => setName(e.target.value)}
           />
           <Input
-            label="E-mail"
+            label={t.emailLabel}
             id="email"
             type="email"
             autoComplete="email"
@@ -102,19 +107,19 @@ export default function Register({ loaderData }: Route.ComponentProps) {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Input
-            label="Password"
+            label={t.passwordLabel}
             id="password"
             type="password"
             autoComplete="new-password"
             required
             minLength={8}
             maxLength={128}
-            hint="At least 8 characters."
+            hint={t.passwordHint8}
             value={password}
             onChange={(e) => setPassword(e.target.value)}
           />
           <Input
-            label="Confirm password"
+            label={t.confirmPasswordLabel}
             id="confirm"
             type="password"
             autoComplete="new-password"
@@ -124,23 +129,23 @@ export default function Register({ loaderData }: Route.ComponentProps) {
           />
           {captchaRequired ? <Turnstile siteKey={siteKey} onToken={setCaptchaToken} /> : null}
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Creating account…" : "Create account"}
+            {submitting ? t.creatingAccount : t.createAccountButton}
           </Button>
         </form>
         <p className="mt-4 text-sm text-fg-muted">
-          Already have an account?{" "}
-          <Link className="text-accent hover:underline" to="/login">
-            Sign in
+          {t.alreadyHaveAccount}
+          <Link className="text-accent hover:underline" to={lp("/login")}>
+            {t.signInHeading}
           </Link>
         </p>
         <p className="mt-4 text-xs text-fg-faint">
-          By creating an account you agree to the{" "}
+          {t.byCreatingPre}
           <Link to="/terms" className="underline">
-            Terms of Service
-          </Link>{" "}
-          and{" "}
+            {t.termsOfService}
+          </Link>
+          {t.and}
           <Link to="/privacy" className="underline">
-            Privacy Policy
+            {t.privacyPolicy}
           </Link>
           .
         </p>

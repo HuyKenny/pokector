@@ -4,6 +4,10 @@ import type { Route } from "./+types/home";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getHomepageData, getPriceMovers } from "~/lib/catalog/queries.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
+import { interpolate } from "~/lib/i18n/t";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
 import { canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
 
@@ -21,9 +25,10 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" };
 }
 
-export async function loader({ context }: Route.LoaderArgs) {
+export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
+  const locale = resolveLocale(params.locale);
   const [{ popularSets, recentCards }, moversUp, moversDown] = await Promise.all([
     getHomepageData(db),
     getPriceMovers(db, 7, "up", 4),
@@ -35,6 +40,8 @@ export async function loader({ context }: Route.LoaderArgs) {
     .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
     .slice(0, 6);
   return {
+    locale,
+    t: getDict(locale).home,
     canonical: canonicalUrl(env.APP_URL, "/"),
     appUrl: env.APP_URL,
     popularSets,
@@ -43,27 +50,16 @@ export async function loader({ context }: Route.LoaderArgs) {
   };
 }
 
-const FEATURES = [
-  {
-    title: "Know what your collection is worth",
-    body: "Every card you track is valued with current TCGplayer market estimates in USD (Cardmarket EUR shown alongside where available). Coverage is always transparent — unpriced cards are labeled, never counted as zero.",
-  },
-  {
-    title: "Watch value over time",
-    body: "Pokector records real price observations from the day you start tracking and builds your portfolio history from them. No backfilled or invented data — your chart starts when you do.",
-  },
-  {
-    title: "Complete your sets",
-    body: "Automatic checklists show what you own, what's missing, and roughly what the missing cards would cost — for every set in the catalog.",
-  },
-  {
-    title: "Organize like a binder",
-    body: "Arrange your cards into visual 9-pocket binder pages, keep binders private, or share them with a link.",
-  },
-];
-
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { popularSets, recentCards, appUrl, tickerMovers } = loaderData;
+  const { popularSets, recentCards, appUrl, tickerMovers, locale, t } = loaderData;
+  const lp = useLocalePath();
+  const langTag = LANG_TAGS[locale];
+  const features = [
+    { title: t.feature1Title, body: t.feature1Body },
+    { title: t.feature2Title, body: t.feature2Body },
+    { title: t.feature3Title, body: t.feature3Body },
+    { title: t.feature4Title, body: t.feature4Body },
+  ];
 
   return (
     <div className="flex flex-col gap-16">
@@ -109,60 +105,62 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           />
         </svg>
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-fg sm:text-5xl">
-          Track every card <span className="text-accent">like an asset</span>.
+          {t.heroTitlePre} <span className="text-accent">{t.heroTitleAccent}</span>.
         </h1>
-        <p className="max-w-2xl text-lg text-fg-muted">
-          Your Pokémon TCG collection as a portfolio: live TCGplayer market values, real price
-          history, profit &amp; loss — honest numbers, no hype.
-        </p>
-        <Form method="get" action="/cards" role="search" className="flex w-full max-w-xl gap-2">
+        <p className="max-w-2xl text-lg text-fg-muted">{t.heroSubtitle}</p>
+        <Form
+          method="get"
+          action={lp("/cards")}
+          role="search"
+          className="flex w-full max-w-xl gap-2"
+        >
           <label htmlFor="hero-search" className="sr-only">
-            Search the card catalog
+            {t.heroSearchLabel}
           </label>
           <input
             id="hero-search"
             type="search"
             name="q"
-            placeholder="Search for a card, e.g. Charizard…"
+            placeholder={t.heroSearchPlaceholder}
             className="min-h-12 flex-1 rounded-xl border border-edge bg-surface px-4 text-fg placeholder:text-fg-faint"
           />
           <button
             type="submit"
             className="min-h-12 rounded-xl bg-accent px-6 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
           >
-            Search
+            {t.heroSearchButton}
           </button>
         </Form>
         <div className="flex gap-3">
           <Link
-            to="/register"
+            to={lp("/register")}
             className="rounded-xl bg-accent px-6 py-3 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
           >
-            Start tracking free
+            {t.ctaStartTracking}
           </Link>
           <Link
-            to="/cards"
+            to={lp("/cards")}
             className="rounded-xl border border-edge bg-surface px-6 py-3 font-medium text-fg hover:bg-surface-raised"
           >
-            Browse cards
+            {t.ctaBrowseCards}
           </Link>
         </div>
       </section>
 
       {/* Market ticker — only when real tracked history produced movers. */}
       {tickerMovers.length > 0 ? (
-        <section aria-label="Biggest 7-day price moves" className="-mt-8">
+        <section aria-label={t.tickerAria} className="-mt-8">
           <div className="flex items-center justify-between gap-4 border-y border-edge py-3">
             <ul className="flex min-w-0 flex-1 gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none]">
               {tickerMovers.map((mover) => (
                 <li key={`${mover.cardId}-${mover.variant}`} className="shrink-0">
                   <Link
-                    to={`/cards/${mover.slug}`}
+                    to={lp(`/cards/${mover.slug}`)}
                     className="flex items-baseline gap-2 text-sm hover:text-fg"
                   >
                     <span className="max-w-40 truncate font-medium text-fg">{mover.name}</span>
                     <span className="font-mono text-xs tabular-nums text-fg-muted">
-                      {formatMinor(mover.currentMinor)}
+                      {formatMinor(mover.currentMinor, "USD", langTag)}
                     </span>
                     <span
                       className={`font-mono text-xs font-semibold tabular-nums ${
@@ -176,10 +174,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
               ))}
             </ul>
             <Link
-              to="/price-movers"
+              to={lp("/price-movers")}
               className="shrink-0 text-sm font-medium text-accent hover:underline"
             >
-              All movers →
+              {t.tickerAllMovers}
             </Link>
           </div>
         </section>
@@ -188,10 +186,10 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* Features */}
       <section aria-labelledby="features-heading">
         <h2 id="features-heading" className="mb-6 text-2xl font-bold text-fg">
-          Built for collectors, not speculators
+          {t.featuresHeading}
         </h2>
         <div className="grid gap-6 sm:grid-cols-2">
-          {FEATURES.map((feature) => (
+          {features.map((feature) => (
             <div
               key={feature.title}
               className="rounded-(--radius-card) border border-edge bg-surface p-6"
@@ -207,22 +205,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       <section aria-labelledby="sets-heading">
         <div className="mb-6 flex items-baseline justify-between">
           <h2 id="sets-heading" className="text-2xl font-bold text-fg">
-            Latest sets
+            {t.latestSetsHeading}
           </h2>
-          <Link to="/sets" className="text-sm font-medium text-accent hover:underline">
-            All sets →
+          <Link to={lp("/sets")} className="text-sm font-medium text-accent hover:underline">
+            {t.allSets}
           </Link>
         </div>
         {popularSets.length === 0 ? (
           <p className="rounded-lg border border-edge bg-surface p-6 text-fg-muted">
-            The catalog is being synchronized. Check back shortly.
+            {t.setsEmpty}
           </p>
         ) : (
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
             {popularSets.map((set) => (
               <li key={set.id}>
                 <Link
-                  to={`/sets/${set.slug}`}
+                  to={lp(`/sets/${set.slug}`)}
                   className="flex h-full flex-col items-center gap-3 rounded-(--radius-card) border border-edge bg-surface p-4 text-center hover:border-accent"
                 >
                   {set.logoUrl ? (
@@ -238,7 +236,9 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     </span>
                   )}
                   <span className="text-sm font-medium text-fg">{set.name}</span>
-                  <span className="text-xs text-fg-faint">{set.total ?? "?"} cards</span>
+                  <span className="text-xs text-fg-faint">
+                    {interpolate(t.cardsCount, { count: set.total ?? "?" })}
+                  </span>
                 </Link>
               </li>
             ))}
@@ -249,17 +249,17 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       {/* Recently updated cards */}
       <section aria-labelledby="recent-heading">
         <h2 id="recent-heading" className="mb-6 text-2xl font-bold text-fg">
-          Recently updated cards
+          {t.recentCardsHeading}
         </h2>
         {recentCards.length === 0 ? (
           <p className="rounded-lg border border-edge bg-surface p-6 text-fg-muted">
-            Card data will appear here after the first catalog synchronization.
+            {t.recentCardsEmpty}
           </p>
         ) : (
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
             {recentCards.map((card) => (
               <li key={card.id}>
-                <Link to={`/cards/${card.slug}`} className="group flex flex-col gap-2">
+                <Link to={lp(`/cards/${card.slug}`)} className="group flex flex-col gap-2">
                   {card.imageSmallUrl ? (
                     <img
                       src={card.imageSmallUrl}
@@ -269,7 +269,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
                     />
                   ) : (
                     <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-fg-faint">
-                      No image
+                      {t.noImage}
                     </span>
                   )}
                   <span className="truncate text-xs font-medium text-fg">{card.name}</span>
@@ -286,25 +286,22 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         className="rounded-(--radius-card) border border-edge bg-surface p-8"
       >
         <h2 id="valuation-heading" className="mb-4 text-2xl font-bold text-fg">
-          How valuation works
+          {t.valuationHeading}
         </h2>
         <div className="grid gap-6 text-sm text-fg-muted md:grid-cols-3">
           <p>
-            <strong className="text-fg">Market-based estimates.</strong> Card values use current
-            TCGplayer prices (market price where available, otherwise mid or low) per printing
-            variant — normal, holofoil, reverse holofoil, and first edition.
+            <strong className="text-fg">{t.valuation1Lead}</strong>
+            {t.valuation1Body}
           </p>
           <p>
-            <strong className="text-fg">Raw cards only.</strong> Estimates describe ungraded,
-            near-mint-market pricing. Your card's actual condition may change what it would really
-            sell for — condition is tracked, but never silently changes the estimate.
+            <strong className="text-fg">{t.valuation2Lead}</strong>
+            {t.valuation2Body}
           </p>
           <p>
-            <strong className="text-fg">Honest history.</strong> Price history starts when Pokector
-            first observes a card, and portfolio history starts when you do. Missing prices are
-            shown as missing — never as zero.{" "}
+            <strong className="text-fg">{t.valuation3Lead}</strong>
+            {t.valuation3Body}
             <Link to="/methodology" className="text-accent hover:underline">
-              Read the full methodology
+              {t.valuationReadMethodology}
             </Link>
             .
           </p>
@@ -313,16 +310,13 @@ export default function Home({ loaderData }: Route.ComponentProps) {
 
       {/* CTA */}
       <section className="flex flex-col items-center gap-4 rounded-(--radius-card) bg-accent-soft p-10 text-center">
-        <h2 className="text-2xl font-bold text-fg">Ready to see what your binder is worth?</h2>
-        <p className="max-w-xl text-fg-muted">
-          Create a free account, add your first cards in minutes, and let Pokector keep score from
-          here on.
-        </p>
+        <h2 className="text-2xl font-bold text-fg">{t.finalCtaHeading}</h2>
+        <p className="max-w-xl text-fg-muted">{t.finalCtaBody}</p>
         <Link
-          to="/register"
+          to={lp("/register")}
           className="rounded-xl bg-accent px-8 py-3 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
-          Create free account
+          {t.finalCtaButton}
         </Link>
       </section>
     </div>

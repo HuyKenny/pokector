@@ -8,16 +8,24 @@ import { Alert, Button, Card, Input } from "~/components/ui";
 import { authClient } from "~/lib/auth-client";
 import { captchaEnabled } from "~/lib/auth/captcha";
 import { getCloudflare } from "~/lib/context";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
 
-export function meta(_args: Route.MetaArgs) {
-  return [{ title: "Sign in — Pokector" }, { name: "robots", content: "noindex" }];
+export function meta({ loaderData }: Route.MetaArgs) {
+  return [
+    { title: loaderData?.t.signInMetaTitle ?? "Sign in — Pokector" },
+    { name: "robots", content: "noindex" },
+  ];
 }
 
-export function loader({ context }: Route.LoaderArgs) {
+export function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
+  const locale = resolveLocale(params.locale);
   return {
     siteKey: env.TURNSTILE_SITE_KEY,
     captchaRequired: captchaEnabled(env),
+    t: getDict(locale).auth,
   };
 }
 
@@ -28,8 +36,9 @@ function safeReturnTo(raw: string | null): string {
 }
 
 export default function Login({ loaderData }: Route.ComponentProps) {
-  const { siteKey, captchaRequired } = loaderData;
+  const { siteKey, captchaRequired, t } = loaderData;
   const navigate = useNavigate();
+  const lp = useLocalePath();
   const [searchParams] = useSearchParams();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -41,7 +50,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
     event.preventDefault();
     setError(null);
     if (captchaRequired && !captchaToken) {
-      setError("Please complete the human verification below.");
+      setError(t.verifyHuman);
       return;
     }
     setSubmitting(true);
@@ -53,11 +62,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
     );
     setSubmitting(false);
     if (apiError) {
-      setError(
-        apiError.status === 429
-          ? "Too many attempts. Please wait a minute and try again."
-          : "Invalid e-mail or password.",
-      );
+      setError(apiError.status === 429 ? t.tooManyAttempts : t.signInInvalid);
       setCaptchaToken(null);
       return;
     }
@@ -66,11 +71,11 @@ export default function Login({ loaderData }: Route.ComponentProps) {
 
   return (
     <main className="mx-auto flex min-h-[80vh] w-full max-w-md flex-col justify-center gap-6 px-4 py-12">
-      <Link to="/" className="self-center">
+      <Link to={lp("/")} className="self-center">
         <PokectorWordmark className="h-9" />
       </Link>
       <Card>
-        <h1 className="mb-4 text-xl font-bold text-fg">Sign in</h1>
+        <h1 className="mb-4 text-xl font-bold text-fg">{t.signInHeading}</h1>
         {error ? (
           <div className="mb-4">
             <Alert tone="error">{error}</Alert>
@@ -78,7 +83,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
         ) : null}
         <form onSubmit={(e) => void handleSubmit(e)} className="flex flex-col gap-4">
           <Input
-            label="E-mail"
+            label={t.emailLabel}
             id="email"
             type="email"
             autoComplete="email"
@@ -87,7 +92,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
             onChange={(e) => setEmail(e.target.value)}
           />
           <Input
-            label="Password"
+            label={t.passwordLabel}
             id="password"
             type="password"
             autoComplete="current-password"
@@ -97,17 +102,17 @@ export default function Login({ loaderData }: Route.ComponentProps) {
           />
           {captchaRequired ? <Turnstile siteKey={siteKey} onToken={setCaptchaToken} /> : null}
           <Button type="submit" disabled={submitting}>
-            {submitting ? "Signing in…" : "Sign in"}
+            {submitting ? t.signingIn : t.signInButton}
           </Button>
         </form>
         <div className="mt-4 flex flex-col gap-1 text-sm text-fg-muted">
-          <Link className="text-accent hover:underline" to="/forgot-password">
-            Forgot your password?
+          <Link className="text-accent hover:underline" to={lp("/forgot-password")}>
+            {t.forgotPassword}
           </Link>
           <span>
-            New to Pokector?{" "}
-            <Link className="text-accent hover:underline" to="/register">
-              Create an account
+            {t.newToPokector}
+            <Link className="text-accent hover:underline" to={lp("/register")}>
+              {t.createAnAccount}
             </Link>
           </span>
         </div>

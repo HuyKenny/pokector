@@ -16,6 +16,10 @@ import {
   getCardBySlug,
   getCardPriceHistory,
 } from "~/lib/catalog/queries.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { LANG_TAGS, resolveLocale } from "~/lib/i18n/locales";
+import { useLocalePath } from "~/lib/i18n/react";
+import { interpolate } from "~/lib/i18n/t";
 import { formatMinor } from "~/lib/money/decimal";
 import { breadcrumbJsonLd, canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
 
@@ -46,6 +50,7 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env, ctx } = getCloudflare(context);
   const db = createDb(env.DB);
+  const locale = resolveLocale(params.locale);
   const detail = await getCardBySlug(db, params.slug);
   if (!detail) {
     throw new Response("Card not found", { status: 404 });
@@ -66,22 +71,31 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     detail,
     history,
     headlinePriceMinor,
+    locale,
+    t: getDict(locale).cardDetail,
+    c: getDict(locale).common,
     canonical: canonicalUrl(env.APP_URL, `/cards/${detail.card.slug}`),
     appUrl: env.APP_URL,
   };
 }
 
-const VARIANT_LABELS: Record<string, string> = {
-  normal: "Normal",
-  holofoil: "Holofoil",
-  reverseHolofoil: "Reverse Holofoil",
-  firstEditionNormal: "1st Edition",
-  firstEditionHolofoil: "1st Edition Holofoil",
+/** Variant key → dictionary key. Values are localized in the component. */
+const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"]> = {
+  normal: "variantNormal",
+  holofoil: "variantHolofoil",
+  reverseHolofoil: "variantReverseHolofoil",
+  firstEditionNormal: "variantFirstEdition",
+  firstEditionHolofoil: "variantFirstEditionHolofoil",
 };
 
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
-  const { detail, history, appUrl } = loaderData;
+  const { detail, history, appUrl, locale, t, c } = loaderData;
   const { card, set, prices, related, trackingSince } = detail;
+  const lp = useLocalePath();
+  const langTag = LANG_TAGS[locale];
+  const money = (minor: number | null, currency: "USD" | "EUR" = "USD") =>
+    formatMinor(minor, currency, langTag);
+  const variantLabel = (v: string) => (VARIANT_KEYS[v] ? t[VARIANT_KEYS[v]] : v);
   const [range, setRange] = useState<ChartRange>("MAX");
   const fetcher = useFetcher();
 
@@ -115,15 +129,15 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
         ]}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">
-        <Link to="/" className="hover:text-fg">
-          Home
+        <Link to={lp("/")} className="hover:text-fg">
+          {c.home}
         </Link>
         <span aria-hidden="true"> / </span>
-        <Link to="/cards" className="hover:text-fg">
-          Cards
+        <Link to={lp("/cards")} className="hover:text-fg">
+          {t.breadcrumbCards}
         </Link>
         <span aria-hidden="true"> / </span>
-        <Link to={`/sets/${set.slug}`} className="hover:text-fg">
+        <Link to={lp(`/sets/${set.slug}`)} className="hover:text-fg">
           {set.name}
         </Link>
         <span aria-hidden="true"> / </span>
@@ -143,7 +157,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             />
           ) : (
             <div className="flex aspect-[63/88] items-center justify-center rounded-xl border border-edge bg-surface-raised text-fg-faint">
-              No image available
+              {c.noImage}
             </div>
           )}
         </div>
@@ -153,7 +167,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
           <div>
             <h1 className="text-3xl font-bold text-fg">{card.name}</h1>
             <p className="text-fg-muted">
-              <Link to={`/sets/${set.slug}`} className="text-accent hover:underline">
+              <Link to={lp(`/sets/${set.slug}`)} className="text-accent hover:underline">
                 {set.name}
               </Link>{" "}
               · #{card.number}
@@ -162,14 +176,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
           </div>
 
           <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
-            {card.supertype ? <Fact label="Card type" value={card.supertype} /> : null}
-            {subtypes.length ? <Fact label="Subtypes" value={subtypes.join(", ")} /> : null}
-            {types.length ? <Fact label="Energy type" value={types.join(", ")} /> : null}
-            {card.hp ? <Fact label="HP" value={String(card.hp)} /> : null}
-            {card.artist ? <Fact label="Artist" value={card.artist} /> : null}
-            {set.releaseDate ? <Fact label="Set released" value={set.releaseDate} /> : null}
+            {card.supertype ? <Fact label={t.factCardType} value={card.supertype} /> : null}
+            {subtypes.length ? <Fact label={t.factSubtypes} value={subtypes.join(", ")} /> : null}
+            {types.length ? <Fact label={t.factEnergyType} value={types.join(", ")} /> : null}
+            {card.hp ? <Fact label={t.factHp} value={String(card.hp)} /> : null}
+            {card.artist ? <Fact label={t.factArtist} value={card.artist} /> : null}
+            {set.releaseDate ? <Fact label={t.factSetReleased} value={set.releaseDate} /> : null}
             {card.regulationMark ? (
-              <Fact label="Regulation mark" value={card.regulationMark} />
+              <Fact label={t.factRegulationMark} value={card.regulationMark} />
             ) : null}
           </dl>
 
@@ -179,47 +193,44 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             className="rounded-(--radius-card) border border-edge bg-surface p-5"
           >
             <h2 id="prices-heading" className="mb-3 font-semibold text-fg">
-              Current market prices (USD)
+              {t.pricesHeading}
             </h2>
             {tcgplayer.length === 0 ? (
-              <p className="text-sm text-fg-muted">
-                No market price is currently available for this card. It stays unpriced — Pokector
-                never substitutes a guess.
-              </p>
+              <p className="text-sm text-fg-muted">{t.pricesEmpty}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-left text-sm">
+                <table className="w-full text-start text-sm">
                   <thead>
                     <tr className="border-b border-edge text-fg-muted">
-                      <th scope="col" className="py-2 pr-4">
-                        Variant
+                      <th scope="col" className="py-2 pe-4">
+                        {t.colVariant}
                       </th>
-                      <th scope="col" className="py-2 pr-4">
-                        Market est.
+                      <th scope="col" className="py-2 pe-4">
+                        {t.colMarket}
                       </th>
-                      <th scope="col" className="py-2 pr-4">
-                        Low
+                      <th scope="col" className="py-2 pe-4">
+                        {t.colLow}
                       </th>
-                      <th scope="col" className="py-2 pr-4">
-                        Mid
+                      <th scope="col" className="py-2 pe-4">
+                        {t.colMid}
                       </th>
                       <th scope="col" className="py-2">
-                        High
+                        {t.colHigh}
                       </th>
                     </tr>
                   </thead>
                   <tbody>
                     {tcgplayer.map((price) => (
                       <tr key={price.variant} className="border-b border-edge/50">
-                        <th scope="row" className="py-2 pr-4 font-medium text-fg">
-                          {VARIANT_LABELS[price.variant] ?? price.variant}
+                        <th scope="row" className="py-2 pe-4 font-medium text-fg">
+                          {variantLabel(price.variant)}
                         </th>
-                        <td className="py-2 pr-4 font-semibold text-fg">
-                          {formatMinor(price.normalizedPriceMinor)}
+                        <td className="py-2 pe-4 font-semibold text-fg">
+                          {money(price.normalizedPriceMinor)}
                         </td>
-                        <td className="py-2 pr-4">{formatMinor(price.lowMinor)}</td>
-                        <td className="py-2 pr-4">{formatMinor(price.midMinor)}</td>
-                        <td className="py-2">{formatMinor(price.highMinor)}</td>
+                        <td className="py-2 pe-4">{money(price.lowMinor)}</td>
+                        <td className="py-2 pe-4">{money(price.midMinor)}</td>
+                        <td className="py-2">{money(price.highMinor)}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -227,11 +238,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               </div>
             )}
             <p className="mt-3 text-xs text-fg-faint">
-              Source: TCGplayer price data
-              {tcgplayer[0]?.sourceUpdatedAt ? `, updated ${tcgplayer[0].sourceUpdatedAt}` : ""}.
+              {t.sourceTcgplayer}
+              {tcgplayer[0]?.sourceUpdatedAt
+                ? interpolate(t.sourceUpdated, { date: tcgplayer[0].sourceUpdatedAt })
+                : ""}
+              .
               {trackingSince
-                ? ` Pokector has tracked this card since ${trackingSince}.`
-                : " Pokector price tracking starts with the first observation."}
+                ? interpolate(t.trackedSince, { date: trackingSince })
+                : t.trackingStarts}
               {card.tcgplayerUrl ? (
                 <>
                   {" "}
@@ -241,15 +255,19 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                     target="_blank"
                     className="text-accent hover:underline"
                   >
-                    View on TCGplayer ↗
+                    {t.viewOnTcgplayer}
                   </a>
                 </>
               ) : null}
             </p>
             {cardmarket.length > 0 ? (
               <p className="mt-2 text-xs text-fg-muted">
-                Cardmarket (EUR): {formatMinor(cardmarket[0].normalizedPriceMinor, "EUR")} trend
-                {cardmarket[0].sourceUpdatedAt ? `, updated ${cardmarket[0].sourceUpdatedAt}` : ""}
+                {interpolate(t.cardmarketTrend, {
+                  price: money(cardmarket[0].normalizedPriceMinor, "EUR"),
+                })}
+                {cardmarket[0].sourceUpdatedAt
+                  ? interpolate(t.sourceUpdated, { date: cardmarket[0].sourceUpdatedAt })
+                  : ""}
                 {card.cardmarketUrl ? (
                   <>
                     {" "}
@@ -259,7 +277,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                       target="_blank"
                       className="text-accent hover:underline"
                     >
-                      View on Cardmarket ↗
+                      {t.viewOnCardmarket}
                     </a>
                   </>
                 ) : null}
@@ -275,7 +293,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 type="submit"
                 className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
               >
-                Add to collection
+                {t.addToCollection}
               </button>
             </fetcher.Form>
             <fetcher.Form method="post" action="/api/v1/wishlist/quick-add">
@@ -284,7 +302,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 type="submit"
                 className="min-h-11 rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
               >
-                Add to wishlist
+                {t.addToWishlist}
               </button>
             </fetcher.Form>
           </div>
@@ -294,18 +312,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             </p>
           ) : null}
 
-          <p className="text-xs text-fg-faint">
-            Displayed values are estimated market prices for raw (ungraded) cards and may not
-            reflect the exact value of your copy, which depends on its physical condition and actual
-            sale conditions. This is not financial advice.
-          </p>
+          <p className="text-xs text-fg-faint">{t.priceDisclaimer}</p>
         </div>
       </div>
 
       {/* Price history */}
       <section className="rounded-(--radius-card) border border-edge bg-surface p-5">
         {availableVariants.length > 1 ? (
-          <div className="mb-3 flex gap-1" role="group" aria-label="Price history variant">
+          <div className="mb-3 flex gap-1" role="group" aria-label={t.historyVariantAria}>
             {availableVariants.map((variant) => (
               <button
                 key={variant}
@@ -318,21 +332,19 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                     : "border border-edge text-fg-muted"
                 }`}
               >
-                {VARIANT_LABELS[variant] ?? variant}
+                {variantLabel(variant)}
               </button>
             ))}
           </div>
         ) : null}
         <HistoryChart
-          title={`Price history — ${VARIANT_LABELS[chartVariant] ?? chartVariant}`}
+          title={interpolate(t.historyTitle, { variant: variantLabel(chartVariant) })}
           points={chartPoints}
           range={range}
           onRangeChange={setRange}
-          emptyMessage="No price history yet. Pokector records real observations only — tracking begins once this card is in a collection, wishlist, or viewed regularly."
+          emptyMessage={t.historyEmpty}
           startNote={
-            trackingSince
-              ? `Tracking since ${trackingSince}. Values between observations carry the last known price forward.`
-              : null
+            trackingSince ? interpolate(t.historyStartNote, { date: trackingSince }) : null
           }
         />
       </section>
@@ -341,12 +353,12 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
       {related.length > 0 ? (
         <section aria-labelledby="related-heading">
           <h2 id="related-heading" className="mb-4 text-xl font-bold text-fg">
-            More from {set.name}
+            {interpolate(t.relatedHeading, { setName: set.name })}
           </h2>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
             {related.map((rel) => (
               <li key={rel.id}>
-                <Link to={`/cards/${rel.slug}`} className="group flex flex-col gap-2">
+                <Link to={lp(`/cards/${rel.slug}`)} className="group flex flex-col gap-2">
                   {rel.imageSmallUrl ? (
                     <img
                       src={rel.imageSmallUrl}
@@ -356,7 +368,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                     />
                   ) : (
                     <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint">
-                      No image
+                      {c.noImage}
                     </span>
                   )}
                   <span className="truncate text-xs font-medium text-fg">{rel.name}</span>

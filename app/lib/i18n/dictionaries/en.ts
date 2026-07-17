@@ -20,6 +20,7 @@ export const en = {
     apply: "Apply",
     noImage: "No image",
     any: "Any",
+    signIn: "Sign in",
   },
 
   layout: {
@@ -78,6 +79,8 @@ export const en = {
       "Arrange your cards into visual 9-pocket binder pages, keep binders private, or share them with a link.",
     latestSetsHeading: "Latest sets",
     allSets: "All sets →",
+    cardsCount: "{count} cards",
+    noImage: "No image",
     setsEmpty: "The catalog is being synchronized. Check back shortly.",
     recentCardsHeading: "Recently updated cards",
     recentCardsEmpty: "Card data will appear here after the first catalog synchronization.",
