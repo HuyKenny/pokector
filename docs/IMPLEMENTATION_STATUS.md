@@ -82,10 +82,13 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 6 — Collection & portfolio
 
-- [ ] Collection CRUD + bulk + filters + table/grid
-- [ ] Portfolio calculations (integer minor units, coverage rules)
-- [ ] Daily snapshots (idempotent)
-- [ ] Dashboard + Chart.js charts (accessible)
+- [x] Collection repository (ownership enforced in EVERY query), entry limits, tracked-count + progress-cache maintenance on writes
+- [x] /app/collection: add (catalog search dialog w/ evidence-based variant options), inline edit, delete + bulk select/edit/delete, filters (search/variant/condition/unpriced), sorts, pagination, table/grid views, zod-validated intents
+- [x] Portfolio calc (pure, unit-tested): market value over priced entries, cost basis over recorded costs, P/L+ROI only over matched entries (missing purchase ≠ 0), valuation+cost coverage
+- [x] Variant-exact price matching (never silently another variant); unpriced entries surfaced, never $0
+- [x] Daily snapshots: idempotent upsert per (user,day,USD), skip-unchanged job (registered portfolio_snapshots handler), on-view freshness top-up via waitUntil
+- [x] Dashboard: headline stats + coverage, daily/7d/30d changes from snapshots (null until real history), most valuable, user's 7-day movers, value by set/rarity/variant, recent activity, accessible portfolio chart (honest start note)
+- [x] Verified: 43 unit + 12 integration tests green (calc rules, CRUD isolation, variant-exact pricing, snapshot idempotency); e2e smoke — add entry → collection lists it, dashboard computes correct value/cost/P&L
 
 ## Phase 7 — Binders, checklists, wishlist
 

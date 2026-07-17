@@ -26,6 +26,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 // Extended as feature phases land (collection, binders, sets, wishlist, …).
 const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: "/app", label: "Dashboard", end: true },
+  { to: "/app/collection", label: "Collection" },
   { to: "/app/settings", label: "Settings" },
 ];
 

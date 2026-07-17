@@ -49,6 +49,8 @@ export default [
   layout("routes/app/layout.tsx", [
     ...prefix("app", [
       index("routes/app/index.tsx"),
+      route("collection", "routes/app/collection.tsx"),
+      route("collection/search", "routes/app/collection-search.ts"),
       route("onboarding", "routes/app/onboarding.tsx"),
       route("settings", "routes/app/settings.tsx"),
     ]),

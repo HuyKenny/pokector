@@ -16,6 +16,7 @@ import {
   handlePriceHistoryRecord,
   handleRetentionAggregate,
 } from "./handlers/catalog.server";
+import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
 import {
   claimNextJob,
   completeJob,
@@ -38,6 +39,7 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   catalog_cards_page: handleCatalogCardsPage,
   price_history_record: handlePriceHistoryRecord,
   retention_aggregate: handleRetentionAggregate,
+  portfolio_snapshots: handlePortfolioSnapshots,
 };
 
 export function registerJobHandler(type: SyncJobType, handler: JobHandler): void {
