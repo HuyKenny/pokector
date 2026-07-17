@@ -11,7 +11,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const requestId = getRequestId(context);
   const url = new URL(request.url);
-  if (url.searchParams.get("q")) await enforceRateLimit(env.KV, "search", clientIp(request));
+  if (url.searchParams.get("q"))
+    await enforceRateLimit(createDb(env.DB), "search", clientIp(request));
 
   const db = createDb(env.DB);
   const result = await searchCards(db, {

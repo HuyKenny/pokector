@@ -14,7 +14,7 @@ import { enforceRateLimit } from "~/lib/security/rate-limit.server";
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  await enforceRateLimit(env.KV, "export", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "export", session.user.id);
 
   const db = createDb(env.DB);
   const data = await getSetBySlug(db, params.setSlug);

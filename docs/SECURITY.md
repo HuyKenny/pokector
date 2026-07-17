@@ -36,9 +36,12 @@ the catalog — user input can never introduce another image origin.
 - Origin/Host validation on every state-changing request (same-origin app; Better
   Auth `trustedOrigins` + our middleware). CSRF protection: SameSite cookies + origin
   check + no cross-site CORS.
-- Rate limits (KV): registration, login, password reset, verification resend, search,
-  import, export, alert config, admin jobs. Progressive backoff on repeated auth
-  failures. Turnstile on registration/login/password-reset forms.
+- Rate limits: registration, login, password reset, verification resend (Better Auth,
+  KV) + search, import, export, alert config, admin jobs (our limiter, **D1 atomic
+  counters, fail-open** — moved off KV 2026-07-17 after per-request KV writes
+  exhausted the Free plan's 1k writes/day and 500ed search; abuse control must never
+  take the site down). Progressive backoff on repeated auth failures. Turnstile on
+  registration/login/password-reset forms.
 
 ## Threat model
 

@@ -34,7 +34,7 @@ const CreateSchema = z.object({
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  await enforceRateLimit(env.KV, "apiWrite", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "apiWrite", session.user.id);
   const parsed = CreateSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) {
     return { ok: false as const, message: parsed.error.issues[0]?.message ?? "Invalid input." };

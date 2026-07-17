@@ -10,7 +10,7 @@ import { enforceRateLimit } from "~/lib/security/rate-limit.server";
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  await enforceRateLimit(env.KV, "search", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "search", session.user.id);
 
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";
   if (q.length < 2) return { items: [] };

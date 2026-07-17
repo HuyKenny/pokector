@@ -20,7 +20,7 @@ export async function action({ request, context }: Route.ActionArgs) {
     const returnTo = referer ? new URL(referer).pathname : "/cards";
     return redirect(`/login?returnTo=${encodeURIComponent(returnTo)}`);
   }
-  await enforceRateLimit(env.KV, "apiWrite", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "apiWrite", session.user.id);
 
   const parsed = BodySchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false, message: "Invalid card." };

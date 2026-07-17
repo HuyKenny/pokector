@@ -92,7 +92,7 @@ const ActionSchema = z.discriminatedUnion("intent", [
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  await enforceRateLimit(env.KV, "apiWrite", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "apiWrite", session.user.id);
   const db = createDb(env.DB);
 
   const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));

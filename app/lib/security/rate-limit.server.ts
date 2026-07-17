@@ -1,9 +1,18 @@
 /**
- * KV-backed fixed-window rate limiter for non-auth surfaces (search, import,
+ * D1-backed fixed-window rate limiter for non-auth surfaces (search, import,
  * export, alert config, admin jobs). Better Auth endpoints use its built-in
- * limiter (also KV via secondaryStorage). KV is eventually consistent, so limits
- * are approximate — acceptable for abuse control, not for billing.
+ * limiter (KV via secondaryStorage).
+ *
+ * Counters live in D1, not KV: the Free plan allows only 1k KV writes/day
+ * account-wide, and per-request KV counter writes exhausted it and 500ed
+ * search (2026-07-17). D1 allows 100k writes/day and increments atomically.
+ *
+ * FAIL-OPEN by design: if the counter infrastructure errors, the request is
+ * allowed. Abuse control must never take the site down.
  */
+
+import { incrementCounter } from "~/lib/counters.server";
+import type { Database } from "~/lib/db/index.server";
 
 export interface RateLimitRule {
   /** Window length in seconds. */
@@ -36,7 +45,7 @@ export interface RateLimitResult {
  * (cf-connecting-ip) for anonymous ones.
  */
 export async function checkRateLimit(
-  kv: KVNamespace,
+  db: Database,
   scope: RateLimitScope,
   identity: string,
 ): Promise<RateLimitResult> {
@@ -44,18 +53,19 @@ export async function checkRateLimit(
   const windowStart = Math.floor(Date.now() / 1000 / rule.window) * rule.window;
   const key = `rl:${scope}:${identity}:${windowStart}`;
 
-  const current = Number.parseInt((await kv.get(key)) ?? "0", 10);
-  if (current >= rule.max) {
+  const current = await incrementCounter(db, key, rule.window * 2);
+  if (current === null) {
+    // Infra failure — fail open (see module doc).
+    return { allowed: true, remaining: rule.max, retryAfterSeconds: 0 };
+  }
+  if (current > rule.max) {
     return {
       allowed: false,
       remaining: 0,
       retryAfterSeconds: windowStart + rule.window - Math.floor(Date.now() / 1000),
     };
   }
-
-  // Not atomic (KV has no increment); approximate by design.
-  await kv.put(key, String(current + 1), { expirationTtl: Math.max(rule.window * 2, 60) });
-  return { allowed: true, remaining: rule.max - current - 1, retryAfterSeconds: 0 };
+  return { allowed: true, remaining: rule.max - current, retryAfterSeconds: 0 };
 }
 
 export function clientIp(request: Request): string {
@@ -64,11 +74,11 @@ export function clientIp(request: Request): string {
 
 /** Throws a 429 Response when over the limit (route-friendly). */
 export async function enforceRateLimit(
-  kv: KVNamespace,
+  db: Database,
   scope: RateLimitScope,
   identity: string,
 ): Promise<void> {
-  const result = await checkRateLimit(kv, scope, identity);
+  const result = await checkRateLimit(db, scope, identity);
   if (!result.allowed) {
     throw new Response(
       JSON.stringify({

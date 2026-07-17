@@ -60,7 +60,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const form = Object.fromEntries(await request.formData());
 
   if (form.intent === "preview") {
-    await enforceRateLimit(env.KV, "importPreview", session.user.id);
+    await enforceRateLimit(createDb(env.DB), "importPreview", session.user.id);
     const parsed = PreviewSchema.safeParse(form);
     if (!parsed.success) return { step: "error" as const, message: "Invalid CSV upload." };
     const csv = parseCsv(parsed.data.csv, LIMITS.maxCsvRows);
@@ -88,7 +88,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   }
 
   if (form.intent === "commit") {
-    await enforceRateLimit(env.KV, "importCommit", session.user.id);
+    await enforceRateLimit(createDb(env.DB), "importCommit", session.user.id);
     const parsed = CommitSchema.safeParse(form);
     if (!parsed.success) return { step: "error" as const, message: "Invalid import." };
     const csv = parseCsv(parsed.data.csv, LIMITS.maxCsvRows);

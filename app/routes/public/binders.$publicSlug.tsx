@@ -22,7 +22,7 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ request, params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   // Rate limit share-link guessing (128-bit slugs + throttle — SPEC §22).
-  await enforceRateLimit(env.KV, "publicBinderView", clientIp(request));
+  await enforceRateLimit(createDb(env.DB), "publicBinderView", clientIp(request));
   const db = createDb(env.DB);
   const binder = await getPublicBinder(db, params.publicSlug);
   if (!binder) throw new Response("Not Found", { status: 404 });

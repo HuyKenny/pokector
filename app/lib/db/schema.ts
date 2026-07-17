@@ -564,6 +564,20 @@ export const adminAuditLogs = sqliteTable(
 
 // ── Sync run bookkeeping (full-sync completion tracking, SPEC §15) ───────────
 
+/**
+ * Short-lived atomic counters (rate-limit windows, PTCG API daily budget).
+ * Kept in D1 instead of KV: the Workers Free plan allows only 1k KV writes/day
+ * account-wide — per-request KV counter writes exhausted it and took search
+ * down with 500s (2026-07-17). D1 allows 100k writes/day and its UPSERT is
+ * atomic, which KV never was. Expired rows are pruned by the daily cron.
+ */
+export const counters = sqliteTable("counters", {
+  key: text("key").primaryKey(),
+  value: integer("value").notNull().default(0),
+  /** Unix epoch seconds after which the row is dead (prune + ignore). */
+  expiresAt: integer("expires_at").notNull(),
+});
+
 export const syncRuns = sqliteTable(
   "sync_runs",
   {

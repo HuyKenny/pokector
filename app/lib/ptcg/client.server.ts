@@ -2,9 +2,12 @@
  * Typed Pokémon TCG API v2 client (SPEC §15). Server-side only: the API key is
  * sent via X-Api-Key and never leaves the Worker. Includes timeout, retries with
  * exponential backoff + jitter, 429/Retry-After handling, response validation,
- * request counting, and a daily request budget guard (KV).
+ * request counting, and a daily request budget guard (D1 counter — one KV write
+ * per API call previously burned through the Free plan's 1k KV writes/day).
  */
 
+import { incrementCounter, readCounter } from "../counters.server";
+import { createDb, type Database } from "../db/index.server";
 import { log } from "../log.server";
 import { PtcgListResponseSchema } from "./types";
 
@@ -37,17 +40,19 @@ function budgetKey(): string {
   return `ptcg:budget:${new Date().toISOString().slice(0, 10)}`;
 }
 
-export async function getDailyRequestCount(kv: KVNamespace): Promise<number> {
-  return Number.parseInt((await kv.get(budgetKey())) ?? "0", 10);
+export async function getDailyRequestCount(db: Database): Promise<number> {
+  return (await readCounter(db, budgetKey())) ?? 0;
 }
 
 export function getDailyBudget(): number {
   return DAILY_BUDGET;
 }
 
-async function consumeBudget(kv: KVNamespace): Promise<void> {
-  const used = await getDailyRequestCount(kv);
-  if (used >= DAILY_BUDGET) {
+async function consumeBudget(db: Database): Promise<void> {
+  const used = await incrementCounter(db, budgetKey(), 60 * 60 * 48);
+  // null = counter infra failure → proceed (the PTCG API rate-limits upstream
+  // anyway); the guard exists to keep us under quota, not to gate correctness.
+  if (used !== null && used > DAILY_BUDGET) {
     throw new PtcgApiError(
       "budget_exhausted",
       `Daily Pokémon TCG API budget (${DAILY_BUDGET}) exhausted`,
@@ -55,8 +60,6 @@ async function consumeBudget(kv: KVNamespace): Promise<void> {
       false,
     );
   }
-  // Approximate counter (KV, non-atomic) — acceptable for budget guarding.
-  await kv.put(budgetKey(), String(used + 1), { expirationTtl: 60 * 60 * 48 });
 }
 
 function backoffMs(attempt: number, retryAfterHeader: string | null): number {
@@ -85,7 +88,7 @@ export interface PtcgPage {
 export class PtcgClient {
   constructor(
     private readonly apiKey: string,
-    private readonly kv: KVNamespace,
+    private readonly db: Database,
     private readonly signal?: AbortSignal,
   ) {}
 
@@ -99,7 +102,7 @@ export class PtcgClient {
         false,
       );
     }
-    return new PtcgClient(env.POKEMON_TCG_API_KEY, env.KV, signal);
+    return new PtcgClient(env.POKEMON_TCG_API_KEY, createDb(env.DB), signal);
   }
 
   async getSetsPage(page: number): Promise<PtcgPage> {
@@ -114,7 +117,7 @@ export class PtcgClient {
     let lastError: PtcgApiError | null = null;
 
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
-      await consumeBudget(this.kv);
+      await consumeBudget(this.db);
       const startedAt = Date.now();
       let response: Response;
       try {

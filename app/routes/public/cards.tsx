@@ -29,7 +29,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const url = new URL(request.url);
   const q = url.searchParams.get("q")?.trim() ?? "";
   if (q) {
-    await enforceRateLimit(env.KV, "search", clientIp(request));
+    await enforceRateLimit(createDb(env.DB), "search", clientIp(request));
   }
   const params = {
     q: q || undefined,

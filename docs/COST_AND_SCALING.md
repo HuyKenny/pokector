@@ -5,22 +5,22 @@ developers.cloudflare.com documentation, **retrieved 2026-07-16/17**.
 
 ## Current plan limits (Workers Free)
 
-| Resource                  | Free limit                                        | Pokector budget notes                                                                                                                         |
-| ------------------------- | ------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| Worker requests           | 100,000/day (resets 00:00 UTC)                    | public site + app + API combined; HTML caching keeps origin hits low                                                                          |
-| CPU time                  | **10 ms per invocation**                          | hard constraint — native scrypt for auth, no heavy per-request loops, batch work in cron/jobs                                                 |
-| CPU time per cron run     | 10 ms                                             | job runner processes small batches per tick; long work is split across job claims                                                             |
-| Worker size               | 3 MB gzip                                         | keep server bundle lean; charts are client-side                                                                                               |
-| Subrequests               | 50/invocation                                     | PTCG sync pages one request per job claim batch                                                                                               |
-| Cron triggers             | **5 per account**                                 | 2 used by production, 0 staging, 3 free (other workers use 0 — verified)                                                                      |
-| D1 rows read              | 5,000,000/day                                     | indexed queries only; EXPLAIN QUERY PLAN in tests; no unindexed scans on hot paths                                                            |
-| D1 rows written           | 100,000/day                                       | catalog daily delta + price observations for _tracked_ cards only (not all 20k cards); each index counts as +1 write                          |
-| D1 storage                | 5 GB account / 500 MB per DB                      | catalog ≈ 20,359 cards ≈ tens of MB; history bounded by tracked-cards design + retention aggregation                                          |
-| D1 queries per invocation | 50                                                | batch upserts via `db.batch()`                                                                                                                |
-| KV reads                  | 100,000/day                                       | cache hits mostly served by Cache API first                                                                                                   |
-| KV writes                 | **1,000/day (different keys)**, 1/s per key       | rate-limit counters use short windows per key; sync locks few keys; session writes bounded — monitor, move rate limiting to D1 if ceiling hit |
-| KV storage                | 1 GB                                              | trivial usage                                                                                                                                 |
-| Queues                    | available on Free: 10,000 ops/day, 24 h retention | used only as optional wake-up signal (D4 in DECISIONS.md); zero reliance                                                                      |
+| Resource                  | Free limit                                        | Pokector budget notes                                                                                                                                                                          |
+| ------------------------- | ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Worker requests           | 100,000/day (resets 00:00 UTC)                    | public site + app + API combined; HTML caching keeps origin hits low                                                                                                                           |
+| CPU time                  | **10 ms per invocation**                          | hard constraint — native scrypt for auth, no heavy per-request loops, batch work in cron/jobs                                                                                                  |
+| CPU time per cron run     | 10 ms                                             | job runner processes small batches per tick; long work is split across job claims                                                                                                              |
+| Worker size               | 3 MB gzip                                         | keep server bundle lean; charts are client-side                                                                                                                                                |
+| Subrequests               | 50/invocation                                     | PTCG sync pages one request per job claim batch                                                                                                                                                |
+| Cron triggers             | **5 per account**                                 | 2 used by production, 0 staging, 3 free (other workers use 0 — verified)                                                                                                                       |
+| D1 rows read              | 5,000,000/day                                     | indexed queries only; EXPLAIN QUERY PLAN in tests; no unindexed scans on hot paths                                                                                                             |
+| D1 rows written           | 100,000/day                                       | catalog daily delta + price observations for _tracked_ cards only (not all 20k cards); each index counts as +1 write                                                                           |
+| D1 storage                | 5 GB account / 500 MB per DB                      | catalog ≈ 20,359 cards ≈ tens of MB; history bounded by tracked-cards design + retention aggregation                                                                                           |
+| D1 queries per invocation | 50                                                | batch upserts via `db.batch()`                                                                                                                                                                 |
+| KV reads                  | 100,000/day                                       | cache hits mostly served by Cache API first                                                                                                                                                    |
+| KV writes                 | **1,000/day (different keys)**, 1/s per key       | **ceiling WAS hit 2026-07-17** (search 500ed) → rate-limit + PTCG-budget counters moved to D1 (`counters` table, atomic UPSERT, fail-open); KV now holds only Better Auth session/state writes |
+| KV storage                | 1 GB                                              | trivial usage                                                                                                                                                                                  |
+| Queues                    | available on Free: 10,000 ops/day, 24 h retention | used only as optional wake-up signal (D4 in DECISIONS.md); zero reliance                                                                                                                       |
 
 ## 10,000-user design target
 
@@ -65,7 +65,7 @@ per-page, independent of total table size, so the 1M-entry target is safe.
 **Known characteristic — catalog name search:** `/cards?q=` uses
 `name_normalized LIKE 'x%' OR search_text LIKE '%x%'`; the substring `OR` forces
 a scan of the (bounded) ~20k-row catalog. Mitigations: public search is
-rate-limited (KV), `/cards` responses are edge-cached (`s-maxage`+SWR), and 20k
+rate-limited (D1 counters), `/cards` responses are edge-cached (`s-maxage`+SWR), and 20k
 rows/scan × realistic search volume stays far under the 5M rows-read/day free
 budget. If search volume grows, the upgrade path is an FTS5 virtual table
 (documented, not yet needed).

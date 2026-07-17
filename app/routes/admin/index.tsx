@@ -49,7 +49,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     .orderBy(desc(schema.syncJobs.createdAt))
     .limit(10);
 
-  const apiRequestsToday = await getDailyRequestCount(env.KV);
+  const apiRequestsToday = await getDailyRequestCount(db);
 
   return {
     environment: env.ENVIRONMENT,
@@ -101,7 +101,7 @@ const ActionSchema = z.discriminatedUnion("intent", [
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await requireAdmin(context, request);
   const { env } = getCloudflare(context);
-  await enforceRateLimit(env.KV, "adminJobs", session.user.id);
+  await enforceRateLimit(createDb(env.DB), "adminJobs", session.user.id);
 
   const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false as const, message: "Invalid action." };
