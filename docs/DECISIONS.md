@@ -105,3 +105,26 @@ US English; legal pages templated from config vars and flagged for operator revi
 Current official docs (Vitest ≥4.1) use a Vite plugin + `defineConfig`, not the older
 `defineWorkersConfig`. D1 migrations applied in test setup via `readD1Migrations` +
 `applyD1Migrations` (official fixture pattern).
+
+### D14. Internationalization — 11 locales on public pages (owner-approved, beyond spec v1)
+
+SPEC v1 is US/English-only. Owner requested (2026-07-17) 10 additional UI locales:
+de, es, ru, zh-Hans, cs, fr, pt-BR, ja, vi, ar. Scope: **public pages + auth chrome
+only** (home, cards, sets, card/set detail, price-movers, public binders, auth). The
+signed-in app (/app, /admin), blog articles, and legal pages stay English.
+
+- **URLs**: English at the unprefixed root (x-default); other locales under a short
+  prefix (`/de`, `/zh`, `/pt`). Full BCP-47 tags (`zh-Hans`, `pt-BR`) used for
+  `<html lang>` + hreflang. No Accept-Language redirects (locale = URL only, per
+  Google). `/en/*` → 301 root; `/de/terms|/de/app` → 301 unprefixed; unknown prefix
+  → 404.
+- **SEO**: every indexable page emits 11 hreflang + x-default and a locale-prefixed
+  canonical; sitemap-static + sitemap-sets carry `xhtml:link` alternates. Filtered/
+  noindex pages get no alternates.
+- **Architecture**: `app/lib/i18n/` — plain nested dictionaries, `en.ts` is the typed
+  source of truth (others `satisfies Dict`; unit parity test enforces identical keys).
+  Dictionaries are server-only (`dictionaries.server.ts`); components receive namespace
+  slices via loader data, so the client never downloads all 11 languages. Card/set
+  names + franchise-neutral terms stay English. Arabic = basic RTL (`dir="rtl"` +
+  logical Tailwind utilities).
+- **Cost**: locale in the path → no `Vary` cache issues; +~50 KB gzip worker bundle.
