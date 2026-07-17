@@ -20,6 +20,32 @@ export default [
     route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx"),
   ]),
 
+  // ── Localized public site (/:locale — de/es/ru/zh/cs/fr/pt/ja/vi/ar) ────────
+  // English stays at the unprefixed root above; this tree duplicates the
+  // TRANSLATED public surface under a locale prefix. Legal, blog, /app, /admin
+  // are intentionally NOT here (they stay English; /de/terms → 301 /terms via
+  // the catchall). Static top-level routes below (sitemap.xml, api, login…)
+  // outrank ":locale" by specificity, so they are never shadowed.
+  route(":locale", "routes/locale-guard.tsx", [
+    layout("routes/public/layout.tsx", { id: "l10n/public/layout" }, [
+      index("routes/public/home.tsx", { id: "l10n/public/home" }),
+      route("cards", "routes/public/cards.tsx", { id: "l10n/public/cards" }),
+      route("cards/:slug", "routes/public/cards.$slug.tsx", { id: "l10n/public/cards.$slug" }),
+      route("sets", "routes/public/sets.tsx", { id: "l10n/public/sets" }),
+      route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
+      route("price-movers", "routes/public/price-movers.tsx", { id: "l10n/public/price-movers" }),
+      route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx", {
+        id: "l10n/public/binders.$publicSlug",
+      }),
+    ]),
+    route("login", "routes/auth/login.tsx", { id: "l10n/auth/login" }),
+    route("register", "routes/auth/register.tsx", { id: "l10n/auth/register" }),
+    route("forgot-password", "routes/auth/forgot-password.tsx", {
+      id: "l10n/auth/forgot-password",
+    }),
+    route("reset-password", "routes/auth/reset-password.tsx", { id: "l10n/auth/reset-password" }),
+  ]),
+
   // ── SEO / machine endpoints ────────────────────────────────────────────────
   route("health", "routes/health.ts"),
   route("robots.txt", "routes/seo/robots.ts"),

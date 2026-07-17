@@ -5,11 +5,13 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useLocation,
   useRouteLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
 import { nonceContext } from "./lib/context";
+import { isRtl, LANG_TAGS, localeFromPathname } from "./lib/i18n/locales";
 import { THEME_SCRIPT } from "./lib/theme";
 import "./app.css";
 
@@ -27,11 +29,15 @@ export function loader({ context }: Route.LoaderArgs) {
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   const nonce = data?.nonce;
+  // Locale is derived from the URL's first segment (the root loader has no
+  // params and doesn't revalidate on client navigation, so useLocation keeps
+  // <html lang/dir> correct across in-app navigations too).
+  const locale = localeFromPathname(useLocation().pathname);
   return (
     // suppressHydrationWarning: the pre-hydration theme script adds `.dark` to
     // <html> before React hydrates, so this one element's attributes may
     // legitimately differ from the server render.
-    <html lang="en" suppressHydrationWarning>
+    <html lang={LANG_TAGS[locale]} dir={isRtl(locale) ? "rtl" : "ltr"} suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />

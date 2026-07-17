@@ -1,10 +1,22 @@
-import { Link } from "react-router";
+import { Link, redirect } from "react-router";
 
 import type { Route } from "./+types/catchall";
+import { isLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 
 /** 404 for unmatched paths (SPEC §23). Intentionally removed content can throw
- * 410 from its own route; unknown URLs are honest 404s. */
-export function loader() {
+ * 410 from its own route; unknown URLs are honest 404s.
+ *
+ * A locale-prefixed path that isn't part of the localized tree — an English-only
+ * page (`/de/terms`, `/de/blog/x`) or an app/admin path (`/de/app`) — 301s to
+ * its unprefixed equivalent rather than 404ing, so a mistyped/copied localized
+ * URL still lands somewhere sensible without creating duplicate content. */
+export function loader({ request }: Route.LoaderArgs) {
+  const url = new URL(request.url);
+  const first = url.pathname.split("/")[1];
+  if (isLocale(first)) {
+    const stripped = stripLocalePrefix(url.pathname);
+    if (stripped !== url.pathname) throw redirect(stripped + url.search, 301);
+  }
   throw new Response("Not Found", { status: 404 });
 }
 
