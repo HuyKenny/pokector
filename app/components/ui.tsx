@@ -13,7 +13,7 @@ export function Button({
     secondary:
       "border border-edge bg-surface text-fg hover:bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed",
     danger:
-      "bg-negative text-white hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed",
+      "bg-negative text-(color:--color-on-accent) hover:opacity-90 disabled:opacity-50 disabled:cursor-not-allowed",
     ghost: "text-fg-muted hover:text-fg hover:bg-surface-raised",
   }[variant];
   return (

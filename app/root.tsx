@@ -28,7 +28,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   const nonce = data?.nonce;
   return (
-    <html lang="en">
+    // suppressHydrationWarning: the pre-hydration theme script adds `.dark` to
+    // <html> before React hydrates, so this one element's attributes may
+    // legitimately differ from the server render.
+    <html lang="en" suppressHydrationWarning>
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -78,7 +81,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
       <p className="text-fg-muted">{details}</p>
       <a
         href="/"
-        className="rounded-lg bg-accent px-4 py-2 font-medium text-white hover:bg-accent-strong"
+        className="rounded-lg bg-accent px-4 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
       >
         Back to homepage
       </a>

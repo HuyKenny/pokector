@@ -3,7 +3,7 @@ import { expect, test } from "@playwright/test";
 test.describe("public site", () => {
   test("homepage renders with hero, search, and trademark disclaimer", async ({ page }) => {
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 1 })).toContainText(/collection/i);
+    await expect(page.getByRole("heading", { level: 1 })).toContainText(/track every card/i);
     await expect(page.getByRole("searchbox").first()).toBeVisible();
     await expect(page.getByText(/not affiliated with/i)).toBeVisible();
   });

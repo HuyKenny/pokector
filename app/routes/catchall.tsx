@@ -21,7 +21,7 @@ export default function CatchAll() {
       </p>
       <Link
         to="/"
-        className="rounded-lg bg-accent px-4 py-2 font-medium text-white hover:bg-accent-strong"
+        className="rounded-lg bg-accent px-4 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
       >
         Back to homepage
       </Link>

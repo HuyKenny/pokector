@@ -24,7 +24,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
     <div className="flex min-h-screen flex-col">
       <a
         href="#main-content"
-        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-white"
+        className="sr-only focus:not-sr-only focus:absolute focus:left-2 focus:top-2 focus:z-50 focus:rounded focus:bg-accent focus:px-3 focus:py-2 focus:text-(color:--color-on-accent)"
       >
         Skip to content
       </a>
@@ -67,7 +67,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
             {signedIn ? (
               <Link
                 to="/app"
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong"
+                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
               >
                 My collection
               </Link>
@@ -81,7 +81,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
                 </Link>
                 <Link
                   to="/register"
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-white hover:bg-accent-strong"
+                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
                 >
                   Get started
                 </Link>

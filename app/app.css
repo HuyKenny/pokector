@@ -216,10 +216,3 @@ a:not([class*="rounded"]):not(:where(nav *)):not(:where(footer *)) {
   text-decoration: underline;
   text-underline-offset: 2px;
 }
-
-/* Dark-mode safety net: filled accent/secondary controls (including CTAs that
-   hardcode text-white) get dark ink text so they clear AA on the bright fill. */
-.dark :is(a, button)[class*="bg-accent"]:not([class*="bg-accent-soft"]),
-.dark :is(a, button)[class*="bg-secondary"]:not([class*="bg-secondary-soft"]) {
-  color: var(--color-on-accent);
-}

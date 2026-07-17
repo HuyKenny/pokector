@@ -282,7 +282,9 @@ export default function SetChecklist({ loaderData, actionData }: Route.Component
               <span
                 aria-hidden="true"
                 className={`flex h-6 w-6 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
-                  owned ? "bg-accent text-white" : "border border-edge text-fg-faint"
+                  owned
+                    ? "bg-accent text-(color:--color-on-accent)"
+                    : "border border-edge text-fg-faint"
                 }`}
               >
                 {owned ? "✓" : ""}
@@ -362,7 +364,9 @@ function Chip({ active, onClick, label }: { active: boolean; onClick: () => void
       onClick={onClick}
       aria-pressed={active}
       className={`min-h-9 rounded-full px-3 text-xs font-medium ${
-        active ? "bg-accent text-white" : "border border-edge text-fg-muted hover:text-fg"
+        active
+          ? "bg-accent text-(color:--color-on-accent)"
+          : "border border-edge text-fg-muted hover:text-fg"
       }`}
     >
       {label}

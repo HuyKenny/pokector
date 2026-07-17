@@ -156,7 +156,7 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
         </div>
         <button
           type="submit"
-          className="min-h-11 rounded-lg bg-accent px-5 font-medium text-white hover:bg-accent-strong"
+          className="min-h-11 rounded-lg bg-accent px-5 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
           Apply
         </button>

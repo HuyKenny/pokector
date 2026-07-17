@@ -63,7 +63,7 @@ const FEATURES = [
 ];
 
 export default function Home({ loaderData }: Route.ComponentProps) {
-  const { popularSets, recentCards, appUrl } = loaderData;
+  const { popularSets, recentCards, appUrl, tickerMovers } = loaderData;
 
   return (
     <div className="flex flex-col gap-16">
@@ -82,13 +82,38 @@ export default function Home({ loaderData }: Route.ComponentProps) {
       />
 
       {/* Hero */}
-      <section className="flex flex-col items-center gap-6 pt-8 text-center">
+      <section className="relative flex flex-col items-center gap-6 pt-8 text-center">
+        {/* Subtle market-chart backdrop (inline SVG only — CSP has no external
+            style/img sources). Decorative, hidden from AT. */}
+        <svg
+          aria-hidden="true"
+          className="pointer-events-none absolute inset-x-0 top-0 -z-10 h-full w-full text-edge"
+          preserveAspectRatio="none"
+          viewBox="0 0 1200 400"
+        >
+          <g stroke="currentColor" strokeWidth="1" opacity="0.35">
+            {[80, 160, 240, 320].map((y) => (
+              <line key={y} x1="0" y1={y} x2="1200" y2={y} />
+            ))}
+            {[200, 400, 600, 800, 1000].map((x) => (
+              <line key={x} x1={x} y1="0" x2={x} y2="400" />
+            ))}
+          </g>
+          <path
+            d="M0 360 L200 320 L380 336 L560 264 L740 288 L920 176 L1200 96"
+            fill="none"
+            className="stroke-accent"
+            strokeWidth="3"
+            strokeLinejoin="round"
+            opacity="0.25"
+          />
+        </svg>
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-fg sm:text-5xl">
-          Your Pokémon TCG collection, <span className="text-accent">tracked and valued</span>.
+          Track every card <span className="text-accent">like an asset</span>.
         </h1>
         <p className="max-w-2xl text-lg text-fg-muted">
-          Browse the full card catalog, record what you own, and watch your collection's estimated
-          market value — with honest prices, honest history, and no hype.
+          Your Pokémon TCG collection as a portfolio: live TCGplayer market values, real price
+          history, profit &amp; loss — honest numbers, no hype.
         </p>
         <Form method="get" action="/cards" role="search" className="flex w-full max-w-xl gap-2">
           <label htmlFor="hero-search" className="sr-only">
@@ -103,7 +128,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           />
           <button
             type="submit"
-            className="min-h-12 rounded-xl bg-accent px-6 font-medium text-white hover:bg-accent-strong"
+            className="min-h-12 rounded-xl bg-accent px-6 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
           >
             Search
           </button>
@@ -111,7 +136,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         <div className="flex gap-3">
           <Link
             to="/register"
-            className="rounded-xl bg-secondary px-6 py-3 font-medium text-white hover:opacity-90"
+            className="rounded-xl bg-accent px-6 py-3 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
           >
             Start tracking free
           </Link>
@@ -123,6 +148,42 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           </Link>
         </div>
       </section>
+
+      {/* Market ticker — only when real tracked history produced movers. */}
+      {tickerMovers.length > 0 ? (
+        <section aria-label="Biggest 7-day price moves" className="-mt-8">
+          <div className="flex items-center justify-between gap-4 border-y border-edge py-3">
+            <ul className="flex min-w-0 flex-1 gap-6 overflow-x-auto whitespace-nowrap [scrollbar-width:none]">
+              {tickerMovers.map((mover) => (
+                <li key={`${mover.cardId}-${mover.variant}`} className="shrink-0">
+                  <Link
+                    to={`/cards/${mover.slug}`}
+                    className="flex items-baseline gap-2 text-sm hover:text-fg"
+                  >
+                    <span className="max-w-40 truncate font-medium text-fg">{mover.name}</span>
+                    <span className="font-mono text-xs tabular-nums text-fg-muted">
+                      {formatMinor(mover.currentMinor)}
+                    </span>
+                    <span
+                      className={`font-mono text-xs font-semibold tabular-nums ${
+                        mover.changePercent >= 0 ? "text-positive" : "text-negative"
+                      }`}
+                    >
+                      {mover.changePercent >= 0 ? "▲" : "▼"} {formatPercent(mover.changePercent)}
+                    </span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+            <Link
+              to="/price-movers"
+              className="shrink-0 text-sm font-medium text-accent hover:underline"
+            >
+              All movers →
+            </Link>
+          </div>
+        </section>
+      ) : null}
 
       {/* Features */}
       <section aria-labelledby="features-heading">
@@ -259,7 +320,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
         </p>
         <Link
           to="/register"
-          className="rounded-xl bg-accent px-8 py-3 font-medium text-white hover:bg-accent-strong"
+          className="rounded-xl bg-accent px-8 py-3 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
           Create free account
         </Link>

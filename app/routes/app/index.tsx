@@ -80,7 +80,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           <div className="flex justify-center gap-3">
             <Link
               to="/app/collection"
-              className="rounded-lg bg-accent px-5 py-2.5 font-medium text-white hover:bg-accent-strong"
+              className="rounded-lg bg-accent px-5 py-2.5 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
             >
               Add cards
             </Link>

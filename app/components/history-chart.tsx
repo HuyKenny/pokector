@@ -77,6 +77,20 @@ export function HistoryChart({
   const [showTable, setShowTable] = useState(false);
   const headingId = useId();
 
+  // Chart.js paints to <canvas> and cannot resolve CSS variables itself, so
+  // read the brand accent token once the component is mounted (the chart only
+  // renders client-side; the SSR fallback needs no colors). Re-read on theme
+  // class changes so a live theme switch recolors the line.
+  const accentColor = useSyncExternalStore(
+    (onChange) => {
+      const observer = new MutationObserver(onChange);
+      observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+      return () => observer.disconnect();
+    },
+    () => getComputedStyle(document.documentElement).getPropertyValue("--color-accent").trim(),
+    () => "",
+  );
+
   const summary = useMemo(() => {
     if (points.length === 0) return emptyMessage;
     const first = points[0];
@@ -107,7 +121,7 @@ export function HistoryChart({
               aria-pressed={range === option}
               className={`min-h-9 rounded-md px-2.5 text-xs font-medium ${
                 range === option
-                  ? "bg-accent text-white"
+                  ? "bg-accent text-(color:--color-on-accent)"
                   : "border border-edge text-fg-muted hover:text-fg"
               }`}
             >
@@ -138,8 +152,9 @@ export function HistoryChart({
                     {
                       label: title,
                       data: points.map((p) => p.valueMinor / 100),
-                      borderColor: "oklch(0.6 0.12 168)",
-                      backgroundColor: "oklch(0.6 0.12 168 / 0.15)",
+                      borderColor: accentColor,
+                      // Same color with alpha — computed oklch(…) → oklch(… / 0.15).
+                      backgroundColor: accentColor.replace(/\)\s*$/, " / 0.15)"),
                       fill: true,
                       pointRadius: points.length === 1 ? 5 : points.length > 60 ? 0 : 2,
                       tension: 0.15,

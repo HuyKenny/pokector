@@ -62,7 +62,7 @@ export default function About() {
       <div className="flex gap-3">
         <Link
           to="/register"
-          className="rounded-xl bg-accent px-6 py-3 font-medium text-white hover:bg-accent-strong"
+          className="rounded-xl bg-accent px-6 py-3 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
           Start your collection
         </Link>

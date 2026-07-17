@@ -315,7 +315,9 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
                 {progress ? (
                   <span
                     className={`absolute left-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
-                      owned ? "bg-accent text-white" : "bg-surface text-fg-muted border border-edge"
+                      owned
+                        ? "bg-accent text-(color:--color-on-accent)"
+                        : "bg-surface text-fg-muted border border-edge"
                     }`}
                   >
                     {owned ? "Owned" : "Missing"}
@@ -369,7 +371,9 @@ function FilterChip({
       onClick={onClick}
       aria-pressed={active}
       className={`min-h-9 rounded-full px-3 text-xs font-medium ${
-        active ? "bg-accent text-white" : "border border-edge text-fg-muted hover:text-fg"
+        active
+          ? "bg-accent text-(color:--color-on-accent)"
+          : "border border-edge text-fg-muted hover:text-fg"
       }`}
     >
       {label}

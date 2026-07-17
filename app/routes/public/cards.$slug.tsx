@@ -273,7 +273,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               <input type="hidden" name="cardId" value={card.id} />
               <button
                 type="submit"
-                className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-white hover:bg-accent-strong"
+                className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
               >
                 Add to collection
               </button>
@@ -314,7 +314,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 aria-pressed={chartVariant === variant}
                 className={`min-h-9 rounded-md px-3 text-xs font-medium ${
                   chartVariant === variant
-                    ? "bg-accent text-white"
+                    ? "bg-accent text-(color:--color-on-accent)"
                     : "border border-edge text-fg-muted"
                 }`}
               >

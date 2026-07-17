@@ -56,7 +56,7 @@ export default function Notifications({ loaderData }: Route.ComponentProps) {
         <h1 className="text-2xl font-bold text-fg">
           Notifications
           {unread > 0 ? (
-            <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-sm text-white">
+            <span className="ml-2 rounded-full bg-secondary px-2 py-0.5 text-sm text-(color:--color-on-secondary)">
               {unread} new
             </span>
           ) : null}

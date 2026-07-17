@@ -80,7 +80,9 @@ export default function Blog({ loaderData }: Route.ComponentProps) {
           to="/blog"
           aria-current={!category ? "true" : undefined}
           className={`min-h-9 rounded-full px-4 py-1.5 text-sm font-medium ${
-            !category ? "bg-accent text-white" : "border border-edge text-fg-muted hover:text-fg"
+            !category
+              ? "bg-accent text-(color:--color-on-accent)"
+              : "border border-edge text-fg-muted hover:text-fg"
           }`}
         >
           All
@@ -92,7 +94,7 @@ export default function Blog({ loaderData }: Route.ComponentProps) {
             aria-current={category === cat ? "true" : undefined}
             className={`min-h-9 rounded-full px-4 py-1.5 text-sm font-medium ${
               category === cat
-                ? "bg-accent text-white"
+                ? "bg-accent text-(color:--color-on-accent)"
                 : "border border-edge text-fg-muted hover:text-fg"
             }`}
           >

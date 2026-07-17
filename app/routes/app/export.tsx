@@ -26,7 +26,7 @@ export default function ExportPage({ loaderData }: Route.ComponentProps) {
         </p>
         <a
           href="/app/export/download"
-          className="inline-flex min-h-11 items-center rounded-lg bg-accent px-5 py-2 font-medium text-white hover:bg-accent-strong"
+          className="inline-flex min-h-11 items-center rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
         >
           Download full collection (CSV)
         </a>
