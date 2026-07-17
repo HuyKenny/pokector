@@ -10,6 +10,7 @@
 import { eq, sql } from "drizzle-orm";
 
 import { pruneExpiredCounters } from "../counters.server";
+import { pruneExpiredAuthKv } from "../auth/kv-store.server";
 import { createDb, schema } from "../db/index.server";
 import { log } from "../log.server";
 import {
@@ -69,9 +70,11 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
   const db = createDb(env.DB);
   const today = new Date().toISOString().slice(0, 10);
 
-  // Housekeeping: drop expired rate-limit/budget counter rows (tiny table).
+  // Housekeeping: drop expired rate-limit/budget counters + Better Auth
+  // secondary-storage rows (sessions/verification/rate-limit) — both tiny tables.
   try {
     await pruneExpiredCounters(db);
+    await pruneExpiredAuthKv(db);
   } catch (error) {
     log.warn("jobs.daily.counter_prune_failed", { error: String(error) });
   }

@@ -15,6 +15,13 @@
       "when": 1784306499093,
       "tag": "0001_careless_lionheart",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1784390400000,
+      "tag": "0002_auth_kv_store",
+      "breakpoints": true
     }
   ]
 }

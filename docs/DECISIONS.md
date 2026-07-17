@@ -169,3 +169,26 @@ search for the card, so visitors can buy a copy and qualifying sales earn commis
   page) needs real developer creds (App ID + OAuth) and rate-limit handling — deferred.
   NB: the "Account SID / Auth Token" the owner first supplied are Twilio-style, not eBay,
   and are unused (stored in workspace credentials with a note; recommend rotation).
+
+### D17. Better Auth secondary storage moved from KV to D1 (incident fix 2026-07-18)
+
+Registration and login were fully broken: every `/api/auth/*` request (even the `/ok`
+health check) returned 500 with `KV put() limit exceeded for the day.` Better Auth's
+`secondaryStorage` (sessions, verification values, and its per-request rate-limit counter)
+was KV-backed, and the Free-plan cap (1k KV writes/day) was exhausted; the unhandled
+`env.KV.put` rejection propagated out of the auth handler → blanket 500. Same class as the
+search-500 incident (2026-07-17), on the path that fix didn't cover.
+
+- **Change**: new D1 table `auth_kv` (migration 0002) + `app/lib/auth/kv-store.server.ts`
+  (get/set/delete/prune, mirroring `counters.server.ts`). `getAuth`'s `secondaryStorage`
+  now calls it instead of KV; `rateLimit.storage` stays `"secondary-storage"` so the limiter
+  writes to D1 too. Auth no longer touches KV at all (health check is the only KV reader).
+- **Fail-open**: storage errors are logged and swallowed (a dropped write means a retry, not
+  a site-down 500) — the codebase's counters philosophy. Better Auth logs a benign warning
+  that rate limiting is best-effort (no atomic `consume` on the store); acceptable for abuse
+  control.
+- **Tradeoff**: sessions read from D1 (single-region) instead of KV (edge), but `cookieCache`
+  (60s) absorbs most session lookups and D1's 5M reads/day is ample. Keeps the app on the
+  Free plan; auth works immediately after deploy (no wait for the KV daily reset).
+- Verified: full register→login→add-card→dashboard flow on staging (Turnstile test key);
+  production `/api/auth/ok` + `/get-session` = 200 with the KV error gone in live logs.

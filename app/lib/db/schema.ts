@@ -578,6 +578,20 @@ export const counters = sqliteTable("counters", {
   expiresAt: integer("expires_at").notNull(),
 });
 
+/**
+ * Better Auth secondary storage (sessions, verification values, rate-limit
+ * counters), backed by D1 instead of KV. On the Free plan KV caps at 1k
+ * writes/day and Better Auth writes on every auth request (session + rate
+ * limiter); once exhausted, an unhandled KV put() rejection 500ed the entire
+ * auth handler (register + login dead, 2026-07-18). D1's budget is far larger.
+ * `expiresAt` is unix epoch seconds; null = no TTL (persists until deleted).
+ */
+export const authKv = sqliteTable("auth_kv", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at"),
+});
+
 export const syncRuns = sqliteTable(
   "sync_runs",
   {

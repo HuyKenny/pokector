@@ -11,6 +11,7 @@ import { createDb, schema } from "../db/index.server";
 import { getEmailProvider } from "../email/index.server";
 import { log } from "../log.server";
 import { captchaEnabled } from "./captcha";
+import { authKvDelete, authKvGet, authKvSet } from "./kv-store.server";
 import { hashPassword, verifyPassword } from "./scrypt.server";
 
 export type Auth = ReturnType<typeof getAuth>;
@@ -39,19 +40,14 @@ export function getAuth(env: Env) {
 
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
 
-    // Sessions, verification values and rate-limit counters live in KV.
+    // Sessions, verification values and rate-limit counters live in D1 (not KV):
+    // Better Auth writes on every auth request, and the Free-plan KV cap (1k
+    // writes/day) once exhausted made an unhandled put() rejection 500 the whole
+    // auth handler. D1-backed store fails open instead. See docs/DECISIONS.md D17.
     secondaryStorage: {
-      get: (key) => env.KV.get(`auth:${key}`),
-      set: async (key, value, ttl) => {
-        await env.KV.put(
-          `auth:${key}`,
-          value,
-          ttl ? { expirationTtl: Math.max(ttl, 60) } : undefined,
-        );
-      },
-      delete: async (key) => {
-        await env.KV.delete(`auth:${key}`);
-      },
+      get: (key) => authKvGet(db, `auth:${key}`),
+      set: (key, value, ttl) => authKvSet(db, `auth:${key}`, value, ttl),
+      delete: (key) => authKvDelete(db, `auth:${key}`),
     },
 
     emailAndPassword: {

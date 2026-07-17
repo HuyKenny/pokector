@@ -1,7 +1,7 @@
 /**
  * D1-backed fixed-window rate limiter for non-auth surfaces (search, import,
  * export, alert config, admin jobs). Better Auth endpoints use its built-in
- * limiter (KV via secondaryStorage).
+ * limiter, whose secondaryStorage is now also D1-backed (see auth/kv-store.server.ts).
  *
  * Counters live in D1, not KV: the Free plan allows only 1k KV writes/day
  * account-wide, and per-request KV counter writes exhausted it and 500ed
