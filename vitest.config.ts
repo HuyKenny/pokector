@@ -24,8 +24,9 @@ export default defineConfig(async () => {
               miniflare: {
                 bindings: {
                   TEST_MIGRATIONS: migrations,
-                  // Test-only value — never a real secret.
+                  // Test-only values — never real secrets.
                   BETTER_AUTH_SECRET: "vitest-only-secret-not-used-anywhere-else",
+                  POKEMON_TCG_API_KEY: "vitest-fixture-key",
                 },
               },
             }),

@@ -57,12 +57,14 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 4 — Catalog sync
 
-- [ ] Typed PTCG API client (timeout/retry/429/backoff/jitter/budget)
-- [ ] Decimal→minor-units parser (tested)
-- [ ] Price normalization (TCGplayer USD, Cardmarket EUR)
-- [ ] Sets+cards+prices sync (idempotent, cursor, lock)
-- [ ] D1 job queue + cron triggers + recovery
-- [ ] Admin sync UI
+- [x] Typed PTCG client: timeout, retries w/ backoff+jitter, 429/Retry-After, zod validation, request counting + 15k/day budget guard (KV), injectable fetch for tests; pageSize 50 → each page fits the Free-plan 10 ms CPU budget (DECISIONS D14)
+- [x] Decimal→minor-units parser (BigInt string math, half-up; 15 unit tests incl. float traps)
+- [x] Price normalization: TCGplayer market→mid→low per variant (incl. 1stEdition* mapping), Cardmarket EUR trend→avgSell→low kept separate; missing price = no row (never zero)
+- [x] Sync: catalog_sets → catalog_cards_page fan-out (idempotency keys per run+page), chunked db.batch upserts, malformed-record skip+count, sync_runs bookkeeping, complete only when all pages succeed, inactive-marking after absence from 2 completed runs
+- [x] D1 job queue: lease-based claim (UPDATE…RETURNING), retry w/ exponential backoff, dead-letter, abandoned-job recovery, idempotency keys; ONE job per invocation + queue wake-up chaining (fresh CPU budget each); cron */5 fallback + daily orchestrator (05:17 UTC)
+- [x] Price history: tracked-cards only, 1 observation/(source,variant,currency,day) via unique constraint, insert only on change (carry-forward), retention job aggregates >400d dailies to monthly
+- [x] Admin sync UI (/admin): stats, API budget, sync runs table, failed jobs + retry, start catalog/history/retention actions with audit records + rate limit; config warnings (missing key/e-mail/turnstile)
+- [x] Verified: 34 unit + 9 integration tests green (full fixture sync e2e, idempotency, history dedup, retry/dead-letter); real local sync running (174 sets, queue chaining confirmed in miniflare)
 
 ## Phase 5 — Public site & SEO
 

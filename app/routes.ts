@@ -13,6 +13,9 @@ export default [
   route("reset-password", "routes/auth/reset-password.tsx"),
   route("logout", "routes/auth/logout.ts"),
 
+  // Administration
+  layout("routes/admin/layout.tsx", [...prefix("admin", [index("routes/admin/index.tsx")])]),
+
   // Authenticated application
   layout("routes/app/layout.tsx", [
     ...prefix("app", [
