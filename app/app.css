@@ -1,8 +1,8 @@
 @import "tailwindcss" source(".");
 
 /* Class-based dark mode: `.dark` on <html>, set pre-hydration by the theme script
-   in root.tsx. Dark is the default (trading-platform look); stored user choice
-   persists, "system" follows the OS preference. */
+   in root.tsx. Light is the default (clean look, owner decision 2026-07-17);
+   dark stays available via the Settings toggle, "system" follows the OS. */
 @custom-variant dark (&:where(.dark, .dark *));
 
 @theme {
@@ -78,8 +78,8 @@
   --shadow-card: 0 1px 2px oklch(0.2 0.02 250 / 0.06), 0 4px 12px oklch(0.2 0.02 250 / 0.05);
 }
 
-/* Dark theme overrides semantic tokens only. Dark is the DEFAULT experience
-   (theme script falls back to dark, not to system preference). */
+/* Dark theme overrides semantic tokens only (opt-in via Settings; light is
+   the default experience). */
 .dark {
   --color-canvas: var(--color-ink-950);
   --color-surface: var(--color-ink-900);

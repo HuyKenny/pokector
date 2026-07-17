@@ -84,7 +84,7 @@ function ProfileSection({
   function applyTheme(next: string) {
     setTheme(next as typeof theme);
     try {
-      // "system" is stored explicitly — an absent key means the dark default.
+      // "system" is stored explicitly — an absent key means the light default.
       localStorage.setItem(THEME_STORAGE_KEY, next);
       const dark =
         next === "dark" ||

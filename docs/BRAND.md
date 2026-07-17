@@ -4,10 +4,12 @@ Last updated: 2026-07-17 (redesign: "Pokémon nod × trading platform", owner-ap
 
 ## Design direction
 
-Premium collector dashboard with a trading-platform feel: dark navy canvas,
-crimson primary accent, financial data presented like a portfolio. **Dark mode is
-the default experience** — a first-time visitor with no stored preference gets
-dark; light stays available in Settings ("system" follows the OS).
+Premium collector dashboard with a trading-platform feel: clean warm-white
+canvas, crimson primary accent, financial data presented like a portfolio.
+**Light mode is the default experience** (owner decision 2026-07-17 — "clean"
+look; dark backgrounds felt heavy) — a first-time visitor with no stored
+preference gets light; dark stays available in Settings ("system" follows the
+OS).
 
 ### Owner-approved deviations from SPEC §5 (2026-07-17)
 
@@ -93,6 +95,7 @@ Outputs: `public/brand/pokector-icon.svg`, `pokector-icon-{192,512}.png`,
 32+16 px). Rendering uses puppeteer-core + system Chromium (`$CHROME_PATH`,
 default `/usr/bin/chromium`) because the Pi has no rsvg/ImageMagick/sharp.
 
-The script prints the sRGB hex of `ink-950` (currently `#050b16`) — if the
-palette changes, update by hand: `<meta name="theme-color">` in `app/root.tsx`
-and `background_color`/`theme_color` in `public/manifest.webmanifest`.
+The script prints the sRGB hexes of the canvas colors (`paper-50` = `#fcfaf6`,
+the light default) — if the palette changes, update by hand:
+`<meta name="theme-color">` in `app/root.tsx` and
+`background_color`/`theme_color` in `public/manifest.webmanifest`.

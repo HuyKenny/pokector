@@ -35,7 +35,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       <head>
         <meta charSet="utf-8" />
         <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta name="theme-color" content="#050b16" />
+        <meta name="theme-color" content="#fcfaf6" />
         <Meta />
         <Links />
         {/* Pre-hydration theme selection; carries the CSP nonce. */}

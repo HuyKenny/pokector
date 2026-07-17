@@ -29,7 +29,9 @@ mkdirSync(brandDir, { recursive: true });
 // Literal oklch values of the palette tokens used by the mark (app/app.css).
 const INK = "oklch(0.15 0.025 255)"; // --color-ink-950
 const PAPER = "oklch(0.965 0.008 85)"; // --color-paper-100
+const PAPER_CANVAS = "oklch(0.985 0.006 85)"; // --color-paper-50 (light canvas)
 const CRIMSON = "oklch(0.6 0.2 26)"; // --color-crimson-500
+const CRIMSON_DEEP = "oklch(0.5 0.19 26)"; // --color-crimson-600 (light-mode accent)
 const SPARK = "oklch(0.85 0.15 90)"; // --color-spark-400
 
 /** Same geometry as PokectorIcon in app/components/brand.tsx. */
@@ -70,41 +72,42 @@ function buildIco(images /* [{size, buf}] */) {
   return Buffer.concat([header, ...entries, ...images.map((i) => i.buf)]);
 }
 
+/* Light, clean OG image (matches the light-by-default site look). */
 const OG_HTML = `<!doctype html><html><head><style>
   * { margin: 0; box-sizing: border-box; }
   body {
     width: 1200px; height: 630px; overflow: hidden;
-    background: ${INK};
+    background: ${PAPER_CANVAS};
     font-family: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    color: ${PAPER};
+    color: ${INK};
     display: flex; flex-direction: column; justify-content: center;
     padding: 0 96px; position: relative;
   }
   .grid {
     position: absolute; inset: 0;
     background-image:
-      linear-gradient(oklch(1 0 0 / 0.045) 1px, transparent 1px),
-      linear-gradient(90deg, oklch(1 0 0 / 0.045) 1px, transparent 1px);
+      linear-gradient(oklch(0.2 0.02 255 / 0.05) 1px, transparent 1px),
+      linear-gradient(90deg, oklch(0.2 0.02 255 / 0.05) 1px, transparent 1px);
     background-size: 60px 60px;
   }
   .chart { position: absolute; right: 0; bottom: 0; width: 640px; height: 360px; }
   .row { display: flex; align-items: center; gap: 28px; position: relative; }
   .mark { width: 120px; height: 120px; }
   h1 { font-size: 96px; font-weight: 800; letter-spacing: -0.03em; }
-  h1 span { color: ${CRIMSON}; }
-  p { position: relative; margin-top: 20px; font-size: 34px; color: oklch(0.78 0.015 255); }
+  h1 span { color: ${CRIMSON_DEEP}; }
+  p { position: relative; margin-top: 20px; font-size: 34px; color: oklch(0.4 0.02 255); }
   .badge {
     position: relative; margin-top: 36px; display: inline-flex; align-self: flex-start;
     align-items: center; gap: 12px; font-size: 26px; font-weight: 600;
-    color: oklch(0.8 0.13 155);
+    color: oklch(0.5 0.13 155);
   }
 </style></head><body>
   <div class="grid"></div>
   <svg class="chart" viewBox="0 0 640 360" fill="none">
     <path d="M0 330 L110 280 L200 300 L320 210 L420 240 L530 120 L640 60"
-      stroke="${CRIMSON}" stroke-width="6" stroke-linejoin="round" opacity="0.9"/>
+      stroke="${CRIMSON_DEEP}" stroke-width="6" stroke-linejoin="round" opacity="0.85"/>
     <path d="M0 330 L110 280 L200 300 L320 210 L420 240 L530 120 L640 60 V360 H0 Z"
-      fill="${CRIMSON}" opacity="0.08"/>
+      fill="${CRIMSON_DEEP}" opacity="0.07"/>
     <circle cx="530" cy="120" r="10" fill="${SPARK}" stroke="${INK}" stroke-width="4"/>
   </svg>
   <div class="row">
@@ -147,17 +150,22 @@ try {
   await page.setContent(OG_HTML);
   writeFileSync(join(brandDir, "pokector-og.png"), await page.screenshot({ type: "png" }));
 
-  // Print the sRGB hex of the dark canvas for theme-color/manifest.
-  const hex = await page.evaluate((ink) => {
-    const canvas = document.createElement("canvas");
-    canvas.width = canvas.height = 1;
-    const ctx = canvas.getContext("2d", { colorSpace: "srgb" });
-    ctx.fillStyle = ink;
-    ctx.fillRect(0, 0, 1, 1);
-    const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
-    return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
-  }, INK);
-  console.log(`ink-950 (${INK}) = ${hex}  ← use in root.tsx theme-color + manifest.webmanifest`);
+  // Print sRGB hexes of the canvas colors for theme-color/manifest (site is
+  // light by default, so those use the paper-50 value).
+  const toHex = (color) =>
+    page.evaluate((c) => {
+      const canvas = document.createElement("canvas");
+      canvas.width = canvas.height = 1;
+      const ctx = canvas.getContext("2d", { colorSpace: "srgb" });
+      ctx.fillStyle = c;
+      ctx.fillRect(0, 0, 1, 1);
+      const [r, g, b] = ctx.getImageData(0, 0, 1, 1).data;
+      return "#" + [r, g, b].map((v) => v.toString(16).padStart(2, "0")).join("");
+    }, color);
+  console.log(
+    `paper-50 (${PAPER_CANVAS}) = ${await toHex(PAPER_CANVAS)}  ← root.tsx theme-color + manifest.webmanifest`,
+  );
+  console.log(`ink-950 (${INK}) = ${await toHex(INK)}  (dark canvas, for reference)`);
   console.log("✓ brand assets written to public/brand/ + public/favicon.ico");
 } finally {
   await browser.close();
