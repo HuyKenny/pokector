@@ -3,7 +3,8 @@ import { Form, Link } from "react-router";
 import type { Route } from "./+types/home";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
-import { getHomepageData } from "~/lib/catalog/queries.server";
+import { getHomepageData, getPriceMovers } from "~/lib/catalog/queries.server";
+import { formatMinor, formatPercent } from "~/lib/money/decimal";
 import { canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
@@ -23,12 +24,22 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const { popularSets, recentCards } = await getHomepageData(db);
+  const [{ popularSets, recentCards }, moversUp, moversDown] = await Promise.all([
+    getHomepageData(db),
+    getPriceMovers(db, 7, "up", 4),
+    getPriceMovers(db, 7, "down", 4),
+  ]);
+  // Market ticker: strongest real 7-day moves in both directions. Empty when
+  // there isn't enough tracked history — the strip simply doesn't render.
+  const tickerMovers = [...moversUp, ...moversDown]
+    .sort((a, b) => Math.abs(b.changePercent) - Math.abs(a.changePercent))
+    .slice(0, 6);
   return {
     canonical: canonicalUrl(env.APP_URL, "/"),
     appUrl: env.APP_URL,
     popularSets,
     recentCards,
+    tickerMovers,
   };
 }
 

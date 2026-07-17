@@ -4,8 +4,8 @@
   "description": "Track your Pokémon TCG collection, portfolio value, binders, and set completion.",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#10151c",
-  "theme_color": "#10151c",
+  "background_color": "#050b16",
+  "theme_color": "#050b16",
   "icons": [
     {
       "src": "/brand/pokector-icon.svg",

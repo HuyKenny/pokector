@@ -84,8 +84,8 @@ function ProfileSection({
   function applyTheme(next: string) {
     setTheme(next as typeof theme);
     try {
-      if (next === "system") localStorage.removeItem(THEME_STORAGE_KEY);
-      else localStorage.setItem(THEME_STORAGE_KEY, next);
+      // "system" is stored explicitly — an absent key means the dark default.
+      localStorage.setItem(THEME_STORAGE_KEY, next);
       const dark =
         next === "dark" ||
         (next === "system" && window.matchMedia("(prefers-color-scheme: dark)").matches);
