@@ -10,12 +10,33 @@ const requestHandler = createRequestHandler(
   import.meta.env.MODE,
 );
 
+/** Canonical host + trailing-slash policy (SPEC §23): www → apex, no trailing
+ * slash except root. HTTP→HTTPS is enforced by Cloudflare at the edge. */
+function canonicalRedirect(url: URL, env: Env): Response | null {
+  const canonicalHost = new URL(env.APP_URL).host;
+  let changed = false;
+
+  if (url.host === `www.${canonicalHost}`) {
+    url.host = canonicalHost;
+    changed = true;
+  }
+  if (url.pathname.length > 1 && url.pathname.endsWith("/")) {
+    url.pathname = url.pathname.replace(/\/+$/, "");
+    changed = true;
+  }
+  return changed ? Response.redirect(url.toString(), 301) : null;
+}
+
 export default {
   async fetch(request, env, ctx) {
     const requestId = crypto.randomUUID();
     const startedAt = Date.now();
     const url = new URL(request.url);
     try {
+      if (request.method === "GET" || request.method === "HEAD") {
+        const redirect = canonicalRedirect(url, env);
+        if (redirect) return redirect;
+      }
       const routerContext = new RouterContextProvider();
       routerContext.set(cloudflareContext, { env, ctx });
       routerContext.set(requestIdContext, requestId);

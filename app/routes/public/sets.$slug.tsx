@@ -1,0 +1,372 @@
+import { data as dataResponse, Link, useSearchParams } from "react-router";
+
+import type { Route } from "./+types/sets.$slug";
+import { optionalUser } from "~/lib/auth/guards.server";
+import { getCloudflare } from "~/lib/context";
+import { createDb } from "~/lib/db/index.server";
+import { getSetBySlug } from "~/lib/catalog/queries.server";
+import { computeSetProgress } from "~/lib/sets/progress.server";
+import { formatMinor } from "~/lib/money/decimal";
+import {
+  breadcrumbJsonLd,
+  canonicalUrl,
+  collectionPageJsonLd,
+  JsonLd,
+  pageMeta,
+} from "~/lib/seo/meta";
+
+export function meta({ loaderData: data }: Route.MetaArgs) {
+  if (!data) {
+    return pageMeta({
+      title: "Set not found | Pokector",
+      description: "Set not found.",
+      noindex: true,
+    });
+  }
+  const { set } = data;
+  return pageMeta({
+    title: `${set.name} — Card List, Prices & Set Value | Pokector`,
+    description: `${set.name} (${set.series}${set.releaseDate ? `, released ${set.releaseDate}` : ""}) — complete card list with ${
+      set.total ?? "all"
+    } cards, market price estimates, and collection checklist on Pokector.`,
+    canonical: data.canonical,
+    image: set.logoUrl ?? undefined,
+  });
+}
+
+export function headers({ loaderHeaders }: Route.HeadersArgs) {
+  // Personalized (signed-in) responses must never be publicly cached; the
+  // loader sets the right policy via data() headers.
+  return {
+    "Cache-Control":
+      loaderHeaders.get("Cache-Control") ?? "public, s-maxage=600, stale-while-revalidate=3600",
+  };
+}
+
+export async function loader({ params, request, context }: Route.LoaderArgs) {
+  const { env } = getCloudflare(context);
+  const db = createDb(env.DB);
+  const data = await getSetBySlug(db, params.slug);
+  if (!data) throw new Response("Set not found", { status: 404 });
+
+  const session = await optionalUser(context, request);
+  const progress = session ? await computeSetProgress(db, session.user.id, data.set.id) : null;
+
+  const payload = {
+    set: {
+      id: data.set.id,
+      slug: data.set.slug,
+      name: data.set.name,
+      series: data.set.series,
+      releaseDate: data.set.releaseDate,
+      printedTotal: data.set.printedTotal,
+      total: data.set.total,
+      logoUrl: data.set.logoUrl,
+      symbolUrl: data.set.symbolUrl,
+      sourceUpdatedAt: data.set.sourceUpdatedAt,
+    },
+    cards: data.cards,
+    estimatedValueMinor: data.estimatedValueMinor,
+    pricedCount: data.pricedCount,
+    progress: progress
+      ? {
+          ownedCount: progress.ownedCount,
+          totalCount: progress.totalCount,
+          missingCount: progress.missingCount,
+          completionPercent: progress.completionPercent,
+          missingValueMinor: progress.missingValueMinor,
+          missingPricedCount: progress.missingPricedCount,
+          ownedCardIds: progress.ownedCardIds,
+        }
+      : null,
+    canonical: canonicalUrl(env.APP_URL, `/sets/${data.set.slug}`),
+    appUrl: env.APP_URL,
+  };
+
+  return dataResponse(payload, {
+    headers: {
+      "Cache-Control": progress
+        ? "private, no-store"
+        : "public, s-maxage=600, stale-while-revalidate=3600",
+    },
+  });
+}
+
+const RARITY_GROUPS = ["Common", "Uncommon", "Rare"];
+
+export default function SetDetail({ loaderData }: Route.ComponentProps) {
+  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl } = loaderData;
+  const [searchParams, setSearchParams] = useSearchParams();
+  const ownedFilter = searchParams.get("show"); // "owned" | "missing" | null
+  const rarityFilter = searchParams.get("rarity");
+  const typeFilter = searchParams.get("type");
+
+  const ownedSet = new Set(progress?.ownedCardIds ?? []);
+  const visibleCards = cards.filter((card) => {
+    if (progress && ownedFilter === "owned" && !ownedSet.has(card.id)) return false;
+    if (progress && ownedFilter === "missing" && ownedSet.has(card.id)) return false;
+    if (rarityFilter) {
+      if (rarityFilter === "Rare" && !(card.rarity ?? "").startsWith("Rare")) return false;
+      if (rarityFilter !== "Rare" && card.rarity !== rarityFilter) return false;
+    }
+    if (typeFilter && card.supertype !== typeFilter) return false;
+    return true;
+  });
+
+  function setFilter(key: string, value: string | null) {
+    const next = new URLSearchParams(searchParams);
+    if (value === null) next.delete(key);
+    else next.set(key, value);
+    setSearchParams(next, { preventScrollReset: true });
+  }
+
+  return (
+    <div className="flex flex-col gap-8">
+      <JsonLd
+        data={[
+          breadcrumbJsonLd(appUrl, [
+            { name: "Home", path: "/" },
+            { name: "Sets", path: "/sets" },
+            { name: set.name, path: `/sets/${set.slug}` },
+          ]),
+          collectionPageJsonLd(appUrl, {
+            name: `${set.name} card list`,
+            description: `All cards in the Pokémon TCG set ${set.name}.`,
+            path: `/sets/${set.slug}`,
+            items: cards
+              .slice(0, 10)
+              .map((card) => ({ name: card.name, path: `/cards/${card.slug}` })),
+          }),
+        ]}
+      />
+      <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">
+        <Link to="/" className="hover:text-fg">
+          Home
+        </Link>
+        <span aria-hidden="true"> / </span>
+        <Link to="/sets" className="hover:text-fg">
+          Sets
+        </Link>
+        <span aria-hidden="true"> / </span>
+        <span aria-current="page" className="text-fg">
+          {set.name}
+        </span>
+      </nav>
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-6">
+        {set.logoUrl ? (
+          <img src={set.logoUrl} alt="" className="h-16 w-auto object-contain" />
+        ) : null}
+        <div>
+          <h1 className="flex items-center gap-3 text-3xl font-bold text-fg">
+            {set.name}
+            {set.symbolUrl ? <img src={set.symbolUrl} alt="" className="h-6 w-6" /> : null}
+          </h1>
+          <p className="text-fg-muted">
+            {set.series}
+            {set.releaseDate ? ` · Released ${set.releaseDate}` : ""} · {set.total ?? "?"} cards
+            {set.printedTotal && set.total && set.printedTotal !== set.total
+              ? ` (${set.printedTotal} in printed set numbering)`
+              : ""}
+          </p>
+          {estimatedValueMinor !== null ? (
+            <p className="mt-1 text-sm text-fg-muted">
+              Estimated full-set market value:{" "}
+              <strong className="text-fg">{formatMinor(estimatedValueMinor)}</strong>{" "}
+              <span className="text-fg-faint">
+                (sum of cheapest priced variant for {pricedCount} of {cards.length} cards; raw
+                cards)
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-fg-faint">
+              Not enough price coverage yet to estimate a full-set value.
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Signed-in completion */}
+      {progress ? (
+        <section
+          aria-labelledby="progress-heading"
+          className="rounded-(--radius-card) border border-accent/40 bg-accent-soft p-5"
+        >
+          <h2 id="progress-heading" className="mb-2 font-semibold text-fg">
+            Your set completion
+          </h2>
+          <div
+            role="progressbar"
+            aria-valuenow={Math.round(progress.completionPercent)}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-label={`Set completion: ${progress.ownedCount} of ${progress.totalCount} cards`}
+            className="mb-2 h-3 w-full overflow-hidden rounded-full bg-surface"
+          >
+            <div className="h-full bg-accent" style={{ width: `${progress.completionPercent}%` }} />
+          </div>
+          <p className="text-sm text-fg-muted">
+            <strong className="text-fg">{progress.ownedCount}</strong> owned ·{" "}
+            <strong className="text-fg">{progress.missingCount}</strong> missing ·{" "}
+            {progress.completionPercent.toFixed(1)}% complete
+            {progress.missingValueMinor !== null ? (
+              <>
+                {" "}
+                · missing cards ≈{" "}
+                <strong className="text-fg">{formatMinor(progress.missingValueMinor)}</strong>
+                <span className="text-fg-faint">
+                  {" "}
+                  ({progress.missingPricedCount}/{progress.missingCount} priced, cheapest variants)
+                </span>
+              </>
+            ) : null}
+          </p>
+          <p className="mt-1 text-xs text-fg-faint">
+            Standard checklist: a card counts as owned when you have at least one copy of any
+            variant. Variant-level checklists are estimated from available market data and may be
+            incomplete.
+          </p>
+        </section>
+      ) : (
+        <p className="rounded-lg border border-edge bg-surface p-4 text-sm text-fg-muted">
+          <Link to="/login" className="text-accent hover:underline">
+            Sign in
+          </Link>{" "}
+          to see your completion progress for this set and the estimated cost of your missing cards.
+        </p>
+      )}
+
+      {/* Filters */}
+      <div
+        className="flex flex-wrap items-center gap-2 text-sm"
+        role="group"
+        aria-label="Card list filters"
+      >
+        {progress ? (
+          <>
+            <FilterChip
+              active={ownedFilter === null}
+              onClick={() => setFilter("show", null)}
+              label="All"
+            />
+            <FilterChip
+              active={ownedFilter === "owned"}
+              onClick={() => setFilter("show", "owned")}
+              label="Owned"
+            />
+            <FilterChip
+              active={ownedFilter === "missing"}
+              onClick={() => setFilter("show", "missing")}
+              label="Missing"
+            />
+            <span aria-hidden="true" className="mx-1 text-fg-faint">
+              |
+            </span>
+          </>
+        ) : null}
+        <FilterChip
+          active={rarityFilter === null}
+          onClick={() => setFilter("rarity", null)}
+          label="Any rarity"
+        />
+        {RARITY_GROUPS.map((rarity) => (
+          <FilterChip
+            key={rarity}
+            active={rarityFilter === rarity}
+            onClick={() => setFilter("rarity", rarity)}
+            label={rarity === "Rare" ? "Rare+" : rarity}
+          />
+        ))}
+        <span aria-hidden="true" className="mx-1 text-fg-faint">
+          |
+        </span>
+        <FilterChip
+          active={typeFilter === null}
+          onClick={() => setFilter("type", null)}
+          label="Any type"
+        />
+        {["Pokémon", "Trainer", "Energy"].map((supertype) => (
+          <FilterChip
+            key={supertype}
+            active={typeFilter === supertype}
+            onClick={() => setFilter("type", supertype)}
+            label={supertype}
+          />
+        ))}
+      </div>
+
+      {/* Card list */}
+      <p className="text-sm text-fg-muted" role="status">
+        Showing {visibleCards.length} of {cards.length} cards
+      </p>
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+        {visibleCards.map((card) => {
+          const owned = ownedSet.has(card.id);
+          return (
+            <li key={card.id} className="relative">
+              <Link to={`/cards/${card.slug}`} className="group flex h-full flex-col gap-2">
+                {progress ? (
+                  <span
+                    className={`absolute left-1.5 top-1.5 z-10 rounded px-1.5 py-0.5 text-[10px] font-bold uppercase ${
+                      owned ? "bg-accent text-white" : "bg-surface text-fg-muted border border-edge"
+                    }`}
+                  >
+                    {owned ? "Owned" : "Missing"}
+                  </span>
+                ) : null}
+                {card.imageSmallUrl ? (
+                  <img
+                    src={card.imageSmallUrl}
+                    alt={`${card.name} card`}
+                    loading="lazy"
+                    className={`aspect-[63/88] w-full rounded-lg border object-cover group-hover:border-accent ${
+                      progress && !owned ? "border-edge opacity-60" : "border-edge"
+                    }`}
+                  />
+                ) : (
+                  <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint">
+                    No image
+                  </span>
+                )}
+                <div>
+                  <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
+                    {card.name}
+                  </p>
+                  <p className="text-xs text-fg-faint">
+                    #{card.number}
+                    {card.rarity ? ` · ${card.rarity}` : ""}
+                    {card.priceMinor !== null ? ` · ${formatMinor(card.priceMinor)}` : ""}
+                  </p>
+                </div>
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`min-h-9 rounded-full px-3 text-xs font-medium ${
+        active ? "bg-accent text-white" : "border border-edge text-fg-muted hover:text-fg"
+      }`}
+    >
+      {label}
+    </button>
+  );
+}

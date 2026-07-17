@@ -68,11 +68,17 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 5 — Public site & SEO
 
-- [ ] Homepage, /cards, /cards/:slug, /sets, /sets/:slug, /price-movers
-- [ ] /methodology, /about, /blog (MDX + 5 articles), legal pages, /contact
-- [ ] Metadata, canonicals, OG/Twitter, structured data, breadcrumbs
-- [ ] robots.txt, sitemap index + chunked sitemaps, RSS
-- [ ] Redirects (www→apex, trailing slash), 404/410
+- [x] Public layout (skip-link, header search, auth-aware CTAs, trademark-disclaimer footer)
+- [x] Homepage (hero+search, features, latest sets, recent cards, valuation explainer, CTA, WebSite JSON-LD + SearchAction)
+- [x] /cards: D1 search (rate-limited), filters (rarity/supertype/sort), pagination, noindex on filter combos
+- [x] /cards/:slug: image, facts, per-variant TCGplayer price table + Cardmarket EUR, source+date, tracking-since, accessible price-history chart (ranges, data table, honest empty state), quick-add CTAs (collection+wishlist, functional), related cards, raw-card disclaimer, breadcrumbs+JSON-LD
+- [x] /sets + /sets/:slug: series filter/sorts, set value estimate w/ coverage note, signed-in completion (progressbar, missing cost, owned/missing/rarity/type filters, private no-store via data() headers)
+- [x] /price-movers: 7/30-day up/down from REAL history only, honest empty states
+- [x] /methodology /about /contact + legal templates (privacy/terms/disclaimer, config-driven operator data, marked for review)
+- [x] Blog: MDX pipeline (@mdx-js/rollup + frontmatter), 5 original articles, categories, pagination, Article JSON-LD
+- [x] SEO: pageMeta builder (unique titles/descriptions, canonical, OG/Twitter), BreadcrumbList/CollectionPage JSON-LD, robots.txt (staging=disallow all), sitemap index + chunked card sitemaps + sets/blog/static, RSS, security.txt, OG image (brand-only)
+- [x] Redirects: www→apex + trailing-slash 301 in worker; 404 catchall; noindex for auth/app/admin
+- [x] Verified: 21 routes smoke-tested (200/404/301), card page shows real synced prices, build+lint+typecheck+34 unit tests green
 
 ## Phase 6 — Collection & portfolio
 
