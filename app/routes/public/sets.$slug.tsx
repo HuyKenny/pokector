@@ -106,8 +106,14 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
     if (progress && ownedFilter === "owned" && !ownedSet.has(card.id)) return false;
     if (progress && ownedFilter === "missing" && ownedSet.has(card.id)) return false;
     if (rarityFilter) {
-      if (rarityFilter === "Rare" && !(card.rarity ?? "").startsWith("Rare")) return false;
-      if (rarityFilter !== "Rare" && card.rarity !== rarityFilter) return false;
+      // "Rare+" bucket = anything beyond Common/Uncommon. Modern rarity names
+      // ("Double Rare", "Illustration Rare", "Ultra Rare", …) don't share a
+      // common prefix, so membership is defined by exclusion.
+      if (rarityFilter === "Rare") {
+        if (!card.rarity || card.rarity === "Common" || card.rarity === "Uncommon") return false;
+      } else if (card.rarity !== rarityFilter) {
+        return false;
+      }
     }
     if (typeFilter && card.supertype !== typeFilter) return false;
     return true;

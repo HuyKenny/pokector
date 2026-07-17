@@ -60,6 +60,9 @@ export default tseslint.config(
         URL: "readonly",
         crypto: "readonly",
         performance: "readonly",
+        // page.evaluate callbacks in smoke-live.mjs run in the browser:
+        document: "readonly",
+        window: "readonly",
       },
     },
   },

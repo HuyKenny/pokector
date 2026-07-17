@@ -10,7 +10,10 @@
  *   inline scripts; dev is never public, so this is an accepted local relaxation.
  */
 
-const PTCG_IMAGE_HOST = "https://images.pokemontcg.io";
+/** Image hosts the Pokémon TCG API returns for card/set artwork. The API moved
+ * newer sets (me2pt5+) to images.scrydex.com — both hosts must be allowed or
+ * the browser blocks the images (seen live on /sets/pitch-black-me5). */
+const PTCG_IMAGE_HOSTS = ["https://images.pokemontcg.io", "https://images.scrydex.com"];
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
 export interface SecurityOptions {
@@ -28,7 +31,7 @@ export function contentSecurityPolicy(options: SecurityOptions): string {
 
   return [
     "default-src 'self'",
-    `img-src 'self' ${PTCG_IMAGE_HOST} data:`,
+    `img-src 'self' ${PTCG_IMAGE_HOSTS.join(" ")} data:`,
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     `frame-src ${TURNSTILE_HOST}`,

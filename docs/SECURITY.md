@@ -15,13 +15,14 @@ Last updated: 2026-07-17 (Phase 0 baseline; verified controls updated per phase)
 
 ## HTTP security headers (all responses)
 
-- `Content-Security-Policy`: `default-src 'self'`; `img-src 'self' https://images.pokemontcg.io data:`; `script-src 'self'` (+ Turnstile `https://challenges.cloudflare.com`); `frame-src https://challenges.cloudflare.com` (Turnstile only); `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`.
+- `Content-Security-Policy`: `default-src 'self'`; `img-src 'self' https://images.pokemontcg.io https://images.scrydex.com data:`; `script-src 'self'` (+ Turnstile `https://challenges.cloudflare.com`); `frame-src https://challenges.cloudflare.com` (Turnstile only); `object-src 'none'`; `base-uri 'self'`; `form-action 'self'`; `frame-ancestors 'none'`.
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains` (production only).
 - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
   `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`.
 - `/app`, `/admin`, `/api/v1` private responses: `Cache-Control: private, no-store`.
 
-Card images come only from the PTCG image host (`images.pokemontcg.io`) as returned by
+Card images come only from the PTCG image hosts (`images.pokemontcg.io`, and
+`images.scrydex.com` used for newer sets) as returned by
 the catalog — user input can never introduce another image origin.
 
 ## AuthN/AuthZ

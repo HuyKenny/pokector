@@ -60,6 +60,12 @@ pnpm deploy:staging                        # CLOUDFLARE_ENV=staging build + depl
 pnpm db:migrate:production
 pnpm deploy:production                     # CLOUDFLARE_ENV=production build + deploy
 pnpm admin:grant --email user@example.com  # first admin (confirms interactively)
+
+# MANDATORY after every staging/production deploy — headless-browser check of
+# hydration + CSP (dev runs 'unsafe-inline', so only deployed envs exercise the
+# nonce-based CSP; a missing nonce on RR's streamed scripts kills ALL client
+# interactivity while every server-rendered page still looks fine):
+cd ~/ai && node pokector/scripts/smoke-live.mjs https://pokector.com
 ```
 
 Note (verified 2026-07-17): with `@cloudflare/vite-plugin`, the target environment is

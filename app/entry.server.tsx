@@ -1,20 +1,35 @@
-import type { EntryContext } from "react-router";
+import type { EntryContext, RouterContextProvider } from "react-router";
 import { ServerRouter } from "react-router";
 import { isbot } from "isbot";
 import { renderToReadableStream } from "react-dom/server";
+
+import { nonceContext } from "./lib/context";
 
 export default async function handleRequest(
   request: Request,
   responseStatusCode: number,
   responseHeaders: Headers,
   routerContext: EntryContext,
+  loadContext?: Readonly<RouterContextProvider>,
 ) {
   let shellRendered = false;
   const userAgent = request.headers.get("user-agent");
 
+  // The per-request CSP nonce MUST reach both React's runtime scripts
+  // (renderToReadableStream option) and React Router's streamed
+  // `streamController.enqueue` inline scripts (ServerRouter prop) — otherwise
+  // the strict nonce-based CSP blocks them and hydration never happens.
+  let nonce: string | undefined;
+  try {
+    nonce = loadContext?.get(nonceContext);
+  } catch {
+    nonce = undefined; // context not provided (e.g. tests)
+  }
+
   const body = await renderToReadableStream(
-    <ServerRouter context={routerContext} url={request.url} />,
+    <ServerRouter context={routerContext} url={request.url} nonce={nonce} />,
     {
+      nonce,
       onError(error: unknown) {
         responseStatusCode = 500;
         // Log streaming rendering errors from inside the shell.  Don't log
