@@ -119,8 +119,12 @@
       "triggers": {
         "crons": ["*/5 * * * *", "17 5 * * *"],
       },
-      // Custom domain attached in Phase 10 (after parking DNS replacement):
-      // "routes": [{ "pattern": "pokector.com", "custom_domain": true }],
+      // Custom domains (parking DNS replaced 2026-07-17). Both apex and www hit
+      // the worker; www→apex 301 is handled in workers/app.ts (canonicalRedirect).
+      "routes": [
+        { "pattern": "pokector.com", "custom_domain": true },
+        { "pattern": "www.pokector.com", "custom_domain": true },
+      ],
       "vars": {
         "APP_NAME": "Pokector",
         "APP_URL": "https://pokector.com",
@@ -128,7 +132,7 @@
         "DEFAULT_CURRENCY": "USD",
         "DEFAULT_LOCALE": "en-US",
         // replaced with the real production widget sitekey in Phase 10
-        "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAD33n0rHJcspIYG9",
         "SUPPORT_EMAIL": "info@pokector.com",
         "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
         "LEGAL_CONTACT_EMAIL": "info@pokector.com",

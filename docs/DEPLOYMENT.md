@@ -79,10 +79,14 @@ previously built environment.
   `GOOGLE_CLIENT_ID/SECRET` to enable Google OAuth.
 - GitHub remote + repo secrets if CI deploys are wanted (workflows are included).
 
-## Status
+## Status (2026-07-17)
 
-- [ ] Staging deployed
-- [ ] Staging smoke tests passed
-- [ ] Production deployed
-- [ ] Domain attached
-- [ ] Production smoke tests passed
+- [x] Staging deployed — https://pokector-staging.huy-kenny.workers.dev
+- [x] Staging smoke tests passed
+- [x] Production deployed — https://pokector-production.huy-kenny.workers.dev
+- [x] Domain attached — https://pokector.com + www→apex (parking DNS replaced)
+- [x] Production smoke tests passed
+- [x] Turnstile production widget provisioned (sitekey 0x4AAAAAAD33n0rHJcspIYG9)
+
+Rollback (if ever needed): recreate proxied A pokector.com/www → 185.8.237.22 and
+AAAA → 2a0e:acc0::d22 (original WEDOS parking), remove custom-domain routes.

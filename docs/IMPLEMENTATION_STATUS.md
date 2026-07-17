@@ -3,7 +3,7 @@
 > Living checklist. Update after every phase. Do not mark items complete until
 > implemented AND verified. Spec contract: [SPEC.md](SPEC.md).
 
-Last updated: 2026-07-17 (Phase 9 complete)
+Last updated: 2026-07-17 (Phase 10 — deployed to production)
 
 ## Phase 0 — Inspection, docs, plan
 
@@ -124,11 +124,13 @@ Last updated: 2026-07-17 (Phase 9 complete)
 
 ## Phase 10 — Deployment
 
-- [ ] Staging resources + migrations + deploy + smoke tests
-- [ ] Production resources + secrets + deploy + health
-- [ ] Domain attach (replace parking DNS — owner approved) + www redirect
-- [ ] Production smoke tests
-- [ ] Final report (SPEC §31)
+- [x] Staging: remote D1 migrations, secrets (PTCG, BETTER_AUTH_SECRET, Turnstile test), deployed to https://pokector-staging.huy-kenny.workers.dev
+- [x] Staging smoke: health ok, robots disallow-all (noindex), CSP+nonce, register→login→admin, controlled real catalog sync (174 sets + card pages chaining, 0 failed)
+- [x] Production: remote D1 migrations, secrets (PTCG, BETTER_AUTH_SECRET, real Turnstile), real Turnstile widget provisioned for pokector.com/www
+- [x] Domain attached: parking DNS deleted (6 records, rollback documented), custom domains pokector.com + www.pokector.com; HTTPS live, edge cert provisioned
+- [x] Production smoke: health ok, home SSR 200, www→apex 301, trailing-slash 301, HSTS+CSP+frame+referrer headers, robots allow (+CF AI-bot mgmt) with sitemap, no secret in live client bundle, Turnstile enforced (tokenless signup 400)
+- [x] Production catalog sync enqueued; daily cron (17:05 UTC) + */5 job runner populate the live catalog
+- [x] Final report delivered (SPEC §31)
 
 ## Blocked / external dependencies
 
