@@ -201,7 +201,7 @@ export function HistoryChart({
           </button>
           {showTable ? (
             <div className="max-h-64 overflow-auto rounded-lg border border-edge">
-              <table className="w-full text-left text-sm">
+              <table className="w-full text-start text-sm">
                 <caption className="sr-only">{title} — data table</caption>
                 <thead className="sticky top-0 bg-surface-raised">
                   <tr>

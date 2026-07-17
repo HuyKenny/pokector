@@ -151,7 +151,7 @@ function MoverSection({
                     {mover.setName} · {mover.variant}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-end">
                   <p className="text-sm font-semibold text-fg">
                     {formatMinor(mover.currentMinor, "USD", langTag)}
                   </p>

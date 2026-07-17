@@ -92,7 +92,7 @@ export function ErrorBoundary({ error }: Route.ErrorBoundaryProps) {
         Back to homepage
       </a>
       {stack ? (
-        <pre className="mt-6 w-full overflow-x-auto rounded-lg bg-surface-raised p-4 text-left text-xs">
+        <pre className="mt-6 w-full overflow-x-auto rounded-lg bg-surface-raised p-4 text-start text-xs">
           <code>{stack}</code>
         </pre>
       ) : null}
