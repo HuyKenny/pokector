@@ -215,22 +215,26 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               <p className="text-sm text-fg-muted">{t.pricesEmpty}</p>
             ) : (
               <div className="overflow-x-auto">
-                <table className="w-full text-start text-sm">
+                {/* Numeric columns are right-aligned (tabular-nums) so prices line
+                    up; the <th> alignment is set explicitly because the browser
+                    default (text-align:center) would otherwise beat the table's
+                    inherited alignment and leave headers off from their values. */}
+                <table className="w-full text-sm">
                   <thead>
                     <tr className="border-b border-edge text-fg-muted">
-                      <th scope="col" className="py-2 pe-4">
+                      <th scope="col" className="py-2 pe-4 text-start font-medium">
                         {t.colVariant}
                       </th>
-                      <th scope="col" className="py-2 pe-4">
+                      <th scope="col" className="py-2 pe-4 text-end font-medium">
                         {t.colMarket}
                       </th>
-                      <th scope="col" className="py-2 pe-4">
+                      <th scope="col" className="py-2 pe-4 text-end font-medium">
                         {t.colLow}
                       </th>
-                      <th scope="col" className="py-2 pe-4">
+                      <th scope="col" className="py-2 pe-4 text-end font-medium">
                         {t.colMid}
                       </th>
-                      <th scope="col" className="py-2">
+                      <th scope="col" className="py-2 text-end font-medium">
                         {t.colHigh}
                       </th>
                     </tr>
@@ -238,15 +242,15 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                   <tbody>
                     {tcgplayer.map((price) => (
                       <tr key={price.variant} className="border-b border-edge/50">
-                        <th scope="row" className="py-2 pe-4 font-medium text-fg">
+                        <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
                           {variantLabel(price.variant)}
                         </th>
-                        <td className="py-2 pe-4 font-semibold text-fg">
+                        <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
                           {money(price.normalizedPriceMinor)}
                         </td>
-                        <td className="py-2 pe-4">{money(price.lowMinor)}</td>
-                        <td className="py-2 pe-4">{money(price.midMinor)}</td>
-                        <td className="py-2">{money(price.highMinor)}</td>
+                        <td className="py-2 pe-4 text-end tabular-nums">{money(price.lowMinor)}</td>
+                        <td className="py-2 pe-4 text-end tabular-nums">{money(price.midMinor)}</td>
+                        <td className="py-2 text-end tabular-nums">{money(price.highMinor)}</td>
                       </tr>
                     ))}
                   </tbody>
