@@ -72,8 +72,10 @@ production expose a request ID, never a stack trace.
 
 ## Verification (Phase 9 fills in results)
 
-- [ ] User data isolation integration tests
-- [ ] Admin authorization tests
-- [ ] Client bundle secret scan
-- [ ] Dependency audit (`pnpm audit`)
-- [ ] Header/CSP verification on staging + production
+- [x] User data isolation integration tests (collection/binders/wishlist BOLA + E2E foreign-binder 404)
+- [x] Admin authorization (requireAdmin double-guard; 404 for non-admins; role only via CLI)
+- [x] Client bundle secret scan — no secret values or `.server` modules in build/client (Phase 9, see COST_AND_SCALING.md)
+- [x] Dependency audit (`pnpm audit --prod`) — 1 moderate, dev-only esbuild advisory, not production-reachable
+- [x] Accessibility: axe-core WCAG 2.1 AA on home/cards/card/login/register/dashboard/collection — 0 serious/critical
+- [x] CSP verified: strict nonce-based script-src in staging/production hydrates correctly; dev uses unsafe-inline (never public)
+- [ ] Header/CSP verification on the live staging + production URLs (Phase 10 smoke tests)

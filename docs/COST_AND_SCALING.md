@@ -41,6 +41,46 @@ developers.cloudflare.com documentation, **retrieved 2026-07-16/17**.
 
 Single upgrade path: everything runs unchanged on Workers Paid; no architectural change needed.
 
-## Measured results
+## Measured results (Phase 9, local D1)
 
-(Phase 9 fills this in: synthetic-scale query timings + query plans.)
+Synthetic dataset generated with `scripts/synth-data.mjs` (validated at 516 users
+/ 40,006 collection entries against the real 19,629-card synced catalog; the
+generator's default target is 10,000 users / 1,000,000 entries — the query plans
+below are size-independent because they are index seeks, not scans).
+
+`scripts/perf-test.mjs` — `EXPLAIN QUERY PLAN` on hot paths (timings include
+~2 s of `wrangler` CLI startup and are not representative of in-Worker latency;
+the **plan** is the signal):
+
+| Query                     | Plan                                                                                                                   |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| collection by user (page) | `SEARCH collection_entries USING INDEX idx_collection_user_updated (user_id=?)`                                        |
+| portfolio sum (user)      | `SEARCH e USING INDEX idx_collection_user_updated` + `SEARCH p USING COVERING INDEX (card_id,source,variant,currency)` |
+| snapshots by user+date    | `SEARCH portfolio_snapshots USING INDEX idx_snapshots_user_date (user_id=?)`                                           |
+| cards by set              | `SEARCH pokemon_cards USING INDEX idx_cards_set_number (set_id=?)`                                                     |
+
+All per-user and catalog-navigation hot paths are index seeks — request cost is
+per-page, independent of total table size, so the 1M-entry target is safe.
+
+**Known characteristic — catalog name search:** `/cards?q=` uses
+`name_normalized LIKE 'x%' OR search_text LIKE '%x%'`; the substring `OR` forces
+a scan of the (bounded) ~20k-row catalog. Mitigations: public search is
+rate-limited (KV), `/cards` responses are edge-cached (`s-maxage`+SWR), and 20k
+rows/scan × realistic search volume stays far under the 5M rows-read/day free
+budget. If search volume grows, the upgrade path is an FTS5 virtual table
+(documented, not yet needed).
+
+## Security review (Phase 9)
+
+- **Client-bundle secret scan** (`build/client/`): no PTCG key, `BETTER_AUTH_SECRET`,
+  or Turnstile secret values present; no `.server` modules (createDb / drizzle
+  adapter / scrypt) leaked to the client. (The string `POKEMON_TCG_API_KEY`
+  appears only inside the admin UI's _instructional_ `wrangler secret put …`
+  help text — a variable name, not a value.)
+- **Dependency audit** (`pnpm audit --prod`): 1 moderate — GHSA-67mh-4wv8-2f99
+  (esbuild dev-server CORS), transitive via `drizzle-kit` → `@esbuild-kit`.
+  Affects only `esbuild serve` in local development; not reachable in the
+  production Worker. Tracked for upstream resolution.
+- **User-data isolation & admin authorization** verified by integration tests
+  (collection/binders/wishlist BOLA, foreign-binder 404) and E2E (guarded /app,
+  foreign binder id → 404).

@@ -5,9 +5,11 @@ import {
   Outlet,
   Scripts,
   ScrollRestoration,
+  useRouteLoaderData,
 } from "react-router";
 
 import type { Route } from "./+types/root";
+import { nonceContext } from "./lib/context";
 import { THEME_SCRIPT } from "./lib/theme";
 import "./app.css";
 
@@ -17,7 +19,14 @@ export const links: Route.LinksFunction = () => [
   { rel: "manifest", href: "/manifest.webmanifest" },
 ];
 
+/** Expose the per-request CSP nonce to the document so inline scripts match. */
+export function loader({ context }: Route.LoaderArgs) {
+  return { nonce: context.get(nonceContext) };
+}
+
 export function Layout({ children }: { children: React.ReactNode }) {
+  const data = useRouteLoaderData<typeof loader>("root");
+  const nonce = data?.nonce;
   return (
     <html lang="en">
       <head>
@@ -26,13 +35,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <meta name="theme-color" content="#10151c" />
         <Meta />
         <Links />
-        {/* Pre-hydration theme selection; hash allow-listed in CSP. */}
-        <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* Pre-hydration theme selection; carries the CSP nonce. */}
+        <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
       </head>
       <body className="min-h-screen bg-canvas font-sans text-fg antialiased">
         {children}
-        <ScrollRestoration />
-        <Scripts />
+        <ScrollRestoration nonce={nonce} />
+        <Scripts nonce={nonce} />
       </body>
     </html>
   );

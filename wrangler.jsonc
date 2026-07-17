@@ -29,6 +29,9 @@
     "DEFAULT_LOCALE": "en-US",
     // Official Cloudflare Turnstile visible always-pass TEST sitekey (public)
     "TURNSTILE_SITE_KEY": "1x00000000000000000000AA",
+    // Local dev / E2E only: skip the browser Turnstile gate so automated flows
+    // don't depend on the external challenge widget. NOT set in staging/production.
+    "CAPTCHA_DISABLED": "true",
     "SUPPORT_EMAIL": "info@pokector.com",
     "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
     "LEGAL_CONTACT_EMAIL": "info@pokector.com",

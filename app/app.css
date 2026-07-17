@@ -37,23 +37,28 @@
   --color-coral-600: oklch(0.58 0.15 33);
   --color-coral-700: oklch(0.5 0.13 33);
 
-  /* Semantic tokens (referenced as bg-surface, text-fg, border-edge, …) */
+  /* Semantic tokens (referenced as bg-surface, text-fg, border-edge, …).
+     Light-theme accent/secondary/negative are tuned so BOTH white-on-color and
+     color-on-white clear WCAG AA 4.5:1 (verified via axe). */
   --color-canvas: var(--color-paper-50);
   --color-surface: oklch(1 0 0);
   --color-surface-raised: var(--color-paper-100);
   --color-edge: var(--color-paper-300);
   --color-fg: var(--color-ink-950);
-  --color-fg-muted: var(--color-ink-600);
-  --color-fg-faint: oklch(0.55 0.015 250);
-  --color-accent: var(--color-mint-600);
-  --color-accent-strong: var(--color-mint-700);
+  --color-fg-muted: oklch(0.4 0.02 250);
+  --color-fg-faint: oklch(0.44 0.015 250);
+  --color-accent: oklch(0.48 0.11 168);
+  --color-accent-strong: oklch(0.43 0.1 168);
   --color-accent-soft: oklch(0.95 0.035 168);
-  --color-secondary: var(--color-coral-600);
+  /* Text placed on an accent/secondary fill. */
+  --color-on-accent: oklch(1 0 0);
+  --color-on-secondary: oklch(1 0 0);
+  --color-secondary: oklch(0.52 0.16 30);
   --color-secondary-soft: oklch(0.95 0.03 33);
-  --color-positive: oklch(0.55 0.13 160);
-  --color-negative: oklch(0.55 0.17 27);
-  --color-warning: oklch(0.62 0.13 70);
-  --color-focus: var(--color-mint-500);
+  --color-positive: oklch(0.5 0.13 160);
+  --color-negative: oklch(0.5 0.19 27);
+  --color-warning: oklch(0.52 0.13 70);
+  --color-focus: var(--color-mint-600);
 
   --radius-card: 0.75rem;
   --shadow-card: 0 1px 2px oklch(0.2 0.02 250 / 0.06), 0 4px 12px oklch(0.2 0.02 250 / 0.05);
@@ -66,16 +71,20 @@
   --color-surface-raised: var(--color-ink-800);
   --color-edge: var(--color-ink-700);
   --color-fg: var(--color-paper-100);
-  --color-fg-muted: oklch(0.72 0.015 250);
-  --color-fg-faint: oklch(0.6 0.015 250);
-  --color-accent: var(--color-mint-500);
-  --color-accent-strong: var(--color-mint-400);
+  --color-fg-muted: oklch(0.74 0.015 250);
+  --color-fg-faint: oklch(0.64 0.015 250);
+  --color-accent: oklch(0.82 0.13 168);
+  --color-accent-strong: oklch(0.88 0.12 168);
   --color-accent-soft: oklch(0.28 0.045 168);
-  --color-secondary: var(--color-coral-500);
+  /* On a bright accent/secondary fill in dark mode, use dark ink text. */
+  --color-on-accent: oklch(0.19 0.02 250);
+  --color-on-secondary: oklch(0.19 0.02 250);
+  --color-secondary: oklch(0.78 0.15 33);
   --color-secondary-soft: oklch(0.3 0.05 33);
-  --color-positive: oklch(0.72 0.13 160);
-  --color-negative: oklch(0.68 0.16 27);
-  --color-warning: oklch(0.75 0.12 70);
+  --color-positive: oklch(0.78 0.13 160);
+  --color-negative: oklch(0.72 0.16 27);
+  --color-warning: oklch(0.8 0.12 70);
+  --color-focus: var(--color-mint-400);
   --shadow-card: 0 1px 2px oklch(0 0 0 / 0.4), 0 4px 12px oklch(0 0 0 / 0.3);
 }
 
@@ -180,4 +189,18 @@ html.dark {
 .prose-blog a {
   color: var(--color-accent);
   text-decoration: underline;
+}
+
+/* In-content links (not nav, not button-styled) get a persistent underline so
+   they are distinguishable without relying on color alone (WCAG 1.4.1). */
+a:not([class*="rounded"]):not(:where(nav *)):not(:where(footer *)) {
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+/* Dark-mode safety net: filled accent/secondary controls (including CTAs that
+   hardcode text-white) get dark ink text so they clear AA on the bright fill. */
+.dark :is(a, button)[class*="bg-accent"]:not([class*="bg-accent-soft"]),
+.dark :is(a, button)[class*="bg-secondary"]:not([class*="bg-secondary-soft"]) {
+  color: var(--color-on-accent);
 }

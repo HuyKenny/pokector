@@ -23,7 +23,9 @@
     "deploy:dry-run": "CLOUDFLARE_ENV=production react-router build && wrangler deploy --dry-run",
     "preview": "pnpm run build && vite preview",
     "cf-typegen": "wrangler types",
-    "postinstall": "wrangler types"
+    "postinstall": "wrangler types",
+    "synth:data": "node scripts/synth-data.mjs",
+    "perf:test": "node scripts/perf-test.mjs"
   },
   "dependencies": {
     "@better-auth/drizzle-adapter": "^1.6.23",

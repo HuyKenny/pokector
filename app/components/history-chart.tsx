@@ -131,6 +131,7 @@ export function HistoryChart({
           <div className="h-56" aria-hidden={!mounted}>
             {mounted ? (
               <Line
+                aria-label={summary}
                 data={{
                   labels: points.map((p) => p.date),
                   datasets: [

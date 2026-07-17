@@ -6,6 +6,7 @@ import { PokectorWordmark } from "~/components/brand";
 import { Turnstile } from "~/components/turnstile";
 import { Alert, Button, Card, Input } from "~/components/ui";
 import { authClient } from "~/lib/auth-client";
+import { captchaEnabled } from "~/lib/auth/captcha";
 import { getCloudflare } from "~/lib/context";
 import { isEmailConfigured } from "~/lib/email/index.server";
 
@@ -17,7 +18,7 @@ export function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   return {
     siteKey: env.TURNSTILE_SITE_KEY,
-    captchaRequired: Boolean(env.TURNSTILE_SECRET_KEY),
+    captchaRequired: captchaEnabled(env),
     emailConfigured: isEmailConfigured(env),
     supportEmail: env.SUPPORT_EMAIL,
   };

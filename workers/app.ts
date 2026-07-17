@@ -1,6 +1,6 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 
-import { cloudflareContext, requestIdContext } from "../app/lib/context";
+import { cloudflareContext, nonceContext, requestIdContext } from "../app/lib/context";
 import { onQueueBatch, onScheduled } from "../app/lib/jobs/runtime.server";
 import { log } from "../app/lib/log.server";
 import { applySecurityHeaders } from "../app/lib/security/headers.server";
@@ -37,12 +37,16 @@ export default {
         const redirect = canonicalRedirect(url, env);
         if (redirect) return redirect;
       }
+      const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
       const routerContext = new RouterContextProvider();
       routerContext.set(cloudflareContext, { env, ctx });
       routerContext.set(requestIdContext, requestId);
+      routerContext.set(nonceContext, nonce);
       const response = await requestHandler(request, routerContext);
       const secured = applySecurityHeaders(response, {
+        secure: env.ENVIRONMENT !== "development",
         production: env.ENVIRONMENT === "production",
+        nonce,
       });
       secured.headers.set("X-Request-Id", requestId);
       log.info("request", {

@@ -15,6 +15,10 @@ export const cloudflareContext = createContext<CloudflareContextValue>();
 /** Correlation ID attached to logs and error responses. */
 export const requestIdContext = createContext<string>();
 
+/** Per-request CSP nonce; stamped on all inline scripts so the strict
+ * production/staging CSP can drop 'unsafe-inline'. */
+export const nonceContext = createContext<string>();
+
 export function getCloudflare(context: Readonly<RouterContextProvider>): CloudflareContextValue {
   return context.get(cloudflareContext);
 }

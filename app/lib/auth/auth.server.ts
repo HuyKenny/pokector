@@ -10,6 +10,7 @@ import { admin, captcha } from "better-auth/plugins";
 import { createDb, schema } from "../db/index.server";
 import { getEmailProvider } from "../email/index.server";
 import { log } from "../log.server";
+import { captchaEnabled } from "./captcha";
 import { hashPassword, verifyPassword } from "./scrypt.server";
 
 export type Auth = ReturnType<typeof getAuth>;
@@ -29,7 +30,12 @@ export function getAuth(env: Env) {
     appName: env.APP_NAME,
     baseURL: env.APP_URL,
     secret: env.BETTER_AUTH_SECRET,
-    trustedOrigins: [env.APP_URL],
+    // Production/staging trust only the canonical origin. Local development (any
+    // port, and E2E servers) trust localhost so same-machine flows work.
+    trustedOrigins:
+      env.ENVIRONMENT === "development"
+        ? [env.APP_URL, "http://localhost:*", "http://127.0.0.1:*"]
+        : [env.APP_URL],
 
     database: drizzleAdapter(db, { provider: "sqlite", schema }),
 
@@ -148,11 +154,11 @@ export function getAuth(env: Env) {
 
     plugins: [
       admin({ defaultRole: "user", adminRoles: ["admin"] }),
-      ...(env.TURNSTILE_SECRET_KEY
+      ...(captchaEnabled(env)
         ? [
             captcha({
               provider: "cloudflare-turnstile",
-              secretKey: env.TURNSTILE_SECRET_KEY,
+              secretKey: env.TURNSTILE_SECRET_KEY!,
               endpoints: ["/sign-up/email", "/sign-in/email", "/request-password-reset"],
             }),
           ]

@@ -59,6 +59,7 @@ export default tseslint.config(
         AbortSignal: "readonly",
         URL: "readonly",
         crypto: "readonly",
+        performance: "readonly",
       },
     },
   },

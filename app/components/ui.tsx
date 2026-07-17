@@ -9,7 +9,7 @@ export function Button({
 }) {
   const styles = {
     primary:
-      "bg-accent text-white hover:bg-accent-strong disabled:opacity-50 disabled:cursor-not-allowed",
+      "bg-accent text-(color:--color-on-accent) hover:bg-accent-strong disabled:opacity-50 disabled:cursor-not-allowed",
     secondary:
       "border border-edge bg-surface text-fg hover:bg-surface-raised disabled:opacity-50 disabled:cursor-not-allowed",
     danger:

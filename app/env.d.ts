@@ -14,4 +14,7 @@ interface Env {
   /** Both absent → Google OAuth hidden. */
   GOOGLE_CLIENT_ID?: string;
   GOOGLE_CLIENT_SECRET?: string;
+  /** "true" only in local development/E2E — skips the Turnstile gate. Never set
+   * in staging/production, so captcha is always enforced there. */
+  CAPTCHA_DISABLED?: string;
 }

@@ -3,7 +3,7 @@
 > Living checklist. Update after every phase. Do not mark items complete until
 > implemented AND verified. Spec contract: [SPEC.md](SPEC.md).
 
-Last updated: 2026-07-17 (Phase 2 complete)
+Last updated: 2026-07-17 (Phase 9 complete)
 
 ## Phase 0 — Inspection, docs, plan
 
@@ -113,11 +113,14 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 9 — Testing & reviews
 
-- [ ] Unit tests (Vitest)
-- [ ] Integration tests (@cloudflare/vitest-pool-workers)
-- [ ] E2E (Playwright) + accessibility (axe-core)
-- [ ] Security review vs threat model
-- [ ] Synthetic data generator + performance results
+- [x] Unit tests: 62 (Vitest) — money/decimal, pricing selection, variant map, portfolio calc, alert crossings, CSV escape/parse/validate, slug, scrypt
+- [x] Integration tests: 18 (@cloudflare/vitest-pool-workers, real D1+migrations) — schema, auth session/isolation, catalog sync idempotency + retry/dead-letter, history dedup, collection CRUD isolation, binder ownership/privacy, import apply+merge, export isolation
+- [x] E2E: Playwright desktop + mobile (11 each) — homepage, search, card page, register→onboarding→dashboard, add-to-collection→portfolio value, guarded routes, logout, foreign-binder 404, mobile nav, dark mode, 404
+- [x] Accessibility: axe-core WCAG 2.1 AA on 7 key pages — 0 serious/critical (fixed palette contrast to AA, added in-content link underlines, chart canvas aria-label)
+- [x] Fixed a real production bug found via E2E: strict CSP blocked SSR hydration → switched to per-request nonce (prod/staging strict, dev unsafe-inline)
+- [x] Security review: client-bundle secret scan clean, no .server leak, `pnpm audit --prod` (1 dev-only moderate), isolation/admin authz covered by tests
+- [x] Synthetic generator (scripts/synth-data.mjs, up to 10k users/1M entries) + perf script (EXPLAIN QUERY PLAN) — all hot paths index seeks (COST_AND_SCALING.md)
+- [x] Full suite green: pnpm lint, typecheck, test, test:integration, test:e2e (desktop+mobile), build
 
 ## Phase 10 — Deployment
 
