@@ -16,6 +16,17 @@
 const PTCG_IMAGE_HOSTS = ["https://images.pokemontcg.io", "https://images.scrydex.com"];
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
+/** Google Analytics 4 (gtag.js). Loaded only in production (see app/root.tsx),
+ * so these origins are added to the CSP only when `production` is set. */
+const GA_SCRIPT_HOST = "https://www.googletagmanager.com";
+const GA_CONNECT_HOSTS = [
+  "https://www.googletagmanager.com",
+  "https://www.google-analytics.com",
+  "https://*.google-analytics.com",
+  "https://*.analytics.google.com",
+];
+const GA_IMAGE_HOSTS = ["https://www.googletagmanager.com", "https://*.google-analytics.com"];
+
 export interface SecurityOptions {
   /** true for staging + production (strict, nonce-based CSP + HSTS-eligible). */
   secure: boolean;
@@ -25,18 +36,22 @@ export interface SecurityOptions {
 }
 
 export function contentSecurityPolicy(options: SecurityOptions): string {
+  const gaScript = options.production ? ` ${GA_SCRIPT_HOST}` : "";
+  const gaConnect = options.production ? ` ${GA_CONNECT_HOSTS.join(" ")}` : "";
+  const gaImg = options.production ? ` ${GA_IMAGE_HOSTS.join(" ")}` : "";
+
   const scriptSrc = options.secure
-    ? `script-src 'self' 'nonce-${options.nonce}' ${TURNSTILE_HOST}`
-    : `script-src 'self' 'unsafe-inline' ${TURNSTILE_HOST}`;
+    ? `script-src 'self' 'nonce-${options.nonce}' ${TURNSTILE_HOST}${gaScript}`
+    : `script-src 'self' 'unsafe-inline' ${TURNSTILE_HOST}${gaScript}`;
 
   return [
     "default-src 'self'",
-    `img-src 'self' ${PTCG_IMAGE_HOSTS.join(" ")} data:`,
+    `img-src 'self' ${PTCG_IMAGE_HOSTS.join(" ")} data:${gaImg}`,
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     `frame-src ${TURNSTILE_HOST}`,
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self'${gaConnect}`,
     "object-src 'none'",
     "base-uri 'self'",
     "form-action 'self'",

@@ -10,10 +10,14 @@ import {
 } from "react-router";
 
 import type { Route } from "./+types/root";
-import { nonceContext } from "./lib/context";
+import { getCloudflare, nonceContext } from "./lib/context";
 import { isRtl, LANG_TAGS, localeFromPathname } from "./lib/i18n/locales";
 import { THEME_SCRIPT } from "./lib/theme";
 import "./app.css";
+
+/** Google Analytics 4 measurement ID. Injected only in production (see loader);
+ * staging/dev never send hits, so their traffic stays out of the reports. */
+const GA_MEASUREMENT_ID = "G-J83PLQ5017";
 
 export const links: Route.LinksFunction = () => [
   { rel: "icon", href: "/brand/pokector-icon.svg", type: "image/svg+xml" },
@@ -21,14 +25,20 @@ export const links: Route.LinksFunction = () => [
   { rel: "manifest", href: "/manifest.webmanifest" },
 ];
 
-/** Expose the per-request CSP nonce to the document so inline scripts match. */
+/** Expose the per-request CSP nonce to the document so inline scripts match,
+ * plus the GA measurement ID (production only). */
 export function loader({ context }: Route.LoaderArgs) {
-  return { nonce: context.get(nonceContext) };
+  const { env } = getCloudflare(context);
+  return {
+    nonce: context.get(nonceContext),
+    gaId: env.ENVIRONMENT === "production" ? GA_MEASUREMENT_ID : null,
+  };
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const data = useRouteLoaderData<typeof loader>("root");
   const nonce = data?.nonce;
+  const gaId = data?.gaId;
   // Locale is derived from the URL's first segment (the root loader has no
   // params and doesn't revalidate on client navigation, so useLocation keeps
   // <html lang/dir> correct across in-app navigations too).
@@ -46,6 +56,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
         <Links />
         {/* Pre-hydration theme selection; carries the CSP nonce. */}
         <script nonce={nonce} dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        {/* Google Analytics 4 (production only). The external gtag loader is
+            allowed by the googletagmanager host in the CSP; the inline config
+            carries the per-request nonce. */}
+        {gaId ? (
+          <>
+            <script async nonce={nonce} src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+            <script
+              nonce={nonce}
+              dangerouslySetInnerHTML={{
+                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+              }}
+            />
+          </>
+        ) : null}
       </head>
       <body className="min-h-screen bg-canvas font-sans text-fg antialiased">
         {children}
