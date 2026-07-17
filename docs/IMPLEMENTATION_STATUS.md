@@ -45,13 +45,15 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 3 — Auth & security foundation
 
-- [ ] Better Auth (email+password, sessions, KV secondary storage)
-- [ ] Native scrypt password hashing (node:crypto) — Workers CPU limit workaround
-- [ ] Roles (admin plugin), `pnpm admin:grant`
-- [ ] Turnstile (captcha plugin + widget provisioning)
-- [ ] Security headers middleware (CSP, HSTS, etc.)
-- [ ] Rate limiting (KV)
-- [ ] Account settings routes
+- [x] Better Auth per-request factory: email+password, sessions in KV (secondaryStorage), secure pokector.* cookies, cf-connecting-ip, trustedOrigins
+- [x] Native scrypt (node:crypto) hashing with format versioning + unit tests (CPU-limit workaround, DECISIONS D6)
+- [x] Roles via admin plugin; profile row auto-created on signup (databaseHooks); `pnpm admin:grant` CLI (confirmation + audit event + local/staging/production, --allow-unverified documented)
+- [x] Turnstile: captcha plugin on sign-up/sign-in/reset endpoints, accessible widget component, official test keys in dev; real widgets provisioned in Phase 10
+- [x] Security headers on every response (CSP w/ theme-script hash + Turnstile origins, HSTS prod, XCTO, Referrer-Policy, Permissions-Policy, frame protection) — from Phase 1, verified in smoke test
+- [x] Rate limiting: Better Auth built-in (KV storage, per-endpoint custom rules) + KV fixed-window limiter for search/import/export/alerts/admin (used by later phases)
+- [x] Routes: /login /register /forgot-password /reset-password /logout(POST) /app layout (guard + noindex + no-store) /app/onboarding /app/settings (profile+theme, change password w/ session revocation, account deletion w/ password re-auth)
+- [x] Honest degraded e-mail mode (no Resend key): reset form shows unavailable state; provider abstraction in app/lib/email/
+- [x] Verified: 16 unit + 6 integration tests green; dev smoke test — signup 200+cookie, /app guard 302, wrong password 401, missing captcha 400
 
 ## Phase 4 — Catalog sync
 

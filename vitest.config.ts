@@ -22,7 +22,11 @@ export default defineConfig(async () => {
             cloudflareTest({
               wrangler: { configPath: "./wrangler.jsonc" },
               miniflare: {
-                bindings: { TEST_MIGRATIONS: migrations },
+                bindings: {
+                  TEST_MIGRATIONS: migrations,
+                  // Test-only value — never a real secret.
+                  BETTER_AUTH_SECRET: "vitest-only-secret-not-used-anywhere-else",
+                },
               },
             }),
           ],

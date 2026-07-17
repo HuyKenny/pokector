@@ -15,10 +15,10 @@ export const cloudflareContext = createContext<CloudflareContextValue>();
 /** Correlation ID attached to logs and error responses. */
 export const requestIdContext = createContext<string>();
 
-export function getCloudflare(context: RouterContextProvider): CloudflareContextValue {
+export function getCloudflare(context: Readonly<RouterContextProvider>): CloudflareContextValue {
   return context.get(cloudflareContext);
 }
 
-export function getRequestId(context: RouterContextProvider): string {
+export function getRequestId(context: Readonly<RouterContextProvider>): string {
   return context.get(requestIdContext);
 }

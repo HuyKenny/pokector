@@ -31,6 +31,11 @@ export default tseslint.config(
       "@typescript-eslint/no-floating-promises": "error",
       "@typescript-eslint/no-misused-promises": "error",
       "@typescript-eslint/no-explicit-any": "error",
+      // React Router idiom: loaders/actions throw Response (redirects, 404s).
+      "@typescript-eslint/only-throw-error": [
+        "error",
+        { allow: [{ from: "lib", name: "Response" }] },
+      ],
       "@typescript-eslint/consistent-type-imports": ["error", { prefer: "type-imports" }],
       "@typescript-eslint/no-unused-vars": [
         "error",
