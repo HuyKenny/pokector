@@ -2,11 +2,12 @@
  * Cron tick router + job dispatcher. Production crons (see wrangler.jsonc):
  *   - every 5 minutes → process ONE due job (fresh CPU budget per invocation;
  *     continuation is chained through queue wake-ups)
- *   - "17 5 * * *" → daily orchestrator: enqueue catalog sync, price history,
- *     snapshots, alerts, retention
+ *   - "17 5 * * *" → daily orchestrator: price history, snapshots, alerts,
+ *     retention every day; the full catalog sync only ~weekly (see
+ *     CATALOG_SYNC_INTERVAL_MS) since it's the dominant D1 write cost
  */
 
-import { and, eq, gte } from "drizzle-orm";
+import { eq, sql } from "drizzle-orm";
 
 import { pruneExpiredCounters } from "../counters.server";
 import { createDb, schema } from "../db/index.server";
@@ -33,6 +34,11 @@ import {
 import { PtcgApiError } from "../ptcg/client.server";
 
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
+
+/** Minimum age of the last full catalog sync before a new one is enqueued.
+ * ~6.5 days so the daily orchestrator triggers it about weekly (owner: weekly
+ * is enough, 2026-07-17) without drifting to an 8-day gap. */
+const CATALOG_SYNC_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
 
 type JobHandler = (job: SyncJob, env: Env) => Promise<void>;
 
@@ -70,28 +76,28 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
     log.warn("jobs.daily.counter_prune_failed", { error: String(error) });
   }
 
-  // Full catalog sync only when the PTCG API key exists AND no run is in flight.
+  // Full catalog sync runs ~weekly, not daily (owner: weekly is enough,
+  // 2026-07-17) — it's the dominant D1 write cost (~82k rows/run). The rest of
+  // this orchestrator stays daily (cheap / delta-only). Gate on the age of the
+  // most recent full-sync run (any status): this enforces the weekly cadence,
+  // prevents overlap with an in-flight run, and survives missed cron ticks.
   if (env.POKEMON_TCG_API_KEY) {
-    const active = await db
-      .select({ id: schema.syncRuns.id })
+    const [lastRun] = await db
+      .select({ startedAt: schema.syncRuns.startedAt })
       .from(schema.syncRuns)
-      .where(
-        and(
-          eq(schema.syncRuns.status, "running"),
-          // Distributed-lock-with-expiry equivalent: a run older than 12 h is
-          // considered abandoned and does not block a fresh daily sync.
-          gte(schema.syncRuns.startedAt, new Date(Date.now() - 12 * 60 * 60 * 1000)),
-        ),
-      )
+      .where(eq(schema.syncRuns.kind, "catalog_full"))
+      .orderBy(sql`${schema.syncRuns.startedAt} DESC`)
       .limit(1);
-    if (active.length === 0) {
+    const dueForSync =
+      !lastRun || lastRun.startedAt.getTime() < Date.now() - CATALOG_SYNC_INTERVAL_MS;
+    if (dueForSync) {
       await enqueueJob(db, {
         type: "catalog_sets",
         payload: { kind: "catalog_full" },
         idempotencyKey: `catalog:auto:${today}`,
       });
     } else {
-      log.warn("jobs.daily.sync_skipped_running", { environment: env.ENVIRONMENT });
+      log.info("jobs.daily.sync_skipped_weekly", { environment: env.ENVIRONMENT });
     }
   } else {
     log.warn("jobs.daily.sync_disabled_no_key", { environment: env.ENVIRONMENT });

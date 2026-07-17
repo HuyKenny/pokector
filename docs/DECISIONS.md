@@ -145,6 +145,9 @@ chart has data.
   accumulate forward from the first recorded day; charts start today and grow.
 - **Write budget (Free plan, 100k D1 rows/day)**: the initial full population is ~62k
   rows (one per current-price row), spread across the chained per-page catalog jobs.
-  Steady state is delta-only (only changed prices), so daily writes stay modest. The
-  daily full catalog sync (~82k upserts) remains the dominant cost; if headroom becomes
-  tight, the mitigation is Workers Paid (raises D1 write limits) or a delta catalog sync.
+  Steady state is delta-only (only changed prices), so writes stay modest. The full
+  catalog sync (~82k upserts) is the dominant cost, so it runs **~weekly, not daily**
+  (owner: weekly is enough, 2026-07-17 — `CATALOG_SYNC_INTERVAL_MS` in scheduler.server.ts);
+  the daily orchestrator still handles price history / snapshots / alerts (cheap /
+  delta-only). Prices and history therefore refresh weekly. If more frequency is ever
+  wanted, the mitigation is Workers Paid (raises D1 write limits) or a delta catalog sync.
