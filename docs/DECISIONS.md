@@ -128,3 +128,23 @@ signed-in app (/app, /admin), blog articles, and legal pages stay English.
   names + franchise-neutral terms stay English. Arabic = basic RTL (`dir="rtl"` +
   logical Tailwind utilities).
 - **Cost**: locale in the path → no `Vary` cache issues; +~50 KB gzip worker bundle.
+
+### D15. Price history recorded for every card, not just tracked ones (owner request 2026-07-17)
+
+SPEC §17 originally gated `card_price_history` to *tracked* cards (in a collection/
+wishlist/popular) to limit write volume. On a fresh site this left almost every card's
+price chart empty. Owner requested all cards accumulate history so every detail page's
+chart has data.
+
+- **Change**: `recordHistoryForCards` no longer joins `tracked_cards` — it records a
+  daily observation for every card that has a current price. Still delta-only (insert
+  only when the value changed vs. the last observation) and capped at one row per
+  card/source/variant/currency/day by the unique constraint.
+- **No backfill of the past**: the PTCG API (TCGplayer/Cardmarket via it) returns only
+  the *current* price — there is no historical time series to import. History can only
+  accumulate forward from the first recorded day; charts start today and grow.
+- **Write budget (Free plan, 100k D1 rows/day)**: the initial full population is ~62k
+  rows (one per current-price row), spread across the chained per-page catalog jobs.
+  Steady state is delta-only (only changed prices), so daily writes stay modest. The
+  daily full catalog sync (~82k upserts) remains the dominant cost; if headroom becomes
+  tight, the mitigation is Workers Paid (raises D1 write limits) or a delta catalog sync.

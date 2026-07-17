@@ -248,9 +248,9 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
   );
   await batchStatements(db, priceStatements);
 
-  // Record history observations for tracked cards on this page (insert only when
+  // Record history observations for every card on this page (insert only when
   // the value changed or no prior observation exists; unique constraint caps at
-  // one row per day).
+  // one row per day). Spread across the chained per-page jobs.
   const pageCardIds = usable.map((n) => n.card.id);
   if (pageCardIds.length > 0) {
     await recordHistoryForCards(db, pageCardIds, syncedAt);
@@ -314,7 +314,7 @@ async function finalizeCatalogRun(db: Database, runId: string): Promise<void> {
   log.info("sync.run_completed", { jobId: runId });
 }
 
-// ── price_history_record (daily, all tracked cards) ─────────────────────────
+// ── price_history_record (daily, all active cards) ──────────────────────────
 
 async function recordHistoryForCards(
   db: Database,
@@ -323,13 +323,19 @@ async function recordHistoryForCards(
 ): Promise<void> {
   const today = todayUtc();
   const idFilter = cardIds ? sql`AND c.card_id IN ${cardIds}` : sql``;
+  // Record a daily observation for EVERY card that has a current price, not just
+  // tracked ones — every card's detail page shows a price chart, so the whole
+  // catalog needs history (owner request 2026-07-17; see docs/DECISIONS.md D15).
+  // Insert only when the value changed vs. the last observation (or none exists);
+  // the unique constraint caps this at one row per card/source/variant/day, so
+  // steady-state writes are delta-only. The per-page sync spreads the initial
+  // full population across the chained catalog jobs (fresh CPU budget each).
   await db.run(sql`
     INSERT OR IGNORE INTO card_price_history
       (card_id, source, variant, currency, price_minor, recorded_date, observed_at, source_updated_at, granularity)
     SELECT c.card_id, c.source, c.variant, c.currency, c.normalized_price_minor,
            ${today}, ${now.getTime()}, c.source_updated_at, 'daily'
     FROM card_prices_current c
-    JOIN tracked_cards t ON t.card_id = c.card_id
     WHERE 1=1 ${idFilter}
       AND COALESCE((
         SELECT h.price_minor FROM card_price_history h
@@ -338,6 +344,7 @@ async function recordHistoryForCards(
         ORDER BY h.recorded_date DESC LIMIT 1
       ), -1) != c.normalized_price_minor
   `);
+  // Keep tracked cards' lastHistoryAt fresh (cheap; touches only tracked rows).
   await db
     .update(schema.trackedCards)
     .set({ lastHistoryAt: now })

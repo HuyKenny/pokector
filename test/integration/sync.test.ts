@@ -101,37 +101,31 @@ describe("catalog synchronization (fixture-mocked API)", () => {
     expect(price?.normalizedPriceMinor).toBeGreaterThan(0);
   });
 
-  it("records price history only for tracked cards, once per day", async () => {
+  it("records daily price history for every card, once per day", async () => {
     const db = createDb(env.DB);
 
-    // Track one card, then run the daily history job twice.
-    await db
-      .insert(schema.trackedCards)
-      .values({ cardId: "base1-4", collectionReferenceCount: 1 })
-      .onConflictDoNothing();
-
+    // The full sync above already recorded a history point per card (per page,
+    // no tracked gate). Run the standalone daily job twice more to prove
+    // idempotency: the unique constraint caps at one row per
+    // card/source/variant/currency/day, so nothing is duplicated.
     await enqueueJob(db, { type: "price_history_record", idempotencyKey: "test:history:1" });
     await drainJobs();
     await enqueueJob(db, { type: "price_history_record", idempotencyKey: "test:history:2" });
     await drainJobs();
 
-    const rows = await db
-      .select()
-      .from(schema.cardPriceHistory)
-      .where(eq(schema.cardPriceHistory.cardId, "base1-4"));
-    // One row per (source, variant, currency) — not duplicated by the second run.
-    const keys = new Set(
-      rows.map((r) => `${r.source}:${r.variant}:${r.currency}:${r.recordedDate}`),
-    );
-    expect(rows.length).toBeGreaterThan(0);
-    expect(keys.size).toBe(rows.length);
-
-    // Untracked cards must have no history.
-    const [untracked] = await db
-      .select({ n: count() })
-      .from(schema.cardPriceHistory)
-      .where(eq(schema.cardPriceHistory.cardId, "base1-5"));
-    expect(untracked.n).toBe(0);
+    // Both a card someone might track (base1-4) and an untracked one (base1-5)
+    // must have history now — every card's chart needs data.
+    for (const cardId of ["base1-4", "base1-5"]) {
+      const rows = await db
+        .select()
+        .from(schema.cardPriceHistory)
+        .where(eq(schema.cardPriceHistory.cardId, cardId));
+      expect(rows.length).toBeGreaterThan(0);
+      const keys = new Set(
+        rows.map((r) => `${r.source}:${r.variant}:${r.currency}:${r.recordedDate}`),
+      );
+      expect(keys.size).toBe(rows.length);
+    }
   });
 
   it("retries failed jobs with backoff and dead-letters after max attempts", async () => {
