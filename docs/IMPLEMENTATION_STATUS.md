@@ -104,10 +104,12 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 8 — Import/export & admin
 
-- [ ] CSV export (streamed, formula-injection safe)
-- [ ] CSV import (preview/commit, background job, error CSV)
-- [ ] Account export + deletion
-- [ ] Admin dashboard + audit log
+- [x] CSV export: streamed (paged), documented column order, every cell formula-injection-safe, user-scoped (isolation test), full + filtered; dedicated resource route
+- [x] CSV import: bounded parser, validation (row-level errors), card resolution by id then set+number (no silent name matching), preview + append/merge commit via background import_apply job, progress + error report, recent-imports view
+- [x] Account data export (JSON, portability) — never includes hashes/tokens; account deletion via Better Auth (password re-auth) with cascade FKs
+- [x] Admin: users list (search, entry counts, recalc-portfolio action + audit) — no role changes from UI, no hashes/tokens shown; audit-log viewer
+- [x] Versioned public JSON API: /api/v1/cards, /cards/:id (?include=history), /sets, /sets/:id, /price-movers — consistent envelope, request IDs, rate-limited search, cacheable
+- [x] Verified: 62 unit + 18 integration tests green (CSV parse/validate/escape, import resolve+apply+merge idempotency, export isolation); dev smoke — import preview→commit→job apply, account JSON export, collection CSV, admin users/audit, API endpoints all 200
 
 ## Phase 9 — Testing & reviews
 

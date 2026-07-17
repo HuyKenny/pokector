@@ -1,6 +1,6 @@
 import { eq } from "drizzle-orm";
 import { useState } from "react";
-import { Form, useNavigate } from "react-router";
+import { Form, Link, useNavigate } from "react-router";
 import { z } from "zod";
 
 import type { Route } from "./+types/settings";
@@ -66,6 +66,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
       <h1 className="text-2xl font-bold text-fg">Settings</h1>
       <ProfileSection loaderData={loaderData} actionData={actionData} />
       <PasswordSection />
+      <DataSection />
       <DangerSection emailConfigured={loaderData.emailConfigured} />
     </div>
   );
@@ -217,6 +218,37 @@ function PasswordSection() {
           {submitting ? "Saving…" : "Change password"}
         </Button>
       </form>
+    </Card>
+  );
+}
+
+function DataSection() {
+  return (
+    <Card>
+      <h2 className="mb-1 text-lg font-semibold text-fg">Your data</h2>
+      <p className="mb-4 text-sm text-fg-muted">
+        Export your collection or a full copy of your account data at any time.
+      </p>
+      <div className="flex flex-wrap gap-3">
+        <Link
+          to="/app/export"
+          className="min-h-11 rounded-lg border border-edge bg-surface px-4 py-2 text-sm font-medium text-fg hover:bg-surface-raised"
+        >
+          Export collection (CSV)
+        </Link>
+        <a
+          href="/app/account-export"
+          className="min-h-11 rounded-lg border border-edge bg-surface px-4 py-2 text-sm font-medium text-fg hover:bg-surface-raised"
+        >
+          Download all my data (JSON)
+        </a>
+        <Link
+          to="/app/import"
+          className="min-h-11 rounded-lg border border-edge bg-surface px-4 py-2 text-sm font-medium text-fg hover:bg-surface-raised"
+        >
+          Import a CSV
+        </Link>
+      </div>
     </Card>
   );
 }

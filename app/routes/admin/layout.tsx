@@ -17,7 +17,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return { adminName: session.user.name };
 }
 
-const NAV = [{ to: "/admin", label: "Overview", end: true }];
+const NAV = [
+  { to: "/admin", label: "Overview", end: true },
+  { to: "/admin/users", label: "Users" },
+  { to: "/admin/audit-log", label: "Audit log" },
+];
 
 export default function AdminLayout(_props: Route.ComponentProps) {
   return (

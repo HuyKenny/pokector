@@ -140,14 +140,14 @@ describe("catalog synchronization (fixture-mocked API)", () => {
     // handler instead to avoid network: enqueue a job type with no handler.
     await db.insert(schema.syncJobs).values({
       id: crypto.randomUUID(),
-      type: "import_apply", // no handler registered yet
+      type: "progress_cache_rebuild", // intentionally has no registered handler
       status: "pending",
       maxAttempts: 2,
     });
 
     await runJobBatch(env); // attempt 1 → retry scheduled (runAfter in future)
     let job = await db.query.syncJobs.findFirst({
-      where: eq(schema.syncJobs.type, "import_apply"),
+      where: eq(schema.syncJobs.type, "progress_cache_rebuild"),
     });
     expect(job?.status).toBe("pending");
     expect(job?.attemptCount).toBe(1);
@@ -159,7 +159,9 @@ describe("catalog synchronization (fixture-mocked API)", () => {
       .set({ runAfter: new Date(Date.now() - 1000) })
       .where(eq(schema.syncJobs.id, job?.id ?? ""));
     await runJobBatch(env);
-    job = await db.query.syncJobs.findFirst({ where: eq(schema.syncJobs.type, "import_apply") });
+    job = await db.query.syncJobs.findFirst({
+      where: eq(schema.syncJobs.type, "progress_cache_rebuild"),
+    });
     expect(job?.status).toBe("failed");
     expect(job?.errorMessage).toContain("No handler");
   });

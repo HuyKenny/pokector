@@ -39,12 +39,24 @@ export default [
   route("reset-password", "routes/auth/reset-password.tsx"),
   route("logout", "routes/auth/logout.ts"),
 
-  // ── Quick-add API (public card page CTAs) ──────────────────────────────────
+  // ── Versioned JSON API (public, cacheable) ─────────────────────────────────
+  route("api/v1/cards", "routes/api/v1.cards.ts"),
+  route("api/v1/cards/:id", "routes/api/v1.cards.$id.ts"),
+  route("api/v1/sets", "routes/api/v1.sets.ts"),
+  route("api/v1/sets/:id", "routes/api/v1.sets.$id.ts"),
+  route("api/v1/price-movers", "routes/api/v1.price-movers.ts"),
+  // Quick-add API (public card page CTAs)
   route("api/v1/collection/quick-add", "routes/api/collection-quick-add.ts"),
   route("api/v1/wishlist/quick-add", "routes/api/wishlist-quick-add.ts"),
 
   // ── Administration ─────────────────────────────────────────────────────────
-  layout("routes/admin/layout.tsx", [...prefix("admin", [index("routes/admin/index.tsx")])]),
+  layout("routes/admin/layout.tsx", [
+    ...prefix("admin", [
+      index("routes/admin/index.tsx"),
+      route("users", "routes/admin/users.tsx"),
+      route("audit-log", "routes/admin/audit-log.tsx"),
+    ]),
+  ]),
 
   // ── Authenticated application ──────────────────────────────────────────────
   layout("routes/app/layout.tsx", [
@@ -59,6 +71,10 @@ export default [
       route("sets/:setSlug/export-missing", "routes/app/sets.$setSlug.export-missing.ts"),
       route("wishlist", "routes/app/wishlist.tsx"),
       route("notifications", "routes/app/notifications.tsx"),
+      route("import", "routes/app/import.tsx"),
+      route("export", "routes/app/export.tsx"),
+      route("export/download", "routes/app/export.download.ts"),
+      route("account-export", "routes/app/account-export.ts"),
       route("onboarding", "routes/app/onboarding.tsx"),
       route("settings", "routes/app/settings.tsx"),
     ]),
