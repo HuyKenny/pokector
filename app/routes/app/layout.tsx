@@ -3,6 +3,9 @@ import { Form, Link, NavLink, Outlet } from "react-router";
 import type { Route } from "./+types/layout";
 import { PokectorWordmark } from "~/components/brand";
 import { requireUser } from "~/lib/auth/guards.server";
+import { getCloudflare } from "~/lib/context";
+import { createDb } from "~/lib/db/index.server";
+import { unreadCount } from "~/lib/notifications/queries.server";
 
 export function meta(_args: Route.MetaArgs) {
   return [{ name: "robots", content: "noindex, nofollow" }];
@@ -14,24 +17,29 @@ export function headers(_args: Route.HeadersArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
+  const { env } = getCloudflare(context);
+  const unread = await unreadCount(createDb(env.DB), session.user.id);
   return {
     user: {
       name: session.user.name,
       email: session.user.email,
       role: session.user.role ?? "user",
     },
+    unread,
   };
 }
 
-// Extended as feature phases land (collection, binders, sets, wishlist, …).
 const NAV_ITEMS: { to: string; label: string; end?: boolean }[] = [
   { to: "/app", label: "Dashboard", end: true },
   { to: "/app/collection", label: "Collection" },
+  { to: "/app/binders", label: "Binders" },
+  { to: "/app/sets", label: "Sets" },
+  { to: "/app/wishlist", label: "Wishlist" },
   { to: "/app/settings", label: "Settings" },
 ];
 
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
-  const { user } = loaderData;
+  const { user, unread } = loaderData;
   return (
     <div className="flex min-h-screen flex-col">
       <header className="border-b border-edge bg-surface">
@@ -56,6 +64,21 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
             ))}
           </nav>
           <div className="flex items-center gap-3">
+            <Link
+              to="/app/notifications"
+              className="relative rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
+              aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
+            >
+              <span aria-hidden="true">🔔</span>
+              {unread > 0 ? (
+                <span
+                  aria-hidden="true"
+                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-white"
+                >
+                  {unread > 9 ? "9+" : unread}
+                </span>
+              ) : null}
+            </Link>
             <span className="hidden text-sm text-fg-muted md:inline" aria-hidden="true">
               {user.name}
             </span>

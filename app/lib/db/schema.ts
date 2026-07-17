@@ -21,9 +21,13 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
+import { CARD_VARIANTS, CONDITIONS, PRICE_SOURCES } from "../enums";
 import { user } from "./auth-schema";
 
 export * from "./auth-schema";
+// Re-export the imported enum arrays so existing `schema.CARD_VARIANTS`
+// server references keep working (single source of truth in ~/lib/enums).
+export { CARD_VARIANTS, CONDITIONS, PRICE_SOURCES };
 
 const createdAt = () =>
   integer("created_at", { mode: "timestamp_ms" })
@@ -134,15 +138,6 @@ export const pokemonCards = sqliteTable(
 
 // ── Pricing ──────────────────────────────────────────────────────────────────
 
-export const PRICE_SOURCES = ["tcgplayer", "cardmarket"] as const;
-export const CARD_VARIANTS = [
-  "normal",
-  "holofoil",
-  "reverseHolofoil",
-  "firstEditionNormal",
-  "firstEditionHolofoil",
-] as const;
-
 export const cardPricesCurrent = sqliteTable(
   "card_prices_current",
   {
@@ -221,14 +216,6 @@ export const cardPriceHistory = sqliteTable(
 );
 
 // ── Collection ───────────────────────────────────────────────────────────────
-
-export const CONDITIONS = [
-  "Near Mint",
-  "Lightly Played",
-  "Moderately Played",
-  "Heavily Played",
-  "Damaged",
-] as const;
 
 export const collectionEntries = sqliteTable(
   "collection_entries",

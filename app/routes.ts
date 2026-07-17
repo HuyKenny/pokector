@@ -17,6 +17,7 @@ export default [
     route("disclaimer", "routes/public/disclaimer.tsx"),
     route("blog", "routes/public/blog.tsx"),
     route("blog/:slug", "routes/public/blog.$slug.tsx"),
+    route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx"),
   ]),
 
   // ── SEO / machine endpoints ────────────────────────────────────────────────
@@ -51,6 +52,13 @@ export default [
       index("routes/app/index.tsx"),
       route("collection", "routes/app/collection.tsx"),
       route("collection/search", "routes/app/collection-search.ts"),
+      route("binders", "routes/app/binders.tsx"),
+      route("binders/:binderId", "routes/app/binders.$binderId.tsx"),
+      route("sets", "routes/app/sets.tsx"),
+      route("sets/:setSlug", "routes/app/sets.$setSlug.tsx"),
+      route("sets/:setSlug/export-missing", "routes/app/sets.$setSlug.export-missing.ts"),
+      route("wishlist", "routes/app/wishlist.tsx"),
+      route("notifications", "routes/app/notifications.tsx"),
       route("onboarding", "routes/app/onboarding.tsx"),
       route("settings", "routes/app/settings.tsx"),
     ]),

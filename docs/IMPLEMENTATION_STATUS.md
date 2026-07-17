@@ -92,10 +92,15 @@ Last updated: 2026-07-17 (Phase 2 complete)
 
 ## Phase 7 — Binders, checklists, wishlist
 
-- [ ] Binders (9-pocket, share links, privacy)
-- [ ] Set checklists + progress cache
-- [ ] Wishlist + price alerts (crossing, cooldown)
-- [ ] Notifications
+- [x] Binders: create/rename/describe/delete, 9-pocket front+back pages, place/move(swap)/clear slots (clear keeps the collection entry), page reorder, add-page; ownership enforced on every mutation; accessible click-to-place/move (non-drag)
+- [x] Binder sharing: private default, unlisted/public with 128-bit crypto share slug, regenerate + disable; public view sanitized (no purchase price/notes/email — verified in tests); 404 (not 403) on unknown/owned-by-other IDs
+- [x] Set checklists: /app/sets progress list (pinned first) + /app/sets/:slug standard & estimated-variant modes, owned/missing/rarity filters, sort missing by price, missing-cost estimate, goals (pin + target date), missing-cards CSV export (dedicated resource route)
+- [x] Wishlist + alerts: add/remove/configure (target price, below/above direction, enable), move-to-collection; crossing logic pure + unit-tested (no first-sight fire, no repeat while across, cooldown, wrong-direction ignore, unavailable-price graceful)
+- [x] Alerts job (alerts_evaluate, daily cron) → in-app notification + optional e-mail (honest degrade) + price_alert_events delivery record; prior_threshold_state persisted
+- [x] Notifications: /app/notifications list, unread badge in app nav, mark-read / mark-all-read
+- [x] CSV escape helper (formula-injection-safe) unit-tested
+- [x] Fixed D1 100-param limit: set progress computed via JOINs, not IN-lists of every card
+- [x] Verified: 55 unit + 15 integration tests green (alert crossings, CSV escaping, binder ownership/privacy); dev smoke — all /app routes 200, binder share unlisted→public view 200 + bad slug 404, checklist + CSV export working
 
 ## Phase 8 — Import/export & admin
 

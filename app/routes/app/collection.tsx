@@ -14,6 +14,7 @@ import {
   listCollection,
   updateEntry,
 } from "~/lib/collection/queries.server";
+import { CARD_VARIANTS, CONDITIONS } from "~/lib/enums";
 import { LIMITS } from "~/lib/limits";
 import { formatMinor, toMinorUnits } from "~/lib/money/decimal";
 import { enforceRateLimit } from "~/lib/security/rate-limit.server";
@@ -48,8 +49,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   };
 }
 
-const VARIANTS = schema.CARD_VARIANTS;
-const CONDITIONS = schema.CONDITIONS;
+const VARIANTS = CARD_VARIANTS;
 
 const MoneySchema = z
   .string()
