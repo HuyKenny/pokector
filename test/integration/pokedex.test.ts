@@ -1,8 +1,14 @@
 import { env } from "cloudflare:test";
 import { beforeAll, describe, expect, it } from "vitest";
 
-import { listPokedexAggregates } from "~/lib/catalog/queries.server";
+import {
+  getUserPokedexOverlay,
+  listPokedexAggregates,
+  togglePokedexFavorite,
+} from "~/lib/catalog/queries.server";
 import { createDb, schema } from "~/lib/db/index.server";
+
+const USER = "pokedex-user";
 
 const db = createDb(env.DB);
 
@@ -62,6 +68,16 @@ async function seed() {
       })
       .onConflictDoNothing();
   }
+
+  await db
+    .insert(schema.user)
+    .values({ id: USER, name: USER, email: "pokedex@test" })
+    .onConflictDoNothing();
+  // User owns Charizard (dex-a, dex 6).
+  await db
+    .insert(schema.collectionEntries)
+    .values({ id: "dex-entry-1", userId: USER, cardId: "dex-a", quantity: 1, variant: "holofoil" })
+    .onConflictDoNothing();
 }
 
 describe("listPokedexAggregates", () => {
@@ -79,5 +95,19 @@ describe("listPokedexAggregates", () => {
 
     // Trainer/Energy (null dex) contributes to nothing.
     expect(agg.get(999)).toBeUndefined();
+  });
+
+  it("computes per-user owned counts and toggles favourites", async () => {
+    const overlay = await getUserPokedexOverlay(db, USER);
+    // Owns 1 distinct Charizard (dex 6) card; nothing for dex 7.
+    expect(overlay.owned[6]).toBe(1);
+    expect(overlay.owned[7]).toBeUndefined();
+    expect(overlay.favorites).toEqual([]);
+
+    // Toggle dex 6 on, then off.
+    expect(await togglePokedexFavorite(db, USER, 6)).toBe(true);
+    expect((await getUserPokedexOverlay(db, USER)).favorites).toEqual([6]);
+    expect(await togglePokedexFavorite(db, USER, 6)).toBe(false);
+    expect((await getUserPokedexOverlay(db, USER)).favorites).toEqual([]);
   });
 });

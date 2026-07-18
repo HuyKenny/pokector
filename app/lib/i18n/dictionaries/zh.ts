@@ -269,6 +269,13 @@ const zh: Dict = {
     colAvgPrice: "平均价格",
     cardsCount: "{count} 张卡牌",
     noCards: "暂无卡牌",
+    filterAll: "全部",
+    filterFavorites: "收藏",
+    genShort: "第 {n} 代",
+    ownedCards: "{owned}/{total} 张卡牌",
+    addFavorite: "加入收藏",
+    removeFavorite: "取消收藏",
+    favoritesEmpty: "还没有收藏 — 点击宝可梦上的 ★ 添加。",
   },
 
   auth: {

@@ -212,3 +212,10 @@ Pokémon's sprite, number, card count, and average card price — as an SEO land
   upgrade path if the cold-cache scan ever breaches the CPU budget.
 - Localized + SEO'd like other public pages (11-locale `pokedex` dict namespace, hreflang,
   `/pokedex` in sitemap-static TRANSLATED_PATHS, nav link in both headers).
+
+**Pokédex personalization (2026-07-18)**: generation filter uses region labels
+(Kanto (I)…Paldea (IX), `app/lib/pokedex/generations.ts`) like tcgcollector. Signed-in
+extras — owned "n/total" per Pokémon, a caught progress bar, and per-Pokémon favourite
+stars + a Favorites filter — are personal, so they're fetched client-side from
+`/api/v1/pokedex/me` (toggled via `/api/v1/pokedex/favorite`) and layered onto the
+edge-cached public page; favourites persist in the `pokedex_favorites` table (migration 0003).

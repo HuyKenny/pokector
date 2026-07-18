@@ -274,6 +274,13 @@ const ar: Dict = {
     colAvgPrice: "متوسط السعر",
     cardsCount: "{count} بطاقة",
     noCards: "لا توجد بطاقات بعد",
+    filterAll: "الكل",
+    filterFavorites: "المفضلة",
+    genShort: "الجيل {n}",
+    ownedCards: "{owned}/{total} بطاقة",
+    addFavorite: "إضافة إلى المفضلة",
+    removeFavorite: "إزالة من المفضلة",
+    favoritesEmpty: "لا مفضلة بعد — اضغط على ★ لدى بوكيمون.",
   },
 
   auth: {

@@ -250,6 +250,19 @@ export const collectionEntries = sqliteTable(
   ],
 );
 
+/** A user's favourited Pokémon (by national dex number) for the Pokédex page. */
+export const pokedexFavorites = sqliteTable(
+  "pokedex_favorites",
+  {
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    dex: integer("dex").notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.dex] }), index("idx_pokedex_fav_user").on(t.userId)],
+);
+
 // ── Binders ──────────────────────────────────────────────────────────────────
 
 export const binders = sqliteTable(

@@ -436,3 +436,46 @@ export async function listPokedexAggregates(db: Database): Promise<Map<number, P
   }
   return map;
 }
+
+/** Per-user Pokédex overlay: distinct owned cards per dex + favourited dex numbers.
+ * Never cached at the edge (personal) — fetched client-side by the Pokédex page. */
+export async function getUserPokedexOverlay(
+  db: Database,
+  userId: string,
+): Promise<{ owned: Record<number, number>; favorites: number[] }> {
+  const ownedRows = await db.all<{ dex: number; owned: number }>(sql`
+    SELECT je.value AS dex, COUNT(DISTINCT e.card_id) AS owned
+    FROM collection_entries e
+    JOIN pokemon_cards k ON k.id = e.card_id
+    JOIN json_each(k.national_pokedex_numbers_json) je
+    WHERE e.user_id = ${userId} AND k.national_pokedex_numbers_json IS NOT NULL
+    GROUP BY je.value
+  `);
+  const owned: Record<number, number> = {};
+  for (const r of ownedRows) owned[Number(r.dex)] = Number(r.owned);
+
+  const favRows = await db
+    .select({ dex: schema.pokedexFavorites.dex })
+    .from(schema.pokedexFavorites)
+    .where(eq(schema.pokedexFavorites.userId, userId));
+  return { owned, favorites: favRows.map((r) => Number(r.dex)) };
+}
+
+/** Toggle a favourite; returns the new state (true = now favourited). */
+export async function togglePokedexFavorite(
+  db: Database,
+  userId: string,
+  dex: number,
+): Promise<boolean> {
+  const existing = await db.query.pokedexFavorites.findFirst({
+    where: (t, { and: a, eq: e }) => a(e(t.userId, userId), e(t.dex, dex)),
+  });
+  if (existing) {
+    await db
+      .delete(schema.pokedexFavorites)
+      .where(and(eq(schema.pokedexFavorites.userId, userId), eq(schema.pokedexFavorites.dex, dex)));
+    return false;
+  }
+  await db.insert(schema.pokedexFavorites).values({ userId, dex }).onConflictDoNothing();
+  return true;
+}

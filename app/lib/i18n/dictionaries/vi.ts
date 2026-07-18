@@ -276,6 +276,13 @@ const vi: Dict = {
     colAvgPrice: "Giá TB",
     cardsCount: "{count} thẻ",
     noCards: "Chưa có thẻ",
+    filterAll: "Tất cả",
+    filterFavorites: "Yêu thích",
+    genShort: "TH {n}",
+    ownedCards: "{owned}/{total} thẻ",
+    addFavorite: "Thêm vào yêu thích",
+    removeFavorite: "Bỏ khỏi yêu thích",
+    favoritesEmpty: "Chưa có mục yêu thích — chạm ★ trên một Pokémon.",
   },
 
   auth: {

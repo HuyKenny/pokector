@@ -76,6 +76,9 @@ export default [
   // Quick-add API (public card page CTAs)
   route("api/v1/collection/quick-add", "routes/api/collection-quick-add.ts"),
   route("api/v1/wishlist/quick-add", "routes/api/wishlist-quick-add.ts"),
+  // Pokédex personal overlay (owned counts + favourites) — fetched client-side
+  route("api/v1/pokedex/me", "routes/api/pokedex-me.ts"),
+  route("api/v1/pokedex/favorite", "routes/api/pokedex-favorite.ts"),
 
   // ── Administration ─────────────────────────────────────────────────────────
   layout("routes/admin/layout.tsx", [

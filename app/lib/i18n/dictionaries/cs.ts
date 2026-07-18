@@ -277,6 +277,13 @@ const cs: Dict = {
     colAvgPrice: "Prům. cena",
     cardsCount: "{count} karet",
     noCards: "Zatím žádné karty",
+    filterAll: "Vše",
+    filterFavorites: "Oblíbené",
+    genShort: "Gen {n}",
+    ownedCards: "{owned}/{total} karet",
+    addFavorite: "Přidat do oblíbených",
+    removeFavorite: "Odebrat z oblíbených",
+    favoritesEmpty: "Zatím žádné oblíbené — klepni na ★ u Pokémona.",
   },
 
   auth: {

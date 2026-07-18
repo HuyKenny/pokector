@@ -273,6 +273,13 @@ const ja: Dict = {
     colAvgPrice: "平均価格",
     cardsCount: "カード{count}枚",
     noCards: "カードはまだありません",
+    filterAll: "すべて",
+    filterFavorites: "お気に入り",
+    genShort: "第{n}世代",
+    ownedCards: "{owned}/{total} 枚",
+    addFavorite: "お気に入りに追加",
+    removeFavorite: "お気に入りから削除",
+    favoritesEmpty: "お気に入りはまだありません — ポケモンの★をタップ。",
   },
 
   auth: {

@@ -280,6 +280,13 @@ const fr: Dict = {
     colAvgPrice: "Prix moyen",
     cardsCount: "{count} cartes",
     noCards: "Pas encore de cartes",
+    filterAll: "Tous",
+    filterFavorites: "Favoris",
+    genShort: "Gén {n}",
+    ownedCards: "{owned}/{total} cartes",
+    addFavorite: "Ajouter aux favoris",
+    removeFavorite: "Retirer des favoris",
+    favoritesEmpty: "Aucun favori — touchez l’étoile ★ d’un Pokémon.",
   },
 
   auth: {

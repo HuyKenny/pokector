@@ -285,6 +285,13 @@ export const en = {
     colAvgPrice: "Avg. price",
     cardsCount: "{count} cards",
     noCards: "No cards yet",
+    filterAll: "All",
+    filterFavorites: "Favorites",
+    genShort: "Gen {n}",
+    ownedCards: "{owned}/{total} cards",
+    addFavorite: "Add to favorites",
+    removeFavorite: "Remove from favorites",
+    favoritesEmpty: "No favorites yet — tap the ★ on a Pokémon to add it.",
   },
 
   auth: {

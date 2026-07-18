@@ -277,6 +277,13 @@ const ru: Dict = {
     colAvgPrice: "Ср. цена",
     cardsCount: "Карт: {count}",
     noCards: "Пока нет карт",
+    filterAll: "Все",
+    filterFavorites: "Избранное",
+    genShort: "Ген. {n}",
+    ownedCards: "{owned}/{total} карт",
+    addFavorite: "В избранное",
+    removeFavorite: "Убрать из избранного",
+    favoritesEmpty: "Пока нет избранного — нажмите ★ у покемона.",
   },
 
   auth: {
