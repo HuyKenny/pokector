@@ -159,6 +159,8 @@ const vi: Dict = {
     priceDisclaimer:
       "Các giá trị hiển thị là giá thị trường ước tính cho thẻ chưa chấm điểm và có thể không phản ánh giá trị chính xác của thẻ bạn có, vốn phụ thuộc vào tình trạng thực tế và điều kiện bán thực tế. Đây không phải lời khuyên tài chính.",
     buyOnEbay: "Mua trên eBay",
+    ebayFrom: "eBay: từ {price}",
+    ebayPsa10From: "PSA 10: từ {price}",
     ebayDisclosure:
       "“Mua trên eBay” là liên kết tiếp thị liên kết — Pokector có thể nhận hoa hồng từ các giao dịch đủ điều kiện, bạn không phải trả thêm chi phí.",
     historyVariantAria: "Phiên bản lịch sử giá",

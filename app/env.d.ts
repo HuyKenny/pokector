@@ -17,4 +17,8 @@ interface Env {
   /** "true" only in local development/E2E — skips the Turnstile gate. Never set
    * in staging/production, so captcha is always enforced there. */
   CAPTCHA_DISABLED?: string;
+  /** eBay Developer keyset (Browse API live prices). Both absent → the eBay
+   * price lookup is disabled and the card page just shows the affiliate button. */
+  EBAY_APP_ID?: string;
+  EBAY_CERT_ID?: string;
 }

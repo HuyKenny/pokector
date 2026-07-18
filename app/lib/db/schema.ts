@@ -605,6 +605,14 @@ export const authKv = sqliteTable("auth_kv", {
   expiresAt: integer("expires_at"),
 });
 
+/** TTL cache for eBay API responses (OAuth app token + per-card Browse prices),
+ * in D1 (not KV — Free-plan write cap). `expiresAt` is unix epoch seconds. */
+export const ebayCache = sqliteTable("ebay_cache", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at").notNull(),
+});
+
 export const syncRuns = sqliteTable(
   "sync_runs",
   {

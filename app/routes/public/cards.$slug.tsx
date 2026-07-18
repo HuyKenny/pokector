@@ -17,6 +17,7 @@ import {
   getCardPriceHistory,
 } from "~/lib/catalog/queries.server";
 import { buildEbaySearchUrl, ebayCardQuery } from "~/lib/affiliate/ebay";
+import { getEbayCardPrices } from "~/lib/affiliate/ebay-api.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
@@ -90,12 +91,28 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     ebayCardQuery(detail.card.name, detail.set.name),
     env.EBAY_CAMPAIGN_ID,
   );
+  const ebayPsa10Url = buildEbaySearchUrl(
+    `${ebayCardQuery(detail.card.name, detail.set.name)} PSA 10`,
+    env.EBAY_CAMPAIGN_ID,
+  );
+
+  // Live eBay "from $X" prices (raw + PSA 10), cached in D1; a cache miss returns
+  // null and refreshes in the background so the render never blocks on eBay.
+  const ebayPrices = await getEbayCardPrices(env, db, (p) => ctx.waitUntil(p), {
+    id: detail.card.id,
+    name: detail.card.name,
+    setName: detail.set.name,
+    number: detail.card.number,
+    printedTotal: detail.set.printedTotal ?? null,
+  });
 
   return {
     detail,
     history,
     headlinePriceMinor,
     ebayUrl,
+    ebayPsa10Url,
+    ebayPrices,
     locale,
     t: getDict(locale).cardDetail,
     c: getDict(locale).common,
@@ -138,7 +155,7 @@ const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"
 };
 
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
-  const { detail, history, ebayUrl, appUrl, locale, t, c } = loaderData;
+  const { detail, history, ebayUrl, ebayPsa10Url, ebayPrices, appUrl, locale, t, c } = loaderData;
   const { card, set, prices, related, trackingSince } = detail;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
@@ -374,6 +391,30 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               </button>
             </fetcher.Form>
           </div>
+          {ebayPrices && (ebayPrices.rawFromMinor != null || ebayPrices.psa10FromMinor != null) ? (
+            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+              {ebayPrices.rawFromMinor != null && ebayUrl ? (
+                <a
+                  href={ebayUrl}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="text-fg-muted hover:text-fg"
+                >
+                  {interpolate(t.ebayFrom, { price: money(ebayPrices.rawFromMinor) })}
+                </a>
+              ) : null}
+              {ebayPrices.psa10FromMinor != null && ebayPsa10Url ? (
+                <a
+                  href={ebayPsa10Url}
+                  target="_blank"
+                  rel="sponsored noopener"
+                  className="text-fg-muted hover:text-fg"
+                >
+                  {interpolate(t.ebayPsa10From, { price: money(ebayPrices.psa10FromMinor) })}
+                </a>
+              ) : null}
+            </div>
+          ) : null}
           {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
             <p className="text-sm text-fg-muted" role="status">
               {String((fetcher.data as { message: string }).message)}

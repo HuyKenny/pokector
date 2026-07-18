@@ -219,3 +219,21 @@ extras — owned "n/total" per Pokémon, a caught progress bar, and per-Pokémon
 stars + a Favorites filter — are personal, so they're fetched client-side from
 `/api/v1/pokedex/me` (toggled via `/api/v1/pokedex/favorite`) and layered onto the
 edge-cached public page; favourites persist in the `pokedex_favorites` table (migration 0003).
+
+### D19. Live eBay Browse API prices on card pages (owner request 2026-07-18)
+
+Card detail pages show live "from $X" prices next to the affiliate button: the lowest
+current eBay listing for the raw card and for a PSA 10 graded copy.
+
+- **Browse API** (OAuth client-credentials app token). Env auto-detected from the App ID
+  (`-SBX-` → sandbox, else production). PSA 10 sold/market price would need the restricted
+  Marketplace Insights API (eBay approval) — deferred; we show PSA 10 *asking* price.
+- **Noise handling**: naive "cheapest match" is junk (stickers, magnets, fan-art,
+  keychains, code cards, lots). We query the exact card (name + number/printedTotal + set),
+  restrict to the CCG single-cards category, drop novelty/graded titles for the raw price,
+  and require "PSA 10" in the title for the graded price, then take the lowest.
+- **Caching / rate limit (Free plan)**: OAuth token + per-card prices cached in D1
+  (`ebay_cache`, migration 0004) — token ~2 h, prices 24 h. A cache miss returns null and
+  refreshes in the background (`ctx.waitUntil`) so renders never block on eBay; a daily
+  refresh-budget counter protects the Browse API limit. Disabled (button only) when no
+  keyset is configured. Keys are Worker secrets (`EBAY_APP_ID`/`EBAY_CERT_ID`).

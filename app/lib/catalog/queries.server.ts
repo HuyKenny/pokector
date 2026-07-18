@@ -102,7 +102,14 @@ export async function searchCards(
 
 export interface CardDetail {
   card: typeof schema.pokemonCards.$inferSelect;
-  set: { id: string; slug: string; name: string; series: string; releaseDate: string | null };
+  set: {
+    id: string;
+    slug: string;
+    name: string;
+    series: string;
+    releaseDate: string | null;
+    printedTotal: number | null;
+  };
   prices: (typeof schema.cardPricesCurrent.$inferSelect)[];
   related: CardListItem[];
   trackingSince: string | null;
@@ -122,6 +129,7 @@ export async function getCardBySlug(db: Database, slug: string): Promise<CardDet
         name: schema.pokemonSets.name,
         series: schema.pokemonSets.series,
         releaseDate: schema.pokemonSets.releaseDate,
+        printedTotal: schema.pokemonSets.printedTotal,
       })
       .from(schema.pokemonSets)
       .where(eq(schema.pokemonSets.id, card.setId))

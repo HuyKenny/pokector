@@ -11,6 +11,7 @@ import { eq, sql } from "drizzle-orm";
 
 import { pruneExpiredCounters } from "../counters.server";
 import { pruneExpiredAuthKv } from "../auth/kv-store.server";
+import { pruneExpiredEbayCache } from "../affiliate/ebay-api.server";
 import { createDb, schema } from "../db/index.server";
 import { log } from "../log.server";
 import {
@@ -75,6 +76,7 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
   try {
     await pruneExpiredCounters(db);
     await pruneExpiredAuthKv(db);
+    await pruneExpiredEbayCache(db);
   } catch (error) {
     log.warn("jobs.daily.counter_prune_failed", { error: String(error) });
   }

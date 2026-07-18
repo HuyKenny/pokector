@@ -159,6 +159,8 @@ const cs: Dict = {
     priceDisclaimer:
       "Zobrazené hodnoty jsou odhadované tržní ceny pro negradované karty a nemusí odpovídat přesné hodnotě vašeho kusu, která závisí na jeho fyzickém stavu a skutečných podmínkách prodeje. Nejedná se o finanční poradenství.",
     buyOnEbay: "Koupit na eBay",
+    ebayFrom: "eBay: od {price}",
+    ebayPsa10From: "PSA 10: od {price}",
     ebayDisclosure:
       "„Koupit na eBay“ je affiliate odkaz — Pokector může získat provizi z odpovídajících nákupů, bez příplatku pro tebe.",
     historyVariantAria: "Varianta historie cen",

@@ -160,6 +160,8 @@ const de: Dict = {
     priceDisclaimer:
       "Angezeigte Werte sind geschätzte Marktpreise für ungegradete Karten und spiegeln möglicherweise nicht den genauen Wert deines Exemplars wider, der vom physischen Zustand und den tatsächlichen Verkaufsbedingungen abhängt. Dies ist keine Finanzberatung.",
     buyOnEbay: "Auf eBay kaufen",
+    ebayFrom: "eBay: ab {price}",
+    ebayPsa10From: "PSA 10: ab {price}",
     ebayDisclosure:
       "„Auf eBay kaufen“ ist ein Affiliate-Link – Pokector erhält ggf. eine Provision für qualifizierte Käufe, ohne Mehrkosten für dich.",
     historyVariantAria: "Variante der Preishistorie",
