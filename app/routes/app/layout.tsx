@@ -122,48 +122,54 @@ function UserMenu({ name, isAdmin, unread }: { name: string; isAdmin: boolean; u
           ▾
         </span>
       </button>
-      <div className="invisible absolute end-0 z-50 mt-1 w-52 rounded-lg border border-edge bg-surface py-1 opacity-0 shadow-(--shadow-card) transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <nav aria-label="Your account" className="flex flex-col py-1">
-          {ACCOUNT_NAV.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              className={({ isActive }) =>
-                `px-4 py-2 text-sm ${
-                  isActive
-                    ? "bg-accent-soft font-medium text-accent-strong"
-                    : "text-fg hover:bg-surface-raised"
-                }`
-              }
-            >
-              {item.label}
-            </NavLink>
-          ))}
-          <Link
-            to="/app/notifications"
-            className="px-4 py-2 text-sm text-fg hover:bg-surface-raised"
-          >
-            Notifications{unread > 0 ? ` (${unread > 9 ? "9+" : unread})` : ""}
-          </Link>
-          {isAdmin ? (
+      {/* top-full + transparent pt-1 (padding, not margin) bridges the gap
+          between the button and the card so moving the mouse down keeps the
+          group hovered — otherwise the menu closes as the cursor crosses a
+          margin gap. */}
+      <div className="invisible absolute end-0 top-full z-50 w-52 pt-1 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
+        <div className="rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+          <nav aria-label="Your account" className="flex flex-col py-1">
+            {ACCOUNT_NAV.map((item) => (
+              <NavLink
+                key={item.to}
+                to={item.to}
+                end={item.end}
+                className={({ isActive }) =>
+                  `px-4 py-2 text-sm ${
+                    isActive
+                      ? "bg-accent-soft font-medium text-accent-strong"
+                      : "text-fg hover:bg-surface-raised"
+                  }`
+                }
+              >
+                {item.label}
+              </NavLink>
+            ))}
             <Link
-              to="/admin"
-              className="px-4 py-2 text-sm font-medium text-secondary hover:bg-surface-raised"
+              to="/app/notifications"
+              className="px-4 py-2 text-sm text-fg hover:bg-surface-raised"
             >
-              Admin
+              Notifications{unread > 0 ? ` (${unread > 9 ? "9+" : unread})` : ""}
             </Link>
-          ) : null}
-        </nav>
-        <div className="my-1 border-t border-edge" />
-        <Form method="post" action="/logout">
-          <button
-            type="submit"
-            className="w-full px-4 py-2 text-start text-sm text-fg-muted hover:bg-surface-raised hover:text-fg"
-          >
-            Sign out
-          </button>
-        </Form>
+            {isAdmin ? (
+              <Link
+                to="/admin"
+                className="px-4 py-2 text-sm font-medium text-secondary hover:bg-surface-raised"
+              >
+                Admin
+              </Link>
+            ) : null}
+          </nav>
+          <div className="my-1 border-t border-edge" />
+          <Form method="post" action="/logout">
+            <button
+              type="submit"
+              className="w-full px-4 py-2 text-start text-sm text-fg-muted hover:bg-surface-raised hover:text-fg"
+            >
+              Sign out
+            </button>
+          </Form>
+        </div>
       </div>
     </div>
   );
