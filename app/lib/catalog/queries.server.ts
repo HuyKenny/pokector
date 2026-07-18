@@ -396,3 +396,43 @@ export async function bumpCardPopularity(db: Database, cardId: string): Promise<
 }
 
 export { lt };
+
+// ── Pokédex aggregates ───────────────────────────────────────────────────────
+
+export interface PokedexAggregate {
+  cardCount: number;
+  avgPriceMinor: number | null;
+}
+
+/**
+ * Card count + average TCGplayer/USD market price per national Pokédex number.
+ * Expands each card's `national_pokedex_numbers_json` array with `json_each`
+ * (multi-Pokémon cards count toward each number). One representative price per
+ * card (MAX across variants) so multi-variant cards don't skew the average;
+ * AVG ignores unpriced cards, COUNT includes them.
+ */
+export async function listPokedexAggregates(db: Database): Promise<Map<number, PokedexAggregate>> {
+  const rows = await db.all<{ dex: number; card_count: number; avg_minor: number | null }>(sql`
+    SELECT je.value AS dex,
+           COUNT(*) AS card_count,
+           AVG(kc.price_minor) AS avg_minor
+    FROM (
+      SELECT k.id,
+             k.national_pokedex_numbers_json AS dexes,
+             (SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
+              WHERE p.card_id = k.id AND p.source = 'tcgplayer' AND p.currency = 'USD') AS price_minor
+      FROM pokemon_cards k
+      WHERE k.active = 1 AND k.national_pokedex_numbers_json IS NOT NULL
+    ) kc
+    JOIN json_each(kc.dexes) je
+    GROUP BY je.value
+  `);
+  const map = new Map<number, PokedexAggregate>();
+  for (const r of rows) {
+    map.set(Number(r.dex), {
+      cardCount: Number(r.card_count),
+      avgPriceMinor: r.avg_minor == null ? null : Math.round(Number(r.avg_minor)),
+    });
+  }
+  return map;
+}

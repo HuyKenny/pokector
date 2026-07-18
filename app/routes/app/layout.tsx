@@ -36,6 +36,7 @@ const BROWSE_NAV: { to: string; label: string }[] = [
   { to: "/cards", label: "Cards" },
   { to: "/sets", label: "Sets" },
   { to: "/price-movers", label: "Price movers" },
+  { to: "/pokedex", label: "Pokédex" },
   { to: "/blog", label: "Blog" },
 ];
 

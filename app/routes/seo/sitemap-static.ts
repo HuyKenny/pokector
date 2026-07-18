@@ -4,7 +4,7 @@ import { localeAlternates } from "~/lib/i18n/locales";
 
 // Translated public pages get a localized <url> per locale, each carrying the
 // full hreflang alternate set. English-only pages (legal + blog) stay single.
-const TRANSLATED_PATHS = ["/", "/cards", "/sets", "/price-movers"];
+const TRANSLATED_PATHS = ["/", "/cards", "/sets", "/price-movers", "/pokedex"];
 const EN_ONLY_PATHS = [
   "/methodology",
   "/about",

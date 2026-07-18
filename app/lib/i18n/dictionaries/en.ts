@@ -30,6 +30,7 @@ export const en = {
     navCards: "Cards",
     navSets: "Sets",
     navPriceMovers: "Price movers",
+    navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Search cards",
     searchCardsPlaceholder: "Search cards…",
@@ -268,6 +269,22 @@ export const en = {
     gainers30: "30-day gainers",
     decliners30: "30-day decliners",
     sectionEmpty: "No qualifying moves in this window yet — more tracked history is needed.",
+  },
+
+  pokedex: {
+    metaTitle: "Pokédex — Every Pokémon by Card Count & Average Price | Pokector",
+    metaDescription:
+      "Browse the full National Pokédex: each Pokémon with its number, how many cards exist, and the average market price — from Bulbasaur to the newest generation.",
+    breadcrumb: "Pokédex",
+    heading: "Pokédex",
+    intro:
+      "Every Pokémon in the National Pokédex with its card count and average card market price. Tap a Pokémon to see its cards.",
+    generationLabel: "Generation {n}",
+    colNumber: "No.",
+    colCards: "Cards",
+    colAvgPrice: "Avg. price",
+    cardsCount: "{count} cards",
+    noCards: "No cards yet",
   },
 
   auth: {

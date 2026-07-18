@@ -23,6 +23,7 @@ const ar: Dict = {
     navCards: "البطاقات",
     navSets: "المجموعات",
     navPriceMovers: "تحركات الأسعار",
+    navPokedex: "بوكيديكس",
     navBlog: "المدونة",
     searchCards: "ابحث عن بطاقات",
     searchCardsPlaceholder: "ابحث عن بطاقات…",
@@ -259,6 +260,20 @@ const ar: Dict = {
     gainers30: "الرابحون خلال 30 يومًا",
     decliners30: "الخاسرون خلال 30 يومًا",
     sectionEmpty: "لا توجد تحركات مؤهَّلة في هذه الفترة بعد — يلزم مزيد من التاريخ المُتتبَّع.",
+  },
+
+  pokedex: {
+    metaTitle: "بوكيديكس — كل بوكيمون حسب عدد البطاقات ومتوسط السعر | Pokector",
+    metaDescription: "تصفّح البوكيديكس الوطني الكامل: كل بوكيمون برقمه وعدد البطاقات المتوفرة ومتوسط سعر السوق.",
+    breadcrumb: "بوكيديكس",
+    heading: "بوكيديكس",
+    intro: "كل بوكيمون في البوكيديكس الوطني مع عدد البطاقات ومتوسط سعر السوق. اضغط على بوكيمون لعرض بطاقاته.",
+    generationLabel: "الجيل {n}",
+    colNumber: "الرقم",
+    colCards: "البطاقات",
+    colAvgPrice: "متوسط السعر",
+    cardsCount: "{count} بطاقة",
+    noCards: "لا توجد بطاقات بعد",
   },
 
   auth: {

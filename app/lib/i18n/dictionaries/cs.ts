@@ -22,6 +22,7 @@ const cs: Dict = {
     navCards: "Karty",
     navSets: "Sety",
     navPriceMovers: "Cenové pohyby",
+    navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Hledat karty",
     searchCardsPlaceholder: "Hledat karty…",
@@ -262,6 +263,20 @@ const cs: Dict = {
     decliners30: "Poklesy za 30 dní",
     sectionEmpty:
       "V tomto období zatím žádné kvalifikující pohyby — je potřeba více sledované historie.",
+  },
+
+  pokedex: {
+    metaTitle: "Pokédex — každý Pokémon podle počtu karet a průměrné ceny | Pokector",
+    metaDescription: "Procházejte kompletní Národní Pokédex: každý Pokémon s číslem, počtem karet a průměrnou tržní cenou.",
+    breadcrumb: "Pokédex",
+    heading: "Pokédex",
+    intro: "Každý Pokémon v Národním Pokédexu s počtem karet a průměrnou tržní cenou karty. Klepnutím na Pokémona zobrazíš jeho karty.",
+    generationLabel: "Generace {n}",
+    colNumber: "Č.",
+    colCards: "Karty",
+    colAvgPrice: "Prům. cena",
+    cardsCount: "{count} karet",
+    noCards: "Zatím žádné karty",
   },
 
   auth: {

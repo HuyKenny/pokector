@@ -22,6 +22,7 @@ const fr: Dict = {
     navCards: "Cartes",
     navSets: "Sets",
     navPriceMovers: "Mouvements de prix",
+    navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Rechercher des cartes",
     searchCardsPlaceholder: "Rechercher des cartes…",
@@ -265,6 +266,20 @@ const fr: Dict = {
     decliners30: "Baisses sur 30 jours",
     sectionEmpty:
       "Aucun mouvement qualifiant sur cette période pour l’instant — plus d’historique suivi est nécessaire.",
+  },
+
+  pokedex: {
+    metaTitle: "Pokédex — chaque Pokémon par nombre de cartes et prix moyen | Pokector",
+    metaDescription: "Parcourez le Pokédex National complet : chaque Pokémon avec son numéro, le nombre de cartes existantes et le prix moyen du marché.",
+    breadcrumb: "Pokédex",
+    heading: "Pokédex",
+    intro: "Chaque Pokémon du Pokédex National avec son nombre de cartes et le prix moyen du marché. Touchez un Pokémon pour voir ses cartes.",
+    generationLabel: "Génération {n}",
+    colNumber: "N°",
+    colCards: "Cartes",
+    colAvgPrice: "Prix moyen",
+    cardsCount: "{count} cartes",
+    noCards: "Pas encore de cartes",
   },
 
   auth: {

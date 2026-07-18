@@ -22,6 +22,7 @@ const ja: Dict = {
     navCards: "カード",
     navSets: "セット",
     navPriceMovers: "価格変動",
+    navPokedex: "ポケモン図鑑",
     navBlog: "ブログ",
     searchCards: "カードを検索",
     searchCardsPlaceholder: "カードを検索…",
@@ -258,6 +259,20 @@ const ja: Dict = {
     gainers30: "30 日間の上昇",
     decliners30: "30 日間の下落",
     sectionEmpty: "この期間に条件を満たす変動はまだありません——より多くの追跡履歴が必要です。",
+  },
+
+  pokedex: {
+    metaTitle: "ポケモン図鑑 — カード枚数と平均価格で見る全ポケモン | Pokector",
+    metaDescription: "全国図鑑を一覧：各ポケモンの番号、存在するカード枚数、平均市場価格をチェックできます。",
+    breadcrumb: "ポケモン図鑑",
+    heading: "ポケモン図鑑",
+    intro: "全国図鑑の各ポケモンをカード枚数と平均市場価格とともに表示。ポケモンをタップするとカード一覧が見られます。",
+    generationLabel: "第{n}世代",
+    colNumber: "No.",
+    colCards: "カード",
+    colAvgPrice: "平均価格",
+    cardsCount: "カード{count}枚",
+    noCards: "カードはまだありません",
   },
 
   auth: {

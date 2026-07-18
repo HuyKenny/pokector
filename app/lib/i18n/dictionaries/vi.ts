@@ -22,6 +22,7 @@ const vi: Dict = {
     navCards: "Thẻ bài",
     navSets: "Bộ thẻ",
     navPriceMovers: "Biến động giá",
+    navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Tìm thẻ bài",
     searchCardsPlaceholder: "Tìm thẻ bài…",
@@ -261,6 +262,20 @@ const vi: Dict = {
     gainers30: "Tăng trong 30 ngày",
     decliners30: "Giảm trong 30 ngày",
     sectionEmpty: "Chưa có biến động đủ điều kiện trong giai đoạn này — cần thêm lịch sử theo dõi.",
+  },
+
+  pokedex: {
+    metaTitle: "Pokédex — mỗi Pokémon theo số lượng thẻ và giá trung bình | Pokector",
+    metaDescription: "Duyệt toàn bộ Pokédex Quốc gia: mỗi Pokémon với số hiệu, số lượng thẻ hiện có và giá thị trường trung bình.",
+    breadcrumb: "Pokédex",
+    heading: "Pokédex",
+    intro: "Mỗi Pokémon trong Pokédex Quốc gia kèm số lượng thẻ và giá thị trường trung bình. Chạm vào một Pokémon để xem các thẻ của nó.",
+    generationLabel: "Thế hệ {n}",
+    colNumber: "Số",
+    colCards: "Thẻ",
+    colAvgPrice: "Giá TB",
+    cardsCount: "{count} thẻ",
+    noCards: "Chưa có thẻ",
   },
 
   auth: {

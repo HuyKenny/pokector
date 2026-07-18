@@ -33,6 +33,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
     { to: lp("/cards"), label: t.navCards },
     { to: lp("/sets"), label: t.navSets },
     { to: lp("/price-movers"), label: t.navPriceMovers },
+    { to: lp("/pokedex"), label: t.navPokedex },
     { to: "/blog", label: t.navBlog }, // blog is English-only
   ];
 

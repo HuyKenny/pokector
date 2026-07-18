@@ -22,6 +22,7 @@ const zh: Dict = {
     navCards: "卡牌",
     navSets: "系列",
     navPriceMovers: "价格波动",
+    navPokedex: "宝可梦图鉴",
     navBlog: "博客",
     searchCards: "搜索卡牌",
     searchCardsPlaceholder: "搜索卡牌…",
@@ -254,6 +255,20 @@ const zh: Dict = {
     gainers30: "30 天涨幅榜",
     decliners30: "30 天跌幅榜",
     sectionEmpty: "此期间暂无符合条件的波动——需要更多追踪历史。",
+  },
+
+  pokedex: {
+    metaTitle: "宝可梦图鉴 — 按卡牌数量和平均价格查看每只宝可梦 | Pokector",
+    metaDescription: "浏览完整的全国图鉴：每只宝可梦的编号、现有卡牌数量以及平均市场价格。",
+    breadcrumb: "宝可梦图鉴",
+    heading: "宝可梦图鉴",
+    intro: "全国图鉴中的每只宝可梦，附卡牌数量和平均市场价格。点击宝可梦查看其卡牌。",
+    generationLabel: "第 {n} 世代",
+    colNumber: "编号",
+    colCards: "卡牌",
+    colAvgPrice: "平均价格",
+    cardsCount: "{count} 张卡牌",
+    noCards: "暂无卡牌",
   },
 
   auth: {

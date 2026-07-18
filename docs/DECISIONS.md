@@ -192,3 +192,23 @@ search-500 incident (2026-07-17), on the path that fix didn't cover.
   Free plan; auth works immediately after deploy (no wait for the KV daily reset).
 - Verified: full register→login→add-card→dashboard flow on staging (Turnstile test key);
   production `/api/auth/ok` + `/get-session` = 200 with the KV error gone in live logs.
+
+### D18. Public Pokédex page (owner request 2026-07-18)
+
+A `/pokedex` browse page (like tcgcollector's) listing the full National Pokédex — each
+Pokémon's sprite, number, card count, and average card price — as an SEO landing page.
+
+- **Sprites self-hosted**: official front-default sprites (#1..#1025) downloaded to
+  `public/sprites/{dex}.png` (~4 MB, `scripts/pokedex/fetch-sprites.mjs`), served from
+  `'self'` → no CSP change (external sprite CDNs are blocked by img-src).
+- **Species names bundled**: `app/lib/pokedex/species.ts` (dex→English name + generation
+  helper), generated once from PokeAPI (`scripts/pokedex/fetch-species.mjs`). The DB has
+  dex numbers on cards but no clean species names; English only (consistent with D14).
+- **Aggregation on-demand + edge cache**: `listPokedexAggregates` expands
+  `national_pokedex_numbers_json` with SQLite `json_each` GROUP BY (new pattern here) →
+  per-dex card count + AVG TCGplayer/USD price (one MAX price per card so multi-variant
+  cards don't skew). Full national dex (incl. 0-card Pokémon) rendered in one page grouped
+  by generation, sprites lazy-loaded, behind `s-maxage=3600`. Precompute table is the
+  upgrade path if the cold-cache scan ever breaches the CPU budget.
+- Localized + SEO'd like other public pages (11-locale `pokedex` dict namespace, hreflang,
+  `/pokedex` in sitemap-static TRANSLATED_PATHS, nav link in both headers).
