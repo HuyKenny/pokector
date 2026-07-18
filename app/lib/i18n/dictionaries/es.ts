@@ -161,6 +161,10 @@ const es: Dict = {
     priceDisclaimer:
       "Los valores mostrados son precios de mercado estimados para cartas sin gradar y pueden no reflejar el valor exacto de tu ejemplar, que depende de su estado físico y de las condiciones reales de venta. Esto no es asesoramiento financiero.",
     buyOnEbay: "Comprar en eBay",
+    getThisCard: "Consigue esta carta",
+    buyFrom: "desde {price}",
+    ebayPsa9From: "PSA 9: desde {price}",
+    psaFromEbay: "Los precios PSA son la oferta más baja actual en eBay.",
     ebayFrom: "eBay: desde {price}",
     ebayPsa10From: "PSA 10: desde {price}",
     ebayDisclosure:

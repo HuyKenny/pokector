@@ -159,6 +159,10 @@ const vi: Dict = {
     priceDisclaimer:
       "Các giá trị hiển thị là giá thị trường ước tính cho thẻ chưa chấm điểm và có thể không phản ánh giá trị chính xác của thẻ bạn có, vốn phụ thuộc vào tình trạng thực tế và điều kiện bán thực tế. Đây không phải lời khuyên tài chính.",
     buyOnEbay: "Mua trên eBay",
+    getThisCard: "Sở hữu thẻ này",
+    buyFrom: "từ {price}",
+    ebayPsa9From: "PSA 9: từ {price}",
+    psaFromEbay: "Giá PSA là mức rao bán thấp nhất hiện tại trên eBay.",
     ebayFrom: "eBay: từ {price}",
     ebayPsa10From: "PSA 10: từ {price}",
     ebayDisclosure:

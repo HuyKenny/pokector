@@ -19,6 +19,7 @@ import { schema, type Database } from "../db/index.server";
 
 export interface EbayCardPrices {
   rawFromMinor: number | null;
+  psa9FromMinor: number | null;
   psa10FromMinor: number | null;
 }
 
@@ -26,7 +27,7 @@ export interface EbayCardPrices {
 const CCG_CATEGORY = "183454";
 const PRICE_TTL_SEC = 24 * 60 * 60;
 const TOKEN_KEY = "ebay:token";
-const DAILY_REFRESH_CAP = 2000; // ×2 Browse calls each ≈ under the 5k/day limit
+const DAILY_REFRESH_CAP = 1500; // ×3 Browse calls each ≈ under the 5k/day limit
 
 /** Listings that are clearly not the raw single card we're pricing. */
 const NOISE =
@@ -146,18 +147,48 @@ async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void>
   const token = await getToken(env, db);
   if (!token) return;
   const base = cardQuery(card);
-  const [rawFromMinor, psa10FromMinor] = await Promise.all([
+  const [rawFromMinor, psa9FromMinor, psa10FromMinor] = await Promise.all([
     // Raw = single card, not graded, not novelty.
     lowestPrice(env, token, base, (t) => !NOISE.test(t) && !GRADED.test(t)),
-    // PSA 10 = title must actually say PSA 10, minus novelty items.
+    // PSA 9 / PSA 10 = title must actually say that grade, minus novelty items.
+    lowestPrice(env, token, `${base} PSA 9`, (t) => /psa\s?9\b/i.test(t) && !NOISE.test(t)),
     lowestPrice(env, token, `${base} PSA 10`, (t) => /psa\s?10\b/i.test(t) && !NOISE.test(t)),
   ]);
   await cacheSet(
     db,
-    `ebay:prices:v1:${card.id}`,
-    JSON.stringify({ rawFromMinor, psa10FromMinor } satisfies EbayCardPrices),
+    `ebay:prices:v2:${card.id}`,
+    JSON.stringify({ rawFromMinor, psa9FromMinor, psa10FromMinor } satisfies EbayCardPrices),
     PRICE_TTL_SEC,
   );
+  // Persist graded prices so they can be valued in portfolios and snapshotted
+  // into history (raw stays TCGplayer — not stored here).
+  await persistGraded(db, card.id, "psa9", psa9FromMinor);
+  await persistGraded(db, card.id, "psa10", psa10FromMinor);
+}
+
+/** Upsert (or clear) a graded price for a card. */
+async function persistGraded(
+  db: Database,
+  cardId: string,
+  grade: "psa9" | "psa10",
+  fromMinor: number | null,
+): Promise<void> {
+  try {
+    if (fromMinor == null) return;
+    await db
+      .insert(schema.cardGradedPrices)
+      .values({ cardId, grade, currency: "USD", fromMinor, observedAt: new Date() })
+      .onConflictDoUpdate({
+        target: [
+          schema.cardGradedPrices.cardId,
+          schema.cardGradedPrices.grade,
+          schema.cardGradedPrices.currency,
+        ],
+        set: { fromMinor, observedAt: new Date() },
+      });
+  } catch {
+    // best-effort
+  }
 }
 
 /**
@@ -172,7 +203,7 @@ export async function getEbayCardPrices(
   card: EbayCardRef,
 ): Promise<EbayCardPrices | null> {
   if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return null;
-  const cached = await cacheGet(db, `ebay:prices:v1:${card.id}`);
+  const cached = await cacheGet(db, `ebay:prices:v2:${card.id}`);
   if (cached) {
     try {
       return JSON.parse(cached) as EbayCardPrices;

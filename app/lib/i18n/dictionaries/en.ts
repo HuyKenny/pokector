@@ -166,9 +166,13 @@ export const en = {
     addToWishlist: "Add to wishlist",
     priceDisclaimer:
       "Displayed values are estimated market prices for raw (ungraded) cards and may not reflect the exact value of your copy, which depends on its physical condition and actual sale conditions. This is not financial advice.",
+    getThisCard: "Get this card",
     buyOnEbay: "Buy on eBay",
+    buyFrom: "from {price}",
     ebayFrom: "eBay: from {price}",
+    ebayPsa9From: "PSA 9: from {price}",
     ebayPsa10From: "PSA 10: from {price}",
+    psaFromEbay: "PSA prices are the lowest current eBay listing.",
     ebayDisclosure:
       "“Buy on eBay” is an affiliate link — Pokector may earn a commission from qualifying purchases, at no extra cost to you.",
     historyVariantAria: "Price history variant",

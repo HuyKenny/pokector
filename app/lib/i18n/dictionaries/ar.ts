@@ -160,6 +160,10 @@ const ar: Dict = {
     priceDisclaimer:
       "القيم المعروضة أسعار سوقية تقديرية للبطاقات غير المصنّفة وقد لا تعكس القيمة الدقيقة لنسختك، التي تعتمد على حالتها الفعلية وظروف البيع الحقيقية. هذه ليست نصيحة مالية.",
     buyOnEbay: "الشراء على eBay",
+    getThisCard: "احصل على هذه البطاقة",
+    buyFrom: "من {price}",
+    ebayPsa9From: "PSA 9: من {price}",
+    psaFromEbay: "أسعار PSA هي أدنى عرض حالي على eBay.",
     ebayFrom: "eBay: من {price}",
     ebayPsa10From: "PSA 10: من {price}",
     ebayDisclosure:

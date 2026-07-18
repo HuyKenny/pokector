@@ -21,4 +21,6 @@ interface Env {
    * price lookup is disabled and the card page just shows the affiliate button. */
   EBAY_APP_ID?: string;
   EBAY_CERT_ID?: string;
+  /** Shared token for the eBay Marketplace Account Deletion endpoint challenge. */
+  EBAY_VERIFICATION_TOKEN?: string;
 }

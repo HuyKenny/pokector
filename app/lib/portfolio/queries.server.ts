@@ -16,13 +16,16 @@ export async function loadPortfolioEntries(db: Database, userId: string) {
     purchase_price_minor: number | null;
   }>(sql`
     SELECT e.quantity,
-           p.normalized_price_minor AS current_price_minor,
+           CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE g.from_minor END
+             AS current_price_minor,
            CASE WHEN e.purchase_currency = 'USD' THEN e.purchase_price_minor ELSE NULL END
              AS purchase_price_minor
     FROM collection_entries e
     LEFT JOIN card_prices_current p
       ON p.card_id = e.card_id AND p.variant = e.variant
      AND p.source = 'tcgplayer' AND p.currency = 'USD'
+    LEFT JOIN card_graded_prices g
+      ON g.card_id = e.card_id AND g.grade = e.grade AND g.currency = 'USD'
     WHERE e.user_id = ${userId}
   `);
 }
@@ -59,6 +62,7 @@ export interface DashboardBreakdowns {
     slug: string;
     name: string;
     variant: string;
+    grade: string;
     currentMinor: number;
     previousMinor: number;
     changePercent: number;
@@ -78,31 +82,37 @@ export async function loadDashboardBreakdowns(
   db: Database,
   userId: string,
 ): Promise<DashboardBreakdowns> {
+  // Grade-aware price: raw entries use the TCGplayer variant price; PSA-graded
+  // entries use the eBay graded "from" price for that grade.
+  const priceMinor = sql`CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE g.from_minor END`;
   const baseJoins = sql`
     FROM collection_entries e
     JOIN pokemon_cards k ON k.id = e.card_id
     LEFT JOIN card_prices_current p
       ON p.card_id = e.card_id AND p.variant = e.variant
      AND p.source = 'tcgplayer' AND p.currency = 'USD'
+    LEFT JOIN card_graded_prices g
+      ON g.card_id = e.card_id AND g.grade = e.grade AND g.currency = 'USD'
   `;
   const whereUser = sql`WHERE e.user_id = ${userId}`;
+  const weekAgo = new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10);
 
   const [bySet, byRarity, byVariant, topCards, movers, recentActivity, unique] = await Promise.all([
     db.all<{ name: string; value_minor: number }>(sql`
-      SELECT s.name AS name, SUM(COALESCE(p.normalized_price_minor, 0) * e.quantity) AS value_minor
+      SELECT s.name AS name, SUM(COALESCE(${priceMinor}, 0) * e.quantity) AS value_minor
       ${baseJoins} JOIN pokemon_sets s ON s.id = k.set_id
       ${whereUser}
       GROUP BY s.name HAVING value_minor > 0 ORDER BY value_minor DESC LIMIT 8
     `),
     db.all<{ name: string; value_minor: number }>(sql`
       SELECT COALESCE(k.rarity, 'Unknown') AS name,
-             SUM(COALESCE(p.normalized_price_minor, 0) * e.quantity) AS value_minor
+             SUM(COALESCE(${priceMinor}, 0) * e.quantity) AS value_minor
       ${baseJoins} ${whereUser}
       GROUP BY COALESCE(k.rarity, 'Unknown') HAVING value_minor > 0
       ORDER BY value_minor DESC LIMIT 8
     `),
     db.all<{ name: string; value_minor: number }>(sql`
-      SELECT e.variant AS name, SUM(COALESCE(p.normalized_price_minor, 0) * e.quantity) AS value_minor
+      SELECT e.variant AS name, SUM(COALESCE(${priceMinor}, 0) * e.quantity) AS value_minor
       ${baseJoins} ${whereUser}
       GROUP BY e.variant HAVING value_minor > 0 ORDER BY value_minor DESC
     `),
@@ -117,8 +127,8 @@ export async function loadDashboardBreakdowns(
     }>(sql`
       SELECT e.card_id, k.slug, k.name, k.image_small_url, e.variant,
              SUM(e.quantity) AS quantity,
-             SUM(p.normalized_price_minor * e.quantity) AS value_minor
-      ${baseJoins} ${whereUser} AND p.normalized_price_minor IS NOT NULL
+             SUM(${priceMinor} * e.quantity) AS value_minor
+      ${baseJoins} ${whereUser} AND ${priceMinor} IS NOT NULL
       GROUP BY e.card_id, e.variant ORDER BY value_minor DESC LIMIT 5
     `),
     db.all<{
@@ -126,25 +136,29 @@ export async function loadDashboardBreakdowns(
       slug: string;
       name: string;
       variant: string;
+      grade: string;
       current_minor: number;
       previous_minor: number;
     }>(sql`
-      SELECT DISTINCT e.card_id, k.slug, k.name, e.variant,
-             p.normalized_price_minor AS current_minor, prev.price_minor AS previous_minor
-      FROM collection_entries e
-      JOIN pokemon_cards k ON k.id = e.card_id
-      JOIN card_prices_current p
-        ON p.card_id = e.card_id AND p.variant = e.variant
-       AND p.source = 'tcgplayer' AND p.currency = 'USD'
-      JOIN (
+      SELECT DISTINCT e.card_id, k.slug, k.name, e.variant, e.grade,
+             ${priceMinor} AS current_minor,
+             CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END AS previous_minor
+      ${baseJoins}
+      LEFT JOIN (
         SELECT h.card_id, h.variant, h.price_minor,
                ROW_NUMBER() OVER (PARTITION BY h.card_id, h.variant ORDER BY h.recorded_date DESC) rn
         FROM card_price_history h
-        WHERE h.source = 'tcgplayer' AND h.currency = 'USD'
-          AND h.recorded_date <= ${new Date(Date.now() - 7 * 86400000).toISOString().slice(0, 10)}
+        WHERE h.source = 'tcgplayer' AND h.currency = 'USD' AND h.recorded_date <= ${weekAgo}
       ) prev ON prev.card_id = e.card_id AND prev.variant = e.variant AND prev.rn = 1
-      WHERE e.user_id = ${userId} AND prev.price_minor > 0
-        AND p.normalized_price_minor != prev.price_minor
+      LEFT JOIN (
+        SELECT h.card_id, h.grade, h.price_minor,
+               ROW_NUMBER() OVER (PARTITION BY h.card_id, h.grade ORDER BY h.recorded_date DESC) rn
+        FROM card_graded_price_history h
+        WHERE h.currency = 'USD' AND h.recorded_date <= ${weekAgo}
+      ) gprev ON gprev.card_id = e.card_id AND gprev.grade = e.grade AND gprev.rn = 1
+      ${whereUser}
+        AND (CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END) > 0
+        AND ${priceMinor} != (CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END)
     `),
     db
       .select({
@@ -171,6 +185,7 @@ export async function loadDashboardBreakdowns(
       slug: m.slug,
       name: m.name,
       variant: m.variant,
+      grade: m.grade,
       currentMinor: m.current_minor,
       previousMinor: m.previous_minor,
       changePercent: ((m.current_minor - m.previous_minor) / m.previous_minor) * 100,

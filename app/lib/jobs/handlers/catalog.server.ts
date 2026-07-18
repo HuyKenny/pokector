@@ -351,9 +351,29 @@ async function recordHistoryForCards(
     .where(cardIds ? inArray(schema.trackedCards.cardId, cardIds) : sql`1=1`);
 }
 
+/** Snapshot current graded (PSA) prices into history, delta-only (one row per
+ * card/grade/currency/day). Only cards with a graded price (i.e. viewed on the
+ * card page, which triggers the eBay lookup) accumulate history. */
+async function recordGradedHistory(db: Database, now: Date): Promise<void> {
+  const today = todayUtc();
+  await db.run(sql`
+    INSERT OR IGNORE INTO card_graded_price_history
+      (card_id, grade, currency, price_minor, recorded_date, observed_at, granularity)
+    SELECT g.card_id, g.grade, g.currency, g.from_minor, ${today}, ${now.getTime()}, 'daily'
+    FROM card_graded_prices g
+    WHERE COALESCE((
+      SELECT h.price_minor FROM card_graded_price_history h
+      WHERE h.card_id = g.card_id AND h.grade = g.grade AND h.currency = g.currency
+      ORDER BY h.recorded_date DESC LIMIT 1
+    ), -1) != g.from_minor
+  `);
+}
+
 export async function handlePriceHistoryRecord(job: SyncJob, env: Env): Promise<void> {
   const db = createDb(env.DB);
-  await recordHistoryForCards(db, null, new Date());
+  const now = new Date();
+  await recordHistoryForCards(db, null, now);
+  await recordGradedHistory(db, now);
   await addJobLog(db, job.id, "info", "history.recorded", {});
 }
 

@@ -16,6 +16,7 @@ export interface CollectionFilters {
   q?: string;
   setId?: string;
   variant?: string;
+  grade?: string;
   condition?: string;
   unpricedOnly?: boolean;
   sort?: "updated" | "name" | "value" | "quantity";
@@ -33,6 +34,10 @@ export async function listCollection(db: Database, userId: string, filters: Coll
         filters.variant as (typeof schema.CARD_VARIANTS)[number],
       ),
     );
+  if (filters.grade)
+    conditions.push(
+      eq(schema.collectionEntries.grade, filters.grade as (typeof schema.GRADES)[number]),
+    );
   if (filters.condition)
     conditions.push(
       eq(
@@ -45,11 +50,18 @@ export async function listCollection(db: Database, userId: string, filters: Coll
     conditions.push(sql`${schema.pokemonCards.searchText} LIKE ${"%" + needle + "%"}`);
   }
 
+  // Grade-aware price: raw → TCGplayer variant price; PSA-graded → eBay graded price.
   const priceExpr = sql<number | null>`(
-    SELECT p.normalized_price_minor FROM card_prices_current p
-    WHERE p.card_id = ${schema.collectionEntries.cardId}
-      AND p.variant = ${schema.collectionEntries.variant}
-      AND p.source = 'tcgplayer' AND p.currency = 'USD'
+    CASE WHEN ${schema.collectionEntries.grade} = 'raw' THEN (
+      SELECT p.normalized_price_minor FROM card_prices_current p
+      WHERE p.card_id = ${schema.collectionEntries.cardId}
+        AND p.variant = ${schema.collectionEntries.variant}
+        AND p.source = 'tcgplayer' AND p.currency = 'USD'
+    ) ELSE (
+      SELECT g.from_minor FROM card_graded_prices g
+      WHERE g.card_id = ${schema.collectionEntries.cardId}
+        AND g.grade = ${schema.collectionEntries.grade} AND g.currency = 'USD'
+    ) END
   )`;
   if (filters.unpricedOnly) conditions.push(sql`${priceExpr} IS NULL`);
 
@@ -70,6 +82,7 @@ export async function listCollection(db: Database, userId: string, filters: Coll
         cardId: schema.collectionEntries.cardId,
         quantity: schema.collectionEntries.quantity,
         variant: schema.collectionEntries.variant,
+        grade: schema.collectionEntries.grade,
         condition: schema.collectionEntries.condition,
         language: schema.collectionEntries.language,
         purchasePriceMinor: schema.collectionEntries.purchasePriceMinor,
@@ -106,6 +119,7 @@ export interface EntryInput {
   cardId: string;
   quantity: number;
   variant: (typeof schema.CARD_VARIANTS)[number];
+  grade?: (typeof schema.GRADES)[number];
   condition: (typeof schema.CONDITIONS)[number];
   language: string;
   purchasePriceMinor: number | null;
@@ -134,6 +148,7 @@ export async function addEntry(db: Database, userId: string, input: EntryInput) 
     cardId: input.cardId,
     quantity: input.quantity,
     variant: input.variant,
+    grade: input.grade ?? "raw",
     condition: input.condition,
     language: input.language,
     purchasePriceMinor: input.purchasePriceMinor,
@@ -157,6 +172,7 @@ export async function updateEntry(
     .set({
       ...(patch.quantity !== undefined ? { quantity: patch.quantity } : {}),
       ...(patch.variant !== undefined ? { variant: patch.variant } : {}),
+      ...(patch.grade !== undefined ? { grade: patch.grade } : {}),
       ...(patch.condition !== undefined ? { condition: patch.condition } : {}),
       ...(patch.language !== undefined ? { language: patch.language } : {}),
       ...(patch.purchasePriceMinor !== undefined

@@ -237,3 +237,26 @@ current eBay listing for the raw card and for a PSA 10 graded copy.
   refreshes in the background (`ctx.waitUntil`) so renders never block on eBay; a daily
   refresh-budget counter protects the Browse API limit. Disabled (button only) when no
   keyset is configured. Keys are Worker secrets (`EBAY_APP_ID`/`EBAY_CERT_ID`).
+
+### D20. Card grades (Raw / PSA 9 / PSA 10) + conversion CTA + eBay compliance (owner request 2026-07-18)
+
+A new **grade** dimension (`raw`/`psa9`/`psa10`, orthogonal to print variant) across prices,
+history, collection and portfolio, plus a conversion-focused "Get this card" CTA and the eBay
+compliance webhook.
+
+- **Grade model**: `GRADES` enum; `collection_entries.grade` (default raw). Graded prices are
+  eBay lowest-listing "from" values, per card+grade, in separate tables `card_graded_prices` +
+  `card_graded_price_history` (not overloading the TCGplayer variant tables). Migration 0005.
+- **eBay client**: fetches raw + PSA 9 + PSA 10 (cache key v2, refresh cap 1500 = ~4500 Browse
+  calls/day) and persists graded prices on view; a daily job snapshots them into history
+  (delta-only, forward-only, viewed cards). PSA = lowest **asking** price, not sold (sold =
+  Marketplace Insights, needs eBay approval — deferred).
+- **Valuation**: all four entry→price joins (portfolio, dashboard breakdowns, movers,
+  listCollection) pick the graded price for graded entries, TCGplayer for raw — so market value,
+  P/L, ROI and movers are grade-correct. `calc.ts` unchanged.
+- **Card page**: PSA 9/10 rows in the price table (Market only; Low/Mid/High = "—"); the history
+  chart toggles Raw variants / PSA 9 / PSA 10; a prominent "Get this card" panel with the official
+  eBay logo + "Buy on eBay — from $X". Collection add/edit gains a grade selector.
+- **eBay compliance**: `/api/ebay/marketplace-deletion` handles the SHA-256 challenge validation
+  (`EBAY_VERIFICATION_TOKEN` secret) and ack (we store no eBay user data). Configure the endpoint
+  URL + token in the eBay console to clear "Non Compliant".

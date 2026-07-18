@@ -159,6 +159,10 @@ const ja: Dict = {
     priceDisclaimer:
       "表示される値は未鑑定カードの推定市場価格であり、実際の状態や取引条件に左右されるため、お手持ちの個体の正確な価値を反映しない場合があります。これは金融アドバイスではありません。",
     buyOnEbay: "eBayで購入する",
+    getThisCard: "このカードを入手",
+    buyFrom: "{price}〜",
+    ebayPsa9From: "PSA 9：{price}〜",
+    psaFromEbay: "PSA価格は現在のeBay最安出品です。",
     ebayFrom: "eBay：{price}〜",
     ebayPsa10From: "PSA 10：{price}〜",
     ebayDisclosure:

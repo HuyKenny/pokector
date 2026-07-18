@@ -160,6 +160,10 @@ const de: Dict = {
     priceDisclaimer:
       "Angezeigte Werte sind geschätzte Marktpreise für ungegradete Karten und spiegeln möglicherweise nicht den genauen Wert deines Exemplars wider, der vom physischen Zustand und den tatsächlichen Verkaufsbedingungen abhängt. Dies ist keine Finanzberatung.",
     buyOnEbay: "Auf eBay kaufen",
+    getThisCard: "Diese Karte holen",
+    buyFrom: "ab {price}",
+    ebayPsa9From: "PSA 9: ab {price}",
+    psaFromEbay: "PSA-Preise sind das niedrigste aktuelle eBay-Angebot.",
     ebayFrom: "eBay: ab {price}",
     ebayPsa10From: "PSA 10: ab {price}",
     ebayDisclosure:

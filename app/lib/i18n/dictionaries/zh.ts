@@ -155,6 +155,10 @@ const zh: Dict = {
     priceDisclaimer:
       "所显示的数值是未评级卡牌的估算市场价格，可能无法反映你手中卡牌的确切价值，其取决于实体品相和实际成交条件。此内容不构成财务建议。",
     buyOnEbay: "在 eBay 上购买",
+    getThisCard: "获得这张卡",
+    buyFrom: "{price} 起",
+    ebayPsa9From: "PSA 9：{price} 起",
+    psaFromEbay: "PSA 价格为 eBay 当前最低在售价。",
     ebayFrom: "eBay：{price} 起",
     ebayPsa10From: "PSA 10：{price} 起",
     ebayDisclosure:

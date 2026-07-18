@@ -14,7 +14,7 @@ import {
   listCollection,
   updateEntry,
 } from "~/lib/collection/queries.server";
-import { CARD_VARIANTS, CONDITIONS } from "~/lib/enums";
+import { CARD_VARIANTS, CONDITIONS, GRADES } from "~/lib/enums";
 import { LIMITS } from "~/lib/limits";
 import { formatMinor, toMinorUnits } from "~/lib/money/decimal";
 import { enforceRateLimit } from "~/lib/security/rate-limit.server";
@@ -50,6 +50,11 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 const VARIANTS = CARD_VARIANTS;
+const GRADE_LABELS: Record<(typeof GRADES)[number], string> = {
+  raw: "Raw",
+  psa9: "PSA 9",
+  psa10: "PSA 10",
+};
 
 const MoneySchema = z
   .string()
@@ -66,6 +71,7 @@ const DateSchema = z
 const EntryFieldsSchema = z.object({
   quantity: z.coerce.number().int().min(1).max(10_000),
   variant: z.enum(VARIANTS),
+  grade: z.enum(GRADES).default("raw"),
   condition: z.enum(CONDITIONS),
   language: z.string().trim().min(1).max(40).default("English"),
   purchasePrice: MoneySchema,
@@ -112,6 +118,7 @@ export async function action({ request, context }: Route.ActionArgs) {
         cardId: card.id,
         quantity: input.quantity,
         variant: input.variant,
+        grade: input.grade,
         condition: input.condition,
         language: input.language,
         purchasePriceMinor: input.purchasePrice,
@@ -124,6 +131,7 @@ export async function action({ request, context }: Route.ActionArgs) {
       const updated = await updateEntry(db, session.user.id, input.entryId, {
         quantity: input.quantity,
         variant: input.variant,
+        grade: input.grade,
         condition: input.condition,
         language: input.language,
         purchasePriceMinor: input.purchasePrice,
@@ -499,7 +507,14 @@ function EntryRow({
             {item.setName} · #{item.cardNumber}
           </p>
         </td>
-        <td className="p-3 text-fg-muted">{item.variant}</td>
+        <td className="p-3 text-fg-muted">
+          {item.variant}
+          {item.grade !== "raw" ? (
+            <span className="ms-1 rounded bg-accent-soft px-1.5 py-0.5 text-xs font-medium text-accent-strong">
+              {GRADE_LABELS[item.grade]}
+            </span>
+          ) : null}
+        </td>
         <td className="p-3 text-fg-muted">{item.condition}</td>
         <td className="p-3">{item.quantity}</td>
         <td className="p-3 text-fg-muted">
@@ -534,6 +549,7 @@ function EntryRow({
               defaults={{
                 quantity: item.quantity,
                 variant: item.variant,
+                grade: item.grade,
                 condition: item.condition,
                 language: item.language,
                 purchasePrice:
@@ -669,6 +685,7 @@ function AddCardPanel() {
                 defaults={{
                   quantity: 1,
                   variant: picked.variants[0] ?? "normal",
+                  grade: "raw",
                   condition: "Near Mint",
                   language: "English",
                   purchasePrice: "",
@@ -700,6 +717,7 @@ function EntryForm({
   defaults: {
     quantity: number;
     variant: string;
+    grade: string;
     condition: string;
     language: string;
     purchasePrice: string;
@@ -746,6 +764,24 @@ function EntryForm({
         {variantOptions ? (
           <p className="text-xs text-fg-faint">Variants with market price data for this card.</p>
         ) : null}
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label htmlFor={`${intent}-grade`} className="text-sm font-medium text-fg">
+          Grade
+        </label>
+        <select
+          id={`${intent}-grade`}
+          name="grade"
+          defaultValue={defaults.grade}
+          className="min-h-11 rounded-lg border border-edge bg-surface px-3 text-fg"
+        >
+          {GRADES.map((g) => (
+            <option key={g} value={g}>
+              {GRADE_LABELS[g]}
+            </option>
+          ))}
+        </select>
+        <p className="text-xs text-fg-faint">PSA prices use eBay lowest listing.</p>
       </div>
       <div className="flex flex-col gap-1.5">
         <label htmlFor={`${intent}-condition`} className="text-sm font-medium text-fg">

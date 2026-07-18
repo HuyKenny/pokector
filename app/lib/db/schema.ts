@@ -21,13 +21,13 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core";
 
-import { CARD_VARIANTS, CONDITIONS, PRICE_SOURCES } from "../enums";
+import { CARD_VARIANTS, CONDITIONS, GRADES, PRICE_SOURCES } from "../enums";
 import { user } from "./auth-schema";
 
 export * from "./auth-schema";
 // Re-export the imported enum arrays so existing `schema.CARD_VARIANTS`
 // server references keep working (single source of truth in ~/lib/enums).
-export { CARD_VARIANTS, CONDITIONS, PRICE_SOURCES };
+export { CARD_VARIANTS, CONDITIONS, GRADES, PRICE_SOURCES };
 
 const createdAt = () =>
   integer("created_at", { mode: "timestamp_ms" })
@@ -215,6 +215,54 @@ export const cardPriceHistory = sqliteTable(
   ],
 );
 
+// ── Graded (PSA) prices — sourced from eBay lowest-listing lookups ────────────
+// Orthogonal to print variant and separate from the TCGplayer/variant pricing
+// above: eBay graded "from" prices are per card+grade. Only psa9/psa10 are
+// stored here (raw is TCGplayer). Populated on-view by the eBay refresh and
+// snapshotted daily into the history table (forward-only, viewed cards).
+
+export const cardGradedPrices = sqliteTable(
+  "card_graded_prices",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => pokemonCards.id),
+    grade: text("grade", { enum: GRADES }).notNull(),
+    currency: text("currency", { enum: ["USD", "EUR"] }).notNull(),
+    /** Lowest current eBay listing ("from $X") in minor units. */
+    fromMinor: integer("from_minor").notNull(),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [primaryKey({ columns: [t.cardId, t.grade, t.currency] })],
+);
+
+export const cardGradedPriceHistory = sqliteTable(
+  "card_graded_price_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => pokemonCards.id),
+    grade: text("grade", { enum: GRADES }).notNull(),
+    currency: text("currency", { enum: ["USD", "EUR"] }).notNull(),
+    priceMinor: integer("price_minor").notNull(),
+    recordedDate: text("recorded_date").notNull(),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+    granularity: text("granularity", { enum: ["daily", "monthly"] })
+      .default("daily")
+      .notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_graded_history_card_grade_currency_date").on(
+      t.cardId,
+      t.grade,
+      t.currency,
+      t.recordedDate,
+    ),
+    index("idx_graded_history_lookup").on(t.cardId, t.grade, t.recordedDate),
+  ],
+);
+
 // ── Collection ───────────────────────────────────────────────────────────────
 
 export const collectionEntries = sqliteTable(
@@ -229,6 +277,9 @@ export const collectionEntries = sqliteTable(
       .references(() => pokemonCards.id),
     quantity: integer("quantity").notNull(),
     variant: text("variant", { enum: CARD_VARIANTS }).notNull(),
+    /** Grade is orthogonal to print variant: a card can be raw or PSA-graded.
+     * Graded entries are valued by eBay graded prices, not TCGplayer. */
+    grade: text("grade", { enum: GRADES }).default("raw").notNull(),
     condition: text("condition", { enum: CONDITIONS }).default("Near Mint").notNull(),
     language: text("language").default("English").notNull(),
     purchasePriceMinor: integer("purchase_price_minor"),

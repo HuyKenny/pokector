@@ -22,6 +22,11 @@ export const CONDITIONS = [
   "Damaged",
 ] as const;
 
+/** Card grade: raw (ungraded) or PSA-graded. Orthogonal to print variant.
+ * Graded prices come from eBay lowest-listing lookups (see ebay-api.server.ts). */
+export const GRADES = ["raw", "psa9", "psa10"] as const;
+
 export type PriceSource = (typeof PRICE_SOURCES)[number];
 export type CardVariant = (typeof CARD_VARIANTS)[number];
 export type Condition = (typeof CONDITIONS)[number];
+export type Grade = (typeof GRADES)[number];

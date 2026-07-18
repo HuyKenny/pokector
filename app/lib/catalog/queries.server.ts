@@ -196,6 +196,29 @@ export async function getCardPriceHistory(
     .limit(800);
 }
 
+/** Graded (PSA) price history for a card + grade (eBay-sourced, USD). */
+export async function getGradedPriceHistory(
+  db: Database,
+  cardId: string,
+  grade: (typeof schema.GRADES)[number],
+): Promise<{ recordedDate: string; priceMinor: number }[]> {
+  return db
+    .select({
+      recordedDate: schema.cardGradedPriceHistory.recordedDate,
+      priceMinor: schema.cardGradedPriceHistory.priceMinor,
+    })
+    .from(schema.cardGradedPriceHistory)
+    .where(
+      and(
+        eq(schema.cardGradedPriceHistory.cardId, cardId),
+        eq(schema.cardGradedPriceHistory.grade, grade),
+        eq(schema.cardGradedPriceHistory.currency, "USD"),
+      ),
+    )
+    .orderBy(asc(schema.cardGradedPriceHistory.recordedDate))
+    .limit(800);
+}
+
 // ── Sets ─────────────────────────────────────────────────────────────────────
 
 export interface SetListParams {

@@ -15,6 +15,7 @@ import {
   bumpCardPopularity,
   getCardBySlug,
   getCardPriceHistory,
+  getGradedPriceHistory,
 } from "~/lib/catalog/queries.server";
 import { buildEbaySearchUrl, ebayCardQuery } from "~/lib/affiliate/ebay";
 import { getEbayCardPrices } from "~/lib/affiliate/ebay-api.server";
@@ -77,7 +78,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // Popularity signal for history tracking — off the response critical path.
   ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
 
-  const history = await getCardPriceHistory(db, detail.card.id, { source: "tcgplayer" });
+  const [history, gradedHistoryPsa9, gradedHistoryPsa10] = await Promise.all([
+    getCardPriceHistory(db, detail.card.id, { source: "tcgplayer" }),
+    getGradedPriceHistory(db, detail.card.id, "psa9"),
+    getGradedPriceHistory(db, detail.card.id, "psa10"),
+  ]);
 
   const tcgplayerPrices = detail.prices.filter((p) => p.source === "tcgplayer");
   const headlinePriceMinor =
@@ -89,6 +94,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   // campaign id isn't configured → the button is hidden.
   const ebayUrl = buildEbaySearchUrl(
     ebayCardQuery(detail.card.name, detail.set.name),
+    env.EBAY_CAMPAIGN_ID,
+  );
+  const ebayPsa9Url = buildEbaySearchUrl(
+    `${ebayCardQuery(detail.card.name, detail.set.name)} PSA 9`,
     env.EBAY_CAMPAIGN_ID,
   );
   const ebayPsa10Url = buildEbaySearchUrl(
@@ -109,8 +118,11 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return {
     detail,
     history,
+    gradedHistoryPsa9,
+    gradedHistoryPsa10,
     headlinePriceMinor,
     ebayUrl,
+    ebayPsa9Url,
     ebayPsa10Url,
     ebayPrices,
     locale,
@@ -121,26 +133,33 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   };
 }
 
-/** eBay wordmark in the four official brand colors (e red, b blue, a gold, y
- * green). Inline SVG — no external request, so it passes the strict img CSP and
- * stays crisp at any size. Decorative here; the link carries the localized label. */
+/** Official eBay wordmark (provided by the owner). Inline SVG — no external
+ * request, so it passes the strict img CSP and stays crisp at any size.
+ * Decorative here; the link carries the localized label. */
 function EbayLogo({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 92 40" className={className} aria-hidden="true" focusable="false">
-      <text
-        x="0"
-        y="31"
-        fontFamily="Arial, Helvetica, sans-serif"
-        fontSize="36"
-        fontWeight="900"
-        fontStyle="italic"
-        letterSpacing="-1.5"
-      >
-        <tspan fill="#E53238">e</tspan>
-        <tspan fill="#0064D2">b</tspan>
-        <tspan fill="#F5AF02">a</tspan>
-        <tspan fill="#86B817">y</tspan>
-      </text>
+    <svg
+      viewBox="0 0 1000 400.75098"
+      className={className}
+      aria-hidden="true"
+      focusable="false"
+    >
+      <path
+        fill="#ffbc13"
+        d="m 633.07803,212.53323 c -45.43873,1.48929 -73.6715,9.689 -73.6715,39.61897 0,19.37591 15.44713,40.38162 54.66334,40.38162 52.57698,0 80.64259,-28.65902 80.64259,-75.66331 l 0.003,-5.16994 c -18.43302,0 -41.16414,0.16089 -61.63704,0.83266 z m 111.75103,62.10248 c 0,14.58313 0.42155,28.9782 1.69406,41.94092 h -46.61408 c -1.24325,-10.67368 -1.6972,-21.27945 -1.6972,-31.56656 -25.20195,30.97941 -55.17735,39.88537 -96.76149,39.88537 -61.67674,0 -94.70072,-32.59982 -94.70072,-70.30689 0,-54.61215 44.91583,-73.86739 122.89013,-75.65391 21.32332,-0.48686 45.27419,-0.55894 65.07531,-0.55894 l -0.003,-5.33606 c 0,-36.56098 -23.44364,-51.59335 -64.06765,-51.59335 -30.15876,0 -52.38579,12.48057 -54.6764,34.0468 h -52.65168 c 5.57217,-53.77165 62.06643,-67.37115 111.74005,-67.37115 59.50837,0 109.77228,21.17288 109.77228,84.11481 z"
+      />
+      <path
+        fill="#f12c2d"
+        d="m 199.63633,185.86602 c -1.94427,-46.87735 -35.77951,-64.41973 -71.94139,-64.41973 -38.99421,0 -70.12667,19.7327 -75.58026,64.41973 z M 51.034408,219.1909 c 2.704332,45.48365 34.069782,72.38437 77.197532,72.38437 29.88033,0 56.45979,-12.17498 65.35948,-38.66041 h 51.68424 c -10.05205,53.73979 -67.15384,71.98058 -116.303,71.98058 C 39.606424,324.89544 0,275.67889 0,209.30653 0,136.24203 40.965642,88.12194 129.78809,88.12194 c 70.69867,0 122.49992,36.99926 122.49992,117.75572 v 13.31324 z"
+      />
+      <path
+        fill="#0968f6"
+        d="m 380.83181,290.6235 c 46.57228,0 78.44078,-33.52181 78.44078,-84.10854 0,-50.58203 -31.8685,-84.10854 -78.44078,-84.10854 -46.31058,0 -78.44392,33.52651 -78.44392,84.10854 0,50.58673 32.13334,84.10854 78.44392,84.10854 z M 252.2854,0 h 50.10249 l -0.005,125.87707 c 24.55682,-29.25975 58.38892,-37.75513 91.68976,-37.75513 55.83503,0 117.85132,37.6773 117.85132,119.02875 0,68.12232 -49.32155,117.74475 -118.78114,117.74475 -36.35726,0 -70.58062,-13.04265 -91.68663,-38.88294 0,10.32107 -0.57618,20.72364 -1.70503,30.56413 h -49.17162 c 0.85513,-15.90944 1.70555,-35.7184 1.70555,-51.74693 z"
+      />
+      <path
+        fill="#93c822"
+        d="M 1000,96.45747 845.05541,400.75099 H 788.94926 L 833.49578,316.25589 716.89033,96.45747 h 58.6266 l 85.80469,171.73057 85.56283,-171.73057 z"
+      />
     </svg>
   );
 }
@@ -155,7 +174,20 @@ const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"
 };
 
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
-  const { detail, history, ebayUrl, ebayPsa10Url, ebayPrices, appUrl, locale, t, c } = loaderData;
+  const {
+    detail,
+    history,
+    gradedHistoryPsa9,
+    gradedHistoryPsa10,
+    ebayUrl,
+    ebayPsa9Url,
+    ebayPsa10Url,
+    ebayPrices,
+    appUrl,
+    locale,
+    t,
+    c,
+  } = loaderData;
   const { card, set, prices, related, trackingSince } = detail;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
@@ -168,13 +200,30 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
   const tcgplayer = prices.filter((p) => p.source === "tcgplayer");
   const cardmarket = prices.filter((p) => p.source === "cardmarket");
   const availableVariants = [...new Set(tcgplayer.map((p) => p.variant))];
-  const [chartVariant, setChartVariant] = useState(availableVariants[0] ?? "normal");
+
+  // History-chart series: each raw print variant, plus PSA 9 / PSA 10 when we
+  // have graded data (current price or accumulated history). A "psa*" key uses
+  // graded history; anything else is a raw print variant.
+  const hasPsa9 = gradedHistoryPsa9.length > 0 || ebayPrices?.psa9FromMinor != null;
+  const hasPsa10 = gradedHistoryPsa10.length > 0 || ebayPrices?.psa10FromMinor != null;
+  const chartSeries: { key: string; label: string }[] = [
+    ...availableVariants.map((v) => ({ key: v, label: variantLabel(v) })),
+    ...(hasPsa9 ? [{ key: "psa9", label: "PSA 9" }] : []),
+    ...(hasPsa10 ? [{ key: "psa10", label: "PSA 10" }] : []),
+  ];
+  const [chartKey, setChartKey] = useState(chartSeries[0]?.key ?? "normal");
 
   const today = new Date().toISOString().slice(0, 10);
   const sinceDate = rangeStartDate(range);
+  const rawHistory =
+    chartKey === "psa9"
+      ? gradedHistoryPsa9
+      : chartKey === "psa10"
+        ? gradedHistoryPsa10
+        : history.filter((h) => h.variant === chartKey);
   const chartPoints: HistoryPoint[] = carryForward(
-    history
-      .filter((h) => h.variant === chartVariant && (!sinceDate || h.recordedDate >= sinceDate))
+    rawHistory
+      .filter((h) => !sinceDate || h.recordedDate >= sinceDate)
       .map((h) => ({ date: h.recordedDate, valueMinor: h.priceMinor })),
     today,
   );
@@ -303,10 +352,44 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                         <td className="py-2 text-end tabular-nums">{money(price.highMinor)}</td>
                       </tr>
                     ))}
+                    {(
+                      [
+                        ["PSA 9", ebayPrices?.psa9FromMinor ?? null, ebayPsa9Url],
+                        ["PSA 10", ebayPrices?.psa10FromMinor ?? null, ebayPsa10Url],
+                      ] as const
+                    ).map(([label, minor, url]) =>
+                      minor != null ? (
+                        <tr key={label} className="border-b border-edge/50">
+                          <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
+                            {url ? (
+                              <a
+                                href={url}
+                                target="_blank"
+                                rel="sponsored noopener"
+                                className="hover:text-accent"
+                              >
+                                {label} ↗
+                              </a>
+                            ) : (
+                              label
+                            )}
+                          </th>
+                          <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
+                            {money(minor)}
+                          </td>
+                          <td className="py-2 pe-4 text-end tabular-nums">{money(null)}</td>
+                          <td className="py-2 pe-4 text-end tabular-nums">{money(null)}</td>
+                          <td className="py-2 text-end tabular-nums">{money(null)}</td>
+                        </tr>
+                      ) : null,
+                    )}
                   </tbody>
                 </table>
               </div>
             )}
+            {ebayPrices?.psa9FromMinor != null || ebayPrices?.psa10FromMinor != null ? (
+              <p className="mt-2 text-xs text-fg-faint">{t.psaFromEbay}</p>
+            ) : null}
             <p className="mt-3 text-xs text-fg-faint">
               {t.sourceTcgplayer}
               {tcgplayer[0]?.sourceUpdatedAt
@@ -355,100 +438,113 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             ) : null}
           </section>
 
-          {/* CTAs */}
-          <div className="flex flex-wrap gap-3">
+          {/* Get this card — conversion panel */}
+          <div className="flex flex-col gap-3 rounded-(--radius-card) border border-edge bg-surface p-5">
+            <h2 className="font-semibold text-fg">{t.getThisCard}</h2>
             {ebayUrl ? (
               <a
                 href={ebayUrl}
                 target="_blank"
                 rel="sponsored noopener"
                 aria-label={t.buyOnEbay}
-                title={t.buyOnEbay}
-                className="inline-flex min-h-11 items-center gap-2 rounded-lg border border-neutral-300 bg-white px-5 py-2 shadow-sm hover:bg-neutral-50"
+                className="flex min-h-14 items-center justify-between gap-3 rounded-xl border-2 border-accent bg-white px-5 py-3 shadow-sm transition hover:bg-neutral-50"
               >
-                <EbayLogo className="h-6 w-auto" />
-                <span aria-hidden className="text-lg text-neutral-500">
-                  ↗
+                <span className="flex items-center gap-3">
+                  <EbayLogo className="h-7 w-auto" />
+                  <span className="font-semibold text-neutral-800">{t.buyOnEbay}</span>
                 </span>
+                {ebayPrices?.rawFromMinor != null ? (
+                  <span className="text-lg font-bold tabular-nums text-neutral-900">
+                    {interpolate(t.buyFrom, { price: money(ebayPrices.rawFromMinor) })}
+                  </span>
+                ) : (
+                  <span aria-hidden className="text-xl text-neutral-500">
+                    ↗
+                  </span>
+                )}
               </a>
             ) : null}
-            <fetcher.Form method="post" action="/api/v1/collection/quick-add">
-              <input type="hidden" name="cardId" value={card.id} />
-              <button
-                type="submit"
-                className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
-              >
-                {t.addToCollection}
-              </button>
-            </fetcher.Form>
-            <fetcher.Form method="post" action="/api/v1/wishlist/quick-add">
-              <input type="hidden" name="cardId" value={card.id} />
-              <button
-                type="submit"
-                className="min-h-11 rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
-              >
-                {t.addToWishlist}
-              </button>
-            </fetcher.Form>
-          </div>
-          {ebayPrices && (ebayPrices.rawFromMinor != null || ebayPrices.psa10FromMinor != null) ? (
-            <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-              {ebayPrices.rawFromMinor != null && ebayUrl ? (
-                <a
-                  href={ebayUrl}
-                  target="_blank"
-                  rel="sponsored noopener"
-                  className="text-fg-muted hover:text-fg"
+            {ebayPrices && (ebayPrices.psa9FromMinor != null || ebayPrices.psa10FromMinor != null) ? (
+              <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+                {ebayPrices.psa9FromMinor != null && ebayPsa9Url ? (
+                  <a
+                    href={ebayPsa9Url}
+                    target="_blank"
+                    rel="sponsored noopener"
+                    className="text-fg-muted hover:text-accent"
+                  >
+                    {interpolate(t.ebayPsa9From, { price: money(ebayPrices.psa9FromMinor) })}
+                  </a>
+                ) : null}
+                {ebayPrices.psa10FromMinor != null && ebayPsa10Url ? (
+                  <a
+                    href={ebayPsa10Url}
+                    target="_blank"
+                    rel="sponsored noopener"
+                    className="text-fg-muted hover:text-accent"
+                  >
+                    {interpolate(t.ebayPsa10From, { price: money(ebayPrices.psa10FromMinor) })}
+                  </a>
+                ) : null}
+              </div>
+            ) : null}
+            <div className="flex flex-wrap gap-3">
+              <fetcher.Form method="post" action="/api/v1/collection/quick-add">
+                <input type="hidden" name="cardId" value={card.id} />
+                <button
+                  type="submit"
+                  className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
                 >
-                  {interpolate(t.ebayFrom, { price: money(ebayPrices.rawFromMinor) })}
-                </a>
-              ) : null}
-              {ebayPrices.psa10FromMinor != null && ebayPsa10Url ? (
-                <a
-                  href={ebayPsa10Url}
-                  target="_blank"
-                  rel="sponsored noopener"
-                  className="text-fg-muted hover:text-fg"
+                  {t.addToCollection}
+                </button>
+              </fetcher.Form>
+              <fetcher.Form method="post" action="/api/v1/wishlist/quick-add">
+                <input type="hidden" name="cardId" value={card.id} />
+                <button
+                  type="submit"
+                  className="min-h-11 rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
                 >
-                  {interpolate(t.ebayPsa10From, { price: money(ebayPrices.psa10FromMinor) })}
-                </a>
-              ) : null}
+                  {t.addToWishlist}
+                </button>
+              </fetcher.Form>
             </div>
-          ) : null}
-          {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
-            <p className="text-sm text-fg-muted" role="status">
-              {String((fetcher.data as { message: string }).message)}
-            </p>
-          ) : null}
+            {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
+              <p className="text-sm text-fg-muted" role="status">
+                {String((fetcher.data as { message: string }).message)}
+              </p>
+            ) : null}
+            {ebayUrl ? <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p> : null}
+          </div>
 
           <p className="text-xs text-fg-faint">{t.priceDisclaimer}</p>
-          {ebayUrl ? <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p> : null}
         </div>
       </div>
 
       {/* Price history */}
       <section className="rounded-(--radius-card) border border-edge bg-surface p-5">
-        {availableVariants.length > 1 ? (
-          <div className="mb-3 flex gap-1" role="group" aria-label={t.historyVariantAria}>
-            {availableVariants.map((variant) => (
+        {chartSeries.length > 1 ? (
+          <div className="mb-3 flex flex-wrap gap-1" role="group" aria-label={t.historyVariantAria}>
+            {chartSeries.map((s) => (
               <button
-                key={variant}
+                key={s.key}
                 type="button"
-                onClick={() => setChartVariant(variant)}
-                aria-pressed={chartVariant === variant}
+                onClick={() => setChartKey(s.key)}
+                aria-pressed={chartKey === s.key}
                 className={`min-h-9 rounded-md px-3 text-xs font-medium ${
-                  chartVariant === variant
+                  chartKey === s.key
                     ? "bg-accent text-(color:--color-on-accent)"
                     : "border border-edge text-fg-muted"
                 }`}
               >
-                {variantLabel(variant)}
+                {s.label}
               </button>
             ))}
           </div>
         ) : null}
         <HistoryChart
-          title={interpolate(t.historyTitle, { variant: variantLabel(chartVariant) })}
+          title={interpolate(t.historyTitle, {
+            variant: chartSeries.find((s) => s.key === chartKey)?.label ?? "",
+          })}
           points={chartPoints}
           range={range}
           onRangeChange={setRange}
