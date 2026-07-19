@@ -9,6 +9,9 @@ import {
   type ChartRange,
   type HistoryPoint,
 } from "~/components/history-chart";
+import { GradingCalculator, type GradedValue } from "~/components/grading-calculator";
+import { optionalUser } from "~/lib/auth/guards.server";
+import { getUserCardState, type UserCardState } from "~/lib/collection/queries.server";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import {
@@ -72,7 +75,7 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "private, max-age=300, stale-while-revalidate=3600" };
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ params, request, context }: Route.LoaderArgs) {
   const { env, ctx } = getCloudflare(context);
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
@@ -84,6 +87,17 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 
   // Popularity signal for history tracking — off the response critical path.
   ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
+
+  // Ownership/wishlist badge for signed-in users (the loader is `private`
+  // cached, so this per-user state never leaks to a shared edge cache).
+  const session = await optionalUser(context, request);
+  const cardState: UserCardState | null = session
+    ? ((await getUserCardState(db, session.user.id, [detail.card.id]))[detail.card.id] ?? {
+        ownedQuantity: 0,
+        variants: [],
+        onWishlist: false,
+      })
+    : null;
 
   const [history, gradedHistoryPsa9, gradedHistoryPsa10] = await Promise.all([
     getCardPriceHistory(db, detail.card.id, { source: MARKET_SOURCE[market] }),
@@ -132,6 +146,8 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     ebayPsa9Url,
     ebayPsa10Url,
     ebayPrices,
+    signedIn: session !== null,
+    cardState,
     locale,
     market,
     t: getDict(locale).cardDetail,
@@ -191,6 +207,8 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
     ebayPsa9Url,
     ebayPsa10Url,
     ebayPrices,
+    signedIn,
+    cardState,
     appUrl,
     locale,
     market,
@@ -255,6 +273,27 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
 
   const types: string[] = card.typesJson ? (JSON.parse(card.typesJson) as string[]) : [];
   const subtypes: string[] = card.subtypesJson ? (JSON.parse(card.subtypesJson) as string[]) : [];
+
+  // Grading ROI calculator inputs — always USD (the PSA graded market). Raw cost
+  // basis = TCGplayer USD headline (fallback: eBay raw "from"). Graded values are
+  // the PSA 9/10 medians (or lowest listing) already fetched for the price table.
+  const rawUsdMinor =
+    tcgplayer.length > 0
+      ? Math.max(...tcgplayer.map((p) => p.normalizedPriceMinor))
+      : (ebayPrices?.rawFromMinor ?? null);
+  const gradedValues: GradedValue[] = [
+    ebayPrices?.psa9
+      ? { label: "PSA 9", valueMinor: ebayPrices.psa9.valueMinor, source: ebayPrices.psa9.source }
+      : null,
+    ebayPrices?.psa10
+      ? {
+          label: "PSA 10",
+          valueMinor: ebayPrices.psa10.valueMinor,
+          source: ebayPrices.psa10.source,
+        }
+      : null,
+  ].filter((v): v is GradedValue => v !== null);
+  const showGradingCalc = rawUsdMinor !== null && gradedValues.length > 0;
 
   return (
     <div className="flex flex-col gap-8">
@@ -523,6 +562,34 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 )}
           </section>
 
+          {/* Ownership badges for signed-in users (never rendered anonymously). */}
+          {cardState && (cardState.ownedQuantity > 0 || cardState.onWishlist) ? (
+            <div className="flex flex-wrap items-center gap-2" role="status">
+              {cardState.ownedQuantity > 0 ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-positive/15 px-3 py-1 text-sm font-medium text-positive">
+                  ✓{" "}
+                  {interpolate(t.ownedBadge, { count: cardState.ownedQuantity })}
+                  {cardState.variants.length
+                    ? interpolate(t.ownedVariants, {
+                        variants: cardState.variants.map(variantLabel).join(", "),
+                      })
+                    : ""}
+                </span>
+              ) : null}
+              {cardState.onWishlist ? (
+                <span className="inline-flex items-center gap-1 rounded-full bg-accent-soft px-3 py-1 text-sm font-medium text-accent-strong">
+                  ♥ {t.onWishlistBadge}
+                </span>
+              ) : null}
+              <Link
+                to={lp("/app/collection")}
+                className="text-sm font-medium text-accent hover:underline"
+              >
+                {t.manageInCollection}
+              </Link>
+            </div>
+          ) : null}
+
           {/* Add to collection / wishlist — directly under the market prices table */}
           <div className="flex flex-wrap gap-3">
             <fetcher.Form method="post" action="/api/v1/collection/quick-add">
@@ -543,12 +610,19 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 {t.addToWishlist}
               </button>
             </fetcher.Form>
+            <Link
+              to={`${lp("/cards/compare")}?ids=${card.slug}`}
+              className="inline-flex min-h-11 items-center rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
+            >
+              {t.compareCard}
+            </Link>
           </div>
           {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
             <p className="text-sm text-fg-muted" role="status">
               {String((fetcher.data as { message: string }).message)}
             </p>
           ) : null}
+          {!signedIn ? <p className="text-xs text-fg-faint">{t.addRequiresAccount}</p> : null}
 
           {/* Get this card — three eBay buy options (Raw / PSA 9 / PSA 10) */}
           {ebayUrl ? (
@@ -593,6 +667,32 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               </div>
               <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p>
             </div>
+          ) : null}
+
+          {showGradingCalc && rawUsdMinor !== null ? (
+            <GradingCalculator
+              rawMinor={rawUsdMinor}
+              grades={gradedValues}
+              langTag={langTag}
+              labels={{
+                heading: t.gradingHeading,
+                tierLabel: t.gradingTierLabel,
+                tierValue: t.gradingTierValue,
+                tierRegular: t.gradingTierRegular,
+                tierExpress: t.gradingTierExpress,
+                rawCostLabel: t.gradingRawCostLabel,
+                colGrade: t.gradingColGrade,
+                colGradedValue: t.gradingColGradedValue,
+                colAllIn: t.gradingColAllIn,
+                colNet: t.gradingColNet,
+                colRoi: t.gradingColRoi,
+                worthIt: t.gradingWorthIt,
+                notWorth: t.gradingNotWorth,
+                soldNote: t.gradingSoldNote,
+                listingDisclaimer: t.gradingListingDisclaimer,
+                feeNote: t.gradingFeeNote,
+              }}
+            />
           ) : null}
 
           <p className="text-xs text-fg-faint">{t.priceDisclaimer}</p>

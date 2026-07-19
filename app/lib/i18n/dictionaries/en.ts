@@ -136,6 +136,7 @@ export const en = {
     emptyBody:
       "Try a shorter search term, or check the spelling. The catalog covers English-language Pokémon TCG cards.",
     didYouMean: "Did you mean…",
+    ownedBadgeAria: "You own {count} of this card",
     paginationAria: "Pagination",
   },
 
@@ -177,6 +178,12 @@ export const en = {
     viewOnCardmarket: "View on Cardmarket ↗",
     addToCollection: "Add to collection",
     addToWishlist: "Add to wishlist",
+    compareCard: "Compare",
+    ownedBadge: "In your collection: ×{count}",
+    ownedVariants: " ({variants})",
+    onWishlistBadge: "On your wishlist",
+    manageInCollection: "Manage in collection ↗",
+    addRequiresAccount: "Sign in to track this card in your collection or wishlist.",
     priceDisclaimer:
       "Displayed values are estimated market prices for raw (ungraded) cards and may not reflect the exact value of your copy, which depends on its physical condition and actual sale conditions. This is not financial advice.",
     getThisCard: "Get this card",
@@ -202,6 +209,24 @@ export const en = {
     variantReverseHolofoil: "Reverse Holofoil",
     variantFirstEdition: "1st Edition",
     variantFirstEditionHolofoil: "1st Edition Holofoil",
+    gradingHeading: "Is it worth grading?",
+    gradingTierLabel: "PSA service",
+    gradingTierValue: "Value",
+    gradingTierRegular: "Regular",
+    gradingTierExpress: "Express",
+    gradingRawCostLabel: "Your raw card cost (USD)",
+    gradingColGrade: "Grade",
+    gradingColGradedValue: "Graded value",
+    gradingColAllIn: "All-in cost",
+    gradingColNet: "Net",
+    gradingColRoi: "ROI",
+    gradingWorthIt: "Clears break-even",
+    gradingNotWorth: "Below break-even",
+    gradingSoldNote:
+      "Graded values are the median of real eBay sales (last 90 days). PSA fees and shipping are estimates and vary by declared value and turnaround.",
+    gradingListingDisclaimer:
+      "Graded values are the lowest current eBay listing, not real sales — treat this as a rough guide only.",
+    gradingFeeNote: "PSA fee {fee} + est. shipping {shipping}.",
   },
 
   sets: {
@@ -313,6 +338,28 @@ export const en = {
     addFavorite: "Add to favorites",
     removeFavorite: "Remove from favorites",
     favoritesEmpty: "No favorites yet — tap the ★ on a Pokémon to add it.",
+  },
+
+  compare: {
+    metaTitle: "Compare Pokémon Card Prices | Pokector",
+    metaDescription:
+      "Overlay the market price history of up to three Pokémon cards side by side.",
+    breadcrumb: "Compare",
+    heading: "Compare cards",
+    intro: "Overlay the price history of up to 3 cards to see how they move against each other.",
+    addLabel: "Add a card",
+    addPlaceholder: "Search by name or number…",
+    addAnother: "Add another card",
+    remove: "Remove {name}",
+    full: "You can compare up to 3 cards. Remove one to add another.",
+    empty: "Add cards to compare their price history.",
+    chartEmpty: "No recorded price history yet for the selected cards.",
+    rangeAria: "Chart time range",
+    showTable: "Show data table",
+    hideTable: "Hide data table",
+    dateColumn: "Date",
+    searchNoResults: "No matching cards.",
+    compareCta: "Compare",
   },
 
   auth: {

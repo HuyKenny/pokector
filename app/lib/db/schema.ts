@@ -491,6 +491,58 @@ export const portfolioSnapshots = sqliteTable(
   ],
 );
 
+// ── Sales / realized P&L ─────────────────────────────────────────────────────
+
+/**
+ * A recorded sale of one or more copies from a collection entry. Feeds the
+ * realized P&L view and tax export. Cost basis is snapshotted at sale time
+ * (`purchasePriceMinor`, per card) so later edits to the source entry — or its
+ * deletion — never rewrite realized history. Orthogonal to portfolio_snapshots,
+ * which value only current holdings; realized P&L is a separate axis.
+ */
+export const cardSales = sqliteTable(
+  "card_sales",
+  {
+    id: text("id").primaryKey(),
+    userId: text("user_id")
+      .notNull()
+      .references(() => user.id, { onDelete: "cascade" }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => pokemonCards.id),
+    /** Source entry; nulled (not cascaded) if that entry is later deleted. */
+    collectionEntryId: text("collection_entry_id").references(() => collectionEntries.id, {
+      onDelete: "set null",
+    }),
+    quantity: integer("quantity").notNull(),
+    variant: text("variant", { enum: CARD_VARIANTS }).notNull(),
+    grade: text("grade", { enum: GRADES }).default("raw").notNull(),
+    saleCurrency: text("sale_currency", { enum: ["USD", "EUR"] })
+      .default("USD")
+      .notNull(),
+    /** Sale price PER CARD, minor units. */
+    salePriceMinor: integer("sale_price_minor").notNull(),
+    /** Optional selling/shipping fees for the whole sale, minor units. */
+    feeMinor: integer("fee_minor"),
+    /** Cost basis snapshotted from the entry at sale time (per card), minor units. */
+    purchasePriceMinor: integer("purchase_price_minor"),
+    purchaseCurrency: text("purchase_currency", { enum: ["USD", "EUR"] })
+      .default("USD")
+      .notNull(),
+    /** "YYYY-MM-DD". */
+    purchaseDate: text("purchase_date"),
+    /** UTC calendar day of the sale, "YYYY-MM-DD". */
+    soldDate: text("sold_date").notNull(),
+    /** Plain text only — never rendered as HTML. */
+    notes: text("notes"),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    index("idx_card_sales_user_date").on(t.userId, t.soldDate),
+    index("idx_card_sales_card").on(t.cardId),
+  ],
+);
+
 // ── Notifications & alert events ─────────────────────────────────────────────
 
 export const notifications = sqliteTable(

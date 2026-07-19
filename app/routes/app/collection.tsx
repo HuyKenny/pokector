@@ -14,6 +14,7 @@ import {
   listCollection,
   updateEntry,
 } from "~/lib/collection/queries.server";
+import { recordSale } from "~/lib/collection/sales.server";
 import { CARD_VARIANTS, CONDITIONS, GRADES } from "~/lib/enums";
 import { LIMITS } from "~/lib/limits";
 import { formatMinor, toMinorUnits } from "~/lib/money/decimal";
@@ -93,6 +94,19 @@ const ActionSchema = z.discriminatedUnion("intent", [
     condition: z.enum(CONDITIONS).optional(),
     language: z.string().trim().max(40).optional(),
   }),
+  z.object({
+    intent: z.literal("sell"),
+    entryId: z.string().uuid(),
+    sellQuantity: z.coerce.number().int().min(1).max(10_000),
+    salePrice: MoneySchema,
+    fee: MoneySchema,
+    soldDate: DateSchema,
+    sellNotes: z
+      .string()
+      .trim()
+      .max(LIMITS.maxNotesLength)
+      .transform((v) => (v === "" ? null : v)),
+  }),
 ]);
 
 export async function action({ request, context }: Route.ActionArgs) {
@@ -154,6 +168,20 @@ export async function action({ request, context }: Route.ActionArgs) {
         language: input.language || undefined,
       });
       return { ok: true as const, message: `${n} ${n === 1 ? "entry" : "entries"} updated.` };
+    }
+    case "sell": {
+      if (input.salePrice === null) {
+        return { ok: false as const, message: "Enter a sale price." };
+      }
+      const res = await recordSale(db, session.user.id, {
+        entryId: input.entryId,
+        quantity: input.sellQuantity,
+        salePriceMinor: input.salePrice,
+        feeMinor: input.fee,
+        soldDate: input.soldDate ?? new Date().toISOString().slice(0, 10),
+        notes: input.sellNotes,
+      });
+      return { ok: res.ok, message: res.message };
     }
   }
 }
@@ -488,6 +516,7 @@ function EntryRow({
   editing: boolean;
   onEdit: () => void;
 }) {
+  const [selling, setSelling] = useState(false);
   return (
     <>
       <tr className="border-b border-edge/50">
@@ -530,14 +559,24 @@ function EntryRow({
           )}
         </td>
         <td className="p-3">
-          <button
-            type="button"
-            onClick={onEdit}
-            aria-expanded={editing}
-            className="text-sm font-medium text-accent hover:underline"
-          >
-            {editing ? "Close" : "Edit"}
-          </button>
+          <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={onEdit}
+              aria-expanded={editing}
+              className="text-sm font-medium text-accent hover:underline"
+            >
+              {editing ? "Close" : "Edit"}
+            </button>
+            <button
+              type="button"
+              onClick={() => setSelling((v) => !v)}
+              aria-expanded={selling}
+              className="text-sm font-medium text-fg-muted hover:text-fg hover:underline"
+            >
+              {selling ? "Close" : "Sell"}
+            </button>
+          </div>
         </td>
       </tr>
       {editing ? (
@@ -564,7 +603,79 @@ function EntryRow({
           </td>
         </tr>
       ) : null}
+      {selling ? (
+        <tr className="border-b border-edge/50 bg-surface-raised">
+          <td colSpan={8} className="p-4">
+            <SellForm item={item} onSubmitted={() => setSelling(false)} />
+          </td>
+        </tr>
+      ) : null}
     </>
+  );
+}
+
+/** Inline "mark as sold" form. Cost basis for realized P&L is the entry's
+ * recorded purchase price (snapshotted server-side at sale time). */
+function SellForm({ item, onSubmitted }: { item: Item; onSubmitted: () => void }) {
+  const today = new Date().toISOString().slice(0, 10);
+  return (
+    <Form method="post" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={onSubmitted}>
+      <input type="hidden" name="intent" value="sell" />
+      <input type="hidden" name="entryId" value={item.id} />
+      <Input
+        label="Quantity to sell"
+        id={`sell-qty-${item.id}`}
+        name="sellQuantity"
+        type="number"
+        min={1}
+        max={item.quantity}
+        defaultValue={item.quantity}
+        required
+      />
+      <Input
+        label="Sale price (USD, per card)"
+        id={`sell-price-${item.id}`}
+        name="salePrice"
+        inputMode="decimal"
+        placeholder="e.g. 40.00"
+        required
+        hint={
+          item.purchasePriceMinor !== null
+            ? `Paid ${formatMinor(item.purchasePriceMinor)} / card`
+            : "No purchase price on file — records proceeds only."
+        }
+      />
+      <Input
+        label="Fees (USD, total)"
+        id={`sell-fee-${item.id}`}
+        name="fee"
+        inputMode="decimal"
+        placeholder="e.g. 5.00"
+        hint="Optional — eBay/shipping fees."
+      />
+      <Input
+        label="Sale date"
+        id={`sell-date-${item.id}`}
+        name="soldDate"
+        type="date"
+        defaultValue={today}
+      />
+      <div className="flex flex-col gap-1.5 sm:col-span-2">
+        <label htmlFor={`sell-notes-${item.id}`} className="text-sm font-medium text-fg">
+          Notes (plain text)
+        </label>
+        <textarea
+          id={`sell-notes-${item.id}`}
+          name="sellNotes"
+          maxLength={LIMITS.maxNotesLength}
+          rows={2}
+          className="rounded-lg border border-edge bg-surface px-3 py-2 text-fg"
+        />
+      </div>
+      <div className="sm:col-span-2 lg:col-span-4">
+        <Button type="submit">Record sale</Button>
+      </div>
+    </Form>
   );
 }
 

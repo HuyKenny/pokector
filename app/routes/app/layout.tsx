@@ -47,6 +47,7 @@ const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
   { to: "/app/binders", label: "Binders" },
   { to: "/app/sets", label: "Sets" },
   { to: "/app/wishlist", label: "Wishlist" },
+  { to: "/app/sales", label: "Sales & P/L" },
   { to: "/app/settings", label: "Settings" },
 ];
 

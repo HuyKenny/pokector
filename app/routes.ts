@@ -5,6 +5,7 @@ export default [
   layout("routes/public/layout.tsx", [
     index("routes/public/home.tsx"),
     route("cards", "routes/public/cards.tsx"),
+    route("cards/compare", "routes/public/cards.compare.tsx"),
     route("cards/:slug", "routes/public/cards.$slug.tsx"),
     route("sets", "routes/public/sets.tsx"),
     route("sets/:slug", "routes/public/sets.$slug.tsx"),
@@ -31,6 +32,9 @@ export default [
     layout("routes/public/layout.tsx", { id: "l10n/public/layout" }, [
       index("routes/public/home.tsx", { id: "l10n/public/home" }),
       route("cards", "routes/public/cards.tsx", { id: "l10n/public/cards" }),
+      route("cards/compare", "routes/public/cards.compare.tsx", {
+        id: "l10n/public/cards.compare",
+      }),
       route("cards/:slug", "routes/public/cards.$slug.tsx", { id: "l10n/public/cards.$slug" }),
       route("sets", "routes/public/sets.tsx", { id: "l10n/public/sets" }),
       route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
@@ -107,6 +111,7 @@ export default [
       route("sets/:setSlug", "routes/app/sets.$setSlug.tsx"),
       route("sets/:setSlug/export-missing", "routes/app/sets.$setSlug.export-missing.ts"),
       route("wishlist", "routes/app/wishlist.tsx"),
+      route("sales", "routes/app/sales.tsx"),
       route("notifications", "routes/app/notifications.tsx"),
       route("import", "routes/app/import.tsx"),
       route("export", "routes/app/export.tsx"),

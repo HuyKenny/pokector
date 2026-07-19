@@ -379,3 +379,41 @@ full-scanned every query, and there was no typeahead (and no search at all on mo
   covered by prefix + the relaxed OR fallback.
 - Verified live (staging + prod): "base charizard"→Base #4 first, "charizard 4/102"→#4,
   "espeon vmax", "surging sparks" (set name), typeahead dropdown with thumbnails.
+
+### D25. Collector/investor tools — ownership badges, grading ROI, compare, realized P/L (owner 2026-07-19)
+
+A UX pass over the whole site plus four tools that fit data we already store (raw +
+PSA 9/10 prices, price history, collection, purchase prices). Competitor/forum scan
+(Collectr, TCGplayer, PokeInvest, PokeInvesting, PokeTop10, PriceCharting) confirmed all
+four are market-standard; population reports + a "hidden gems"/undervalued signal were
+deferred (data-constrained). No duplication of existing features (portfolio P/L, wishlist
+alerts, set goals, binders, import/export already existed).
+
+- **Ownership badges** (`getUserCardState` in `collection/queries.server.ts`): signed-in
+  users see "In your collection ×N / On your wishlist" on the public card page and a "✓N"
+  corner badge on catalog tiles — one batched query over the page's card IDs. Prevents
+  duplicate buys. Public `/cards` list goes `Cache-Control: private` **only when signed in**
+  (via a loader-set header + `headers()` fallback) so the shared edge cache can't leak one
+  user's owned counts; anonymous keeps the shared cache. The card page was already `private`.
+- **Grading ROI calculator** (`lib/grading/fees.ts` + `components/grading-calculator.tsx`):
+  on the card page, "Is it worth grading?" compares raw cost + PSA fee + round-trip shipping
+  against the PSA 9/10 median (sold comps) → net + ROI% + break-even badge, with a client
+  tier selector (Value/Regular/Express) and editable raw cost. USD only (the graded market).
+  PSA fees are approximate constants in one file. **Data-dependent: renders only when eBay
+  PSA data is present** — so it is dark on production until the eBay API access is enabled
+  (pending owner action); fully verified on staging.
+- **Card comparison** (`/cards/compare?ids=slug,slug,slug`, `components/multi-history-chart.tsx`):
+  overlays up to 3 cards' price history on one axis (new multi-series chart kept **separate**
+  from the single-series `HistoryChart` so the card/dashboard charts are untouched), with a
+  suggest-powered picker and a "Compare" CTA on each card. `noindex`, `private` (market cookie).
+- **Realized P/L / sales** (migration 0008 `card_sales`): a "Sell" action on each collection
+  entry (`sales.server.ts` `recordSale`) snapshots the entry's purchase price as cost basis
+  (lot-accurate — the user sells a chosen entry, so no separate FIFO engine), draws the lot
+  down (deletes the entry at zero), and writes a sale. New `/app/sales` page (realized P/L,
+  proceeds net of fees, cost basis, year filter, tax CSV export) + an all-time realized strip
+  on the dashboard. Kept a **separate axis** from portfolio snapshots (which value only current
+  holdings) so P/L isn't double-counted. Unpriced lots are excluded from realized P/L (flagged).
+- i18n +41 keys ×11 (ownership, grading, compare); `/app` surfaces stay English per convention.
+  Unit tests for grading ROI + realized P/L math + summary. Verified end-to-end on staging
+  (register → add → ownership badge → sell → sales page + dashboard strip + CSV; grading calc;
+  compare) and on production (ownership/compare/sales; grading calc awaits eBay data).

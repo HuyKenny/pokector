@@ -13,6 +13,7 @@ import { requireUser } from "~/lib/auth/guards.server";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { changeBetween } from "~/lib/portfolio/calc";
+import { listSales, summarizeSales } from "~/lib/collection/sales.server";
 import {
   computeUserPortfolio,
   loadDashboardBreakdowns,
@@ -34,14 +35,16 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const userId = session.user.id;
 
-  const [summary, breakdowns, snapshots, prev1, prev7, prev30] = await Promise.all([
+  const [summary, breakdowns, snapshots, prev1, prev7, prev30, sales] = await Promise.all([
     computeUserPortfolio(db, userId),
     loadDashboardBreakdowns(db, userId),
     loadSnapshots(db, userId, null),
     snapshotAtOrBefore(db, userId, daysAgo(1)),
     snapshotAtOrBefore(db, userId, daysAgo(7)),
     snapshotAtOrBefore(db, userId, daysAgo(30)),
+    listSales(db, userId),
   ]);
+  const realized = summarizeSales(sales);
 
   // Keep today's snapshot fresh after collection changes (idempotent upsert).
   const today = new Date().toISOString().slice(0, 10);
@@ -60,11 +63,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       monthly: changeBetween(summary.marketValueMinor, prev30),
     },
     trackingSince: snapshots[0]?.snapshotDate ?? null,
+    realized,
   };
 }
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-  const { name, summary, breakdowns, snapshots, changes, trackingSince } = loaderData;
+  const { name, summary, breakdowns, snapshots, changes, trackingSince, realized } = loaderData;
   const [range, setRange] = useState<ChartRange>("MAX");
 
   if (summary.totalEntries === 0) {
@@ -92,6 +96,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
             </Link>
           </div>
         </Card>
+        <RealizedStrip realized={realized} />
       </div>
     );
   }
@@ -149,6 +154,8 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         <ChangeStat label="Daily change" change={changes.daily} />
         <ChangeStat label="7-day change" change={changes.weekly} />
       </div>
+
+      <RealizedStrip realized={realized} />
 
       {/* Portfolio chart */}
       <Card>
@@ -294,6 +301,38 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         </Card>
       </div>
     </div>
+  );
+}
+
+function RealizedStrip({
+  realized,
+}: {
+  realized: { realizedPlMinor: number; proceedsMinor: number; salesCount: number };
+}) {
+  if (realized.salesCount === 0) return null;
+  return (
+    <Card className="!p-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div>
+          <p className="text-xs uppercase tracking-wide text-fg-muted">Realized P/L (all-time)</p>
+          <p
+            className={`text-xl font-bold ${
+              realized.realizedPlMinor >= 0 ? "text-positive" : "text-negative"
+            }`}
+          >
+            {realized.realizedPlMinor >= 0 ? "+" : ""}
+            {formatMinor(realized.realizedPlMinor)}
+          </p>
+          <p className="text-xs text-fg-faint">
+            {realized.salesCount} {realized.salesCount === 1 ? "sale" : "sales"} ·{" "}
+            {formatMinor(realized.proceedsMinor)} proceeds
+          </p>
+        </div>
+        <Link to="/app/sales" className="text-sm font-medium text-accent hover:underline">
+          View sales →
+        </Link>
+      </div>
+    </Card>
   );
 }
 

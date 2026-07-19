@@ -244,3 +244,61 @@ export async function availableVariants(db: Database, cardId: string): Promise<s
     .where(eq(schema.cardPricesCurrent.cardId, cardId));
   return rows.map((r) => r.variant);
 }
+
+/** What the signed-in user already holds for a card: owned quantity (summed
+ * across entries), the distinct variants owned, and whether it's on their
+ * wishlist. Powers the catalog "you own this" badges (public card + list). */
+export interface UserCardState {
+  ownedQuantity: number;
+  variants: string[];
+  onWishlist: boolean;
+}
+
+/**
+ * Batch ownership/wishlist lookup for the catalog badges. Returns a plain record
+ * (serialization-safe across the loader boundary) keyed by card ID; cards the
+ * user neither owns nor wishlisted are simply absent. Always scoped to userId.
+ */
+export async function getUserCardState(
+  db: Database,
+  userId: string,
+  cardIds: string[],
+): Promise<Record<string, UserCardState>> {
+  const state: Record<string, UserCardState> = {};
+  if (cardIds.length === 0) return state;
+  const ensure = (cardId: string): UserCardState =>
+    (state[cardId] ??= { ownedQuantity: 0, variants: [], onWishlist: false });
+
+  const [owned, wished] = await Promise.all([
+    db
+      .select({
+        cardId: schema.collectionEntries.cardId,
+        variant: schema.collectionEntries.variant,
+        quantity: schema.collectionEntries.quantity,
+      })
+      .from(schema.collectionEntries)
+      .where(
+        and(
+          eq(schema.collectionEntries.userId, userId),
+          inArray(schema.collectionEntries.cardId, cardIds),
+        ),
+      ),
+    db
+      .select({ cardId: schema.wishlistItems.cardId })
+      .from(schema.wishlistItems)
+      .where(
+        and(
+          eq(schema.wishlistItems.userId, userId),
+          inArray(schema.wishlistItems.cardId, cardIds),
+        ),
+      ),
+  ]);
+
+  for (const row of owned) {
+    const s = ensure(row.cardId);
+    s.ownedQuantity += row.quantity;
+    if (!s.variants.includes(row.variant)) s.variants.push(row.variant);
+  }
+  for (const row of wished) ensure(row.cardId).onWishlist = true;
+  return state;
+}

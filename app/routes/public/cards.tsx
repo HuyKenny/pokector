@@ -1,6 +1,8 @@
-import { Form, Link, useSearchParams } from "react-router";
+import { data, Form, Link, useSearchParams } from "react-router";
 
 import type { Route } from "./+types/cards";
+import { optionalUser } from "~/lib/auth/guards.server";
+import { getUserCardState } from "~/lib/collection/queries.server";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import {
@@ -30,8 +32,14 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
   });
 }
 
-export function headers(_args: Route.HeadersArgs) {
-  return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800" };
+export function headers({ loaderHeaders }: Route.HeadersArgs) {
+  // Signed-in requests carry per-user ownership badges → the loader marks them
+  // `private` so a URL-keyed shared cache can't leak one user's owned counts.
+  // Anonymous requests set no header and fall back to the shared edge cache.
+  return {
+    "Cache-Control":
+      loaderHeaders.get("Cache-Control") ?? "public, s-maxage=300, stale-while-revalidate=1800",
+  };
 }
 
 export async function loader({ params: routeParams, request, context }: Route.LoaderArgs) {
@@ -51,31 +59,50 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     page: Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1,
   };
   const db = createDb(env.DB);
-  const [result, sets] = await Promise.all([searchCards(db, params), listSetsBrief(db)]);
+  const [result, sets, session] = await Promise.all([
+    searchCards(db, params),
+    listSetsBrief(db),
+    optionalUser(context, request),
+  ]);
   const filtered = Boolean(q || params.setId || params.rarity || params.supertype || params.sort);
   // On a zero-result text search, offer relaxed "did you mean" suggestions.
   const suggestions =
     q && result.total === 0 ? await searchCardsRelaxed(db, q, 12) : ([] as CardListItem[]);
 
-  return {
+  // "You own this" badges for signed-in users — one batch query over the ids on
+  // this page (results + any suggestions). Anonymous users get an empty map and
+  // the shared edge cache; signed-in responses go `private` (see headers()).
+  const ownedState = session
+    ? await getUserCardState(
+        db,
+        session.user.id,
+        [...result.items, ...suggestions].map((card) => card.id),
+      )
+    : {};
+
+  const payload = {
     result,
     suggestions,
     sets,
     q,
     filtered,
+    ownedState,
     locale,
     t: getDict(locale).cards,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
     canonical: canonicalUrl(env.APP_URL, localePath(locale, "/cards")),
   };
+  return session
+    ? data(payload, { headers: { "Cache-Control": "private, no-cache" } })
+    : payload;
 }
 
 // Rarity option values are catalog data (DB query values) and stay English.
 const RARITIES = ["Common", "Uncommon", "Rare", "Rare Holo", "Rare Ultra", "Rare Secret"];
 
 export default function Cards({ loaderData }: Route.ComponentProps) {
-  const { result, suggestions, sets, q, appUrl, locale, t, c } = loaderData;
+  const { result, suggestions, sets, q, ownedState, appUrl, locale, t, c } = loaderData;
   const [searchParams] = useSearchParams();
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
@@ -229,7 +256,13 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
               <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
                 {suggestions.map((card) => (
                   <li key={card.id}>
-                    <CardTile card={card} to={lp(`/cards/${card.slug}`)} noImage={c.noImage} />
+                    <CardTile
+                      card={card}
+                      to={lp(`/cards/${card.slug}`)}
+                      noImage={c.noImage}
+                      owned={ownedState[card.id]?.ownedQuantity ?? 0}
+                      ownedAria={t.ownedBadgeAria}
+                    />
                   </li>
                 ))}
               </ul>
@@ -240,7 +273,13 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {result.items.map((card) => (
             <li key={card.id}>
-              <CardTile card={card} to={lp(`/cards/${card.slug}`)} noImage={c.noImage} />
+              <CardTile
+                card={card}
+                to={lp(`/cards/${card.slug}`)}
+                noImage={c.noImage}
+                owned={ownedState[card.id]?.ownedQuantity ?? 0}
+                ownedAria={t.ownedBadgeAria}
+              />
             </li>
           ))}
         </ul>
@@ -274,22 +313,44 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
 }
 
 /** Result tile — image + name + set/year/number/rarity for cross-set disambiguation. */
-function CardTile({ card, to, noImage }: { card: CardListItem; to: string; noImage: string }) {
+function CardTile({
+  card,
+  to,
+  noImage,
+  owned = 0,
+  ownedAria,
+}: {
+  card: CardListItem;
+  to: string;
+  noImage: string;
+  owned?: number;
+  ownedAria?: string;
+}) {
   const year = card.releaseDate?.slice(0, 4);
   return (
     <Link to={to} className="group flex h-full flex-col gap-2">
-      {card.imageSmallUrl ? (
-        <img
-          src={card.imageSmallUrl}
-          alt={`${card.name} — ${card.setName ?? card.setId} ${card.number}`}
-          loading="lazy"
-          className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-        />
-      ) : (
-        <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-sm text-fg-faint">
-          {noImage}
-        </span>
-      )}
+      <div className="relative">
+        {card.imageSmallUrl ? (
+          <img
+            src={card.imageSmallUrl}
+            alt={`${card.name} — ${card.setName ?? card.setId} ${card.number}`}
+            loading="lazy"
+            className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+          />
+        ) : (
+          <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-sm text-fg-faint">
+            {noImage}
+          </span>
+        )}
+        {owned > 0 ? (
+          <span
+            className="absolute end-1.5 top-1.5 inline-flex items-center gap-0.5 rounded-full bg-positive/90 px-2 py-0.5 text-xs font-bold text-(color:--color-on-accent) shadow-sm"
+            aria-label={ownedAria ? interpolate(ownedAria, { count: owned }) : `${owned}`}
+          >
+            ✓{owned}
+          </span>
+        ) : null}
+      </div>
       <div>
         <p className="truncate text-sm font-medium text-fg group-hover:text-accent">{card.name}</p>
         <p className="truncate text-xs text-fg-faint">

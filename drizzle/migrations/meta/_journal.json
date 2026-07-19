@@ -57,6 +57,13 @@
       "when": 1784462400000,
       "tag": "0007_card_search_fts",
       "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1784476800000,
+      "tag": "0008_card_sales",
+      "breakpoints": true
     }
   ]
 }

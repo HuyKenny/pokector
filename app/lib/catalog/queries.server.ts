@@ -3,7 +3,7 @@
  * Indexed pagination only; no SELECT * on hot paths.
  */
 
-import { and, asc, count, desc, eq, gte, like, lt, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, like, lt, sql, type SQL } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
 import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
@@ -52,6 +52,35 @@ export async function listSetsBrief(db: Database): Promise<{ id: string; name: s
     .select({ id: schema.pokemonSets.id, name: schema.pokemonSets.name })
     .from(schema.pokemonSets)
     .orderBy(desc(schema.pokemonSets.releaseDate));
+}
+
+export interface CardBrief {
+  id: string;
+  slug: string;
+  name: string;
+  number: string;
+  setName: string;
+  imageSmallUrl: string | null;
+}
+
+/** Lightweight card lookup by slug (compare picker / compare page). Preserves
+ * the caller's slug order and silently drops unknown slugs. */
+export async function getCardsBriefBySlugs(db: Database, slugs: string[]): Promise<CardBrief[]> {
+  if (slugs.length === 0) return [];
+  const rows = await db
+    .select({
+      id: schema.pokemonCards.id,
+      slug: schema.pokemonCards.slug,
+      name: schema.pokemonCards.name,
+      number: schema.pokemonCards.number,
+      setName: schema.pokemonSets.name,
+      imageSmallUrl: schema.pokemonCards.imageSmallUrl,
+    })
+    .from(schema.pokemonCards)
+    .innerJoin(schema.pokemonSets, eq(schema.pokemonCards.setId, schema.pokemonSets.id))
+    .where(and(inArray(schema.pokemonCards.slug, slugs), eq(schema.pokemonCards.active, true)));
+  const bySlug = new Map(rows.map((r) => [r.slug, r]));
+  return slugs.map((s) => bySlug.get(s)).filter((r): r is CardBrief => r !== undefined);
 }
 
 export async function searchCards(
