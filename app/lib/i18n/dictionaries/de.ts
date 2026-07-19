@@ -25,7 +25,10 @@ const de: Dict = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Karten suchen",
-    searchCardsPlaceholder: "Karten suchen…",
+    searchCardsPlaceholder: "Name, Nummer, Set…",
+    searchResults: "Suchergebnisse",
+    searchViewAll: "Alle Ergebnisse anzeigen →",
+    searchNoResults: "Keine passenden Karten",
     myCollection: "Meine Sammlung",
     signIn: "Anmelden",
     getStarted: "Loslegen",
@@ -110,6 +113,7 @@ const de: Dict = {
     searchLabel: "Suche",
     searchPlaceholder: "Kartenname, Set oder Nummer…",
     rarityLabel: "Seltenheit",
+    setLabel: "Set",
     cardTypeLabel: "Kartentyp",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -124,6 +128,7 @@ const de: Dict = {
     emptyTitle: "Keine Karten gefunden",
     emptyBody:
       "Versuche einen kürzeren Suchbegriff oder prüfe die Schreibweise. Der Katalog umfasst englischsprachige Pokémon-TCG-Karten.",
+    didYouMean: "Meinten Sie…",
     paginationAria: "Seitennavigation",
   },
 

@@ -25,7 +25,10 @@ const vi: Dict = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Tìm thẻ bài",
-    searchCardsPlaceholder: "Tìm thẻ bài…",
+    searchCardsPlaceholder: "Tên, số, bộ…",
+    searchResults: "Kết quả tìm kiếm",
+    searchViewAll: "Xem tất cả kết quả →",
+    searchNoResults: "Không có thẻ phù hợp",
     myCollection: "Bộ sưu tập của tôi",
     signIn: "Đăng nhập",
     getStarted: "Bắt đầu",
@@ -109,6 +112,7 @@ const vi: Dict = {
     searchLabel: "Tìm kiếm",
     searchPlaceholder: "Tên thẻ, bộ thẻ hoặc số…",
     rarityLabel: "Độ hiếm",
+    setLabel: "Bộ",
     cardTypeLabel: "Loại thẻ",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -123,6 +127,7 @@ const vi: Dict = {
     emptyTitle: "Không tìm thấy thẻ nào",
     emptyBody:
       "Hãy thử từ khóa ngắn hơn hoặc kiểm tra chính tả. Danh mục bao gồm thẻ Pokémon TCG tiếng Anh.",
+    didYouMean: "Có phải bạn muốn tìm…",
     paginationAria: "Phân trang",
   },
 

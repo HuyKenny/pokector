@@ -72,6 +72,7 @@ export default [
 
   // ── Versioned JSON API (public, cacheable) ─────────────────────────────────
   route("api/v1/cards", "routes/api/v1.cards.ts"),
+  route("api/v1/cards/suggest", "routes/api/v1.cards.suggest.ts"),
   route("api/v1/cards/:id", "routes/api/v1.cards.$id.ts"),
   route("api/v1/sets", "routes/api/v1.sets.ts"),
   route("api/v1/sets/:id", "routes/api/v1.sets.$id.ts"),

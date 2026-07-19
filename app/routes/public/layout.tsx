@@ -1,8 +1,9 @@
-import { Form, Link, NavLink, Outlet, useLocation, useNavigation } from "react-router";
+import { Link, NavLink, Outlet, useLocation, useNavigation } from "react-router";
 
 import type { Route } from "./+types/layout";
 import { PokectorWordmark } from "~/components/brand";
 import { Flag } from "~/components/flags";
+import { HeaderSearch } from "~/components/header-search";
 import { optionalUser } from "~/lib/auth/guards.server";
 import { getMarket } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
@@ -73,18 +74,13 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
             ))}
           </nav>
           <div className="ms-auto flex items-center gap-2">
-            <Form method="get" action={lp("/cards")} role="search" className="hidden md:block">
-              <label htmlFor="header-search" className="sr-only">
-                {t.searchCards}
-              </label>
-              <input
-                id="header-search"
-                type="search"
-                name="q"
-                placeholder={t.searchCardsPlaceholder}
-                className="w-44 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint"
-              />
-            </Form>
+            <HeaderSearch
+              label={t.searchCards}
+              placeholder={t.searchCardsPlaceholder}
+              resultsLabel={t.searchResults}
+              viewAll={t.searchViewAll}
+              noResults={t.searchNoResults}
+            />
             <MarketSwitcher
               current={market}
               redirectTo={location.pathname}

@@ -25,7 +25,10 @@ const cs: Dict = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Hledat karty",
-    searchCardsPlaceholder: "Hledat karty…",
+    searchCardsPlaceholder: "Název, číslo, edice…",
+    searchResults: "Výsledky hledání",
+    searchViewAll: "Zobrazit všechny výsledky →",
+    searchNoResults: "Žádné odpovídající karty",
     myCollection: "Moje sbírka",
     signIn: "Přihlásit se",
     getStarted: "Začít",
@@ -109,6 +112,7 @@ const cs: Dict = {
     searchLabel: "Hledat",
     searchPlaceholder: "Název karty, set nebo číslo…",
     rarityLabel: "Vzácnost",
+    setLabel: "Edice",
     cardTypeLabel: "Typ karty",
     typePokemon: "Pokémon",
     typeTrainer: "Trenér",
@@ -123,6 +127,7 @@ const cs: Dict = {
     emptyTitle: "Nenalezeny žádné karty",
     emptyBody:
       "Zkuste kratší hledaný výraz nebo zkontrolujte pravopis. Katalog zahrnuje anglicky psané karty Pokémon TCG.",
+    didYouMean: "Mysleli jste…",
     paginationAria: "Stránkování",
   },
 

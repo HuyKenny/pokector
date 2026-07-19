@@ -3,11 +3,11 @@
  * Indexed pagination only; no SELECT * on hot paths.
  */
 
-import { and, asc, count, desc, eq, gte, like, lt, or, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, like, lt, sql, type SQL } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
 import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
-import { normalizeName } from "../seo/slug";
+import { buildFtsMatch, CARD_SEARCH_BM25_WEIGHTS } from "./search.server";
 
 export const CATALOG_PAGE_SIZE = 24;
 export const MAX_PAGE = 400;
@@ -40,8 +40,18 @@ export interface CardListItem {
   rarity: string | null;
   setId: string;
   setName?: string | null;
+  series?: string | null;
+  releaseDate?: string | null;
   imageSmallUrl: string | null;
   priceMinor?: number | null;
+}
+
+/** Sets for the /cards filter dropdown (newest first). */
+export async function listSetsBrief(db: Database): Promise<{ id: string; name: string }[]> {
+  return db
+    .select({ id: schema.pokemonSets.id, name: schema.pokemonSets.name })
+    .from(schema.pokemonSets)
+    .orderBy(desc(schema.pokemonSets.releaseDate));
 }
 
 export async function searchCards(
@@ -49,20 +59,79 @@ export async function searchCards(
   params: CardSearchParams,
 ): Promise<{ items: CardListItem[]; total: number; page: number; pageCount: number }> {
   const page = Math.min(Math.max(params.page ?? 1, 1), MAX_PAGE);
-  const conditions: SQL[] = [eq(schema.pokemonCards.active, true)];
+  // A text query goes through the FTS5 index (tokenized, ranked); browsing with
+  // only structured filters uses the plain indexed table scan.
+  const match = params.q ? buildFtsMatch(params.q, "and") : null;
+  return match ? searchCardsFts(db, params, page, match) : searchCardsBrowse(db, params, page);
+}
 
-  if (params.q) {
-    const needle = normalizeName(params.q).slice(0, 80);
-    if (needle) {
-      // Prefix match uses the name index; substring falls back to search_text.
-      conditions.push(
-        or(
-          like(schema.pokemonCards.nameNormalized, `${needle}%`),
-          like(schema.pokemonCards.searchText, `%${needle}%`),
-        ) as SQL,
-      );
-    }
-  }
+const pageCountOf = (total: number) =>
+  Math.max(1, Math.min(Math.ceil(total / CATALOG_PAGE_SIZE), MAX_PAGE));
+
+/** Column list for the raw FTS SELECT, aliased to CardListItem keys. */
+const FTS_SELECT = sql`
+  k.id AS id, k.slug AS slug, k.name AS name, k.number AS number,
+  k.rarity AS rarity, k.set_id AS "setId",
+  k.image_small_url AS "imageSmallUrl", s.name AS "setName",
+  s.series AS series, s.release_date AS "releaseDate"
+`;
+const bm25Rank = sql.raw(`bm25(card_search, ${CARD_SEARCH_BM25_WEIGHTS.join(", ")})`);
+
+/** Structured (non-text) filters as SQL fragments against the joined card row. */
+function ftsFilters(params: CardSearchParams): SQL {
+  const filters: SQL[] = [];
+  if (params.setId) filters.push(sql`AND k.set_id = ${params.setId}`);
+  if (params.rarity) filters.push(sql`AND k.rarity = ${params.rarity}`);
+  if (params.supertype) filters.push(sql`AND k.supertype = ${params.supertype}`);
+  if (params.type)
+    filters.push(sql`AND k.types_json LIKE ${`%"${params.type.replaceAll('"', "")}"%`}`);
+  return filters.length ? sql.join(filters, sql` `) : sql``;
+}
+
+/** Ranked FTS5 search: all query tokens must match; ordered by relevance (bm25)
+ * unless the user picked an explicit sort. */
+async function searchCardsFts(
+  db: Database,
+  params: CardSearchParams,
+  page: number,
+  match: string,
+): Promise<{ items: CardListItem[]; total: number; page: number; pageCount: number }> {
+  const filterSql = ftsFilters(params);
+  const orderSql =
+    params.sort === "number"
+      ? sql`k.set_id ASC, k.number_sort ASC, k.number ASC`
+      : params.sort === "newest"
+        ? sql`k.source_updated_at DESC, k.name ASC`
+        : sql`${bm25Rank} ASC, k.number_sort ASC`;
+  const offset = (page - 1) * CATALOG_PAGE_SIZE;
+  const [items, totalRows] = await Promise.all([
+    db.all<CardListItem>(sql`
+      SELECT ${FTS_SELECT}
+      FROM card_search
+      JOIN pokemon_cards k ON k.id = card_search.card_id AND k.active = 1
+      JOIN pokemon_sets s ON s.id = k.set_id
+      WHERE card_search MATCH ${match} ${filterSql}
+      ORDER BY ${orderSql}
+      LIMIT ${CATALOG_PAGE_SIZE} OFFSET ${offset}
+    `),
+    db.all<{ total: number }>(sql`
+      SELECT count(*) AS total
+      FROM card_search
+      JOIN pokemon_cards k ON k.id = card_search.card_id AND k.active = 1
+      WHERE card_search MATCH ${match} ${filterSql}
+    `),
+  ]);
+  const total = totalRows[0]?.total ?? 0;
+  return { items, total, page, pageCount: pageCountOf(total) };
+}
+
+/** Browse (no text query): structured filters + sort over the indexed table. */
+async function searchCardsBrowse(
+  db: Database,
+  params: CardSearchParams,
+  page: number,
+): Promise<{ items: CardListItem[]; total: number; page: number; pageCount: number }> {
+  const conditions: SQL[] = [eq(schema.pokemonCards.active, true)];
   if (params.setId) conditions.push(eq(schema.pokemonCards.setId, params.setId));
   if (params.rarity) conditions.push(eq(schema.pokemonCards.rarity, params.rarity));
   if (params.supertype) conditions.push(eq(schema.pokemonCards.supertype, params.supertype));
@@ -83,7 +152,12 @@ export async function searchCards(
 
   const [items, [{ total }]] = await Promise.all([
     db
-      .select({ ...cardListColumns, setName: schema.pokemonSets.name })
+      .select({
+        ...cardListColumns,
+        setName: schema.pokemonSets.name,
+        series: schema.pokemonSets.series,
+        releaseDate: schema.pokemonSets.releaseDate,
+      })
       .from(schema.pokemonCards)
       .innerJoin(schema.pokemonSets, eq(schema.pokemonCards.setId, schema.pokemonSets.id))
       .where(where)
@@ -93,12 +167,30 @@ export async function searchCards(
     db.select({ total: count() }).from(schema.pokemonCards).where(where),
   ]);
 
-  return {
-    items,
-    total,
-    page,
-    pageCount: Math.max(1, Math.min(Math.ceil(total / CATALOG_PAGE_SIZE), MAX_PAGE)),
-  };
+  return { items, total, page, pageCount: pageCountOf(total) };
+}
+
+/**
+ * Relaxed "did you mean" suggestions: OR of the query's prefix tokens (any token
+ * may match), ranked by bm25. Used for the empty state when the strict AND search
+ * returns nothing.
+ */
+export async function searchCardsRelaxed(
+  db: Database,
+  q: string,
+  limit = 12,
+): Promise<CardListItem[]> {
+  const match = buildFtsMatch(q, "or");
+  if (!match) return [];
+  return db.all<CardListItem>(sql`
+    SELECT ${FTS_SELECT}
+    FROM card_search
+    JOIN pokemon_cards k ON k.id = card_search.card_id AND k.active = 1
+    JOIN pokemon_sets s ON s.id = k.set_id
+    WHERE card_search MATCH ${match}
+    ORDER BY ${bm25Rank} ASC
+    LIMIT ${limit}
+  `);
 }
 
 export interface CardDetail {

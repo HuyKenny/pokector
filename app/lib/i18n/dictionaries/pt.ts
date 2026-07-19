@@ -25,7 +25,10 @@ const pt: Dict = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Buscar cartas",
-    searchCardsPlaceholder: "Buscar cartas…",
+    searchCardsPlaceholder: "Nome, número, coleção…",
+    searchResults: "Resultados da busca",
+    searchViewAll: "Ver todos os resultados →",
+    searchNoResults: "Nenhuma carta correspondente",
     myCollection: "Minha coleção",
     signIn: "Entrar",
     getStarted: "Começar",
@@ -111,6 +114,7 @@ const pt: Dict = {
     searchLabel: "Pesquisar",
     searchPlaceholder: "Nome da carta, set ou número…",
     rarityLabel: "Raridade",
+    setLabel: "Coleção",
     cardTypeLabel: "Tipo de carta",
     typePokemon: "Pokémon",
     typeTrainer: "Treinador",
@@ -125,6 +129,7 @@ const pt: Dict = {
     emptyTitle: "Nenhuma carta encontrada",
     emptyBody:
       "Tente um termo de busca mais curto ou verifique a ortografia. O catálogo abrange cartas Pokémon TCG em inglês.",
+    didYouMean: "Você quis dizer…",
     paginationAria: "Paginação",
   },
 

@@ -25,7 +25,10 @@ const ru: Dict = {
     navPokedex: "Покедекс",
     navBlog: "Блог",
     searchCards: "Поиск карт",
-    searchCardsPlaceholder: "Поиск карт…",
+    searchCardsPlaceholder: "Название, номер, сет…",
+    searchResults: "Результаты поиска",
+    searchViewAll: "Показать все результаты →",
+    searchNoResults: "Нет подходящих карт",
     myCollection: "Моя коллекция",
     signIn: "Войти",
     getStarted: "Начать",
@@ -109,6 +112,7 @@ const ru: Dict = {
     searchLabel: "Поиск",
     searchPlaceholder: "Название карты, сет или номер…",
     rarityLabel: "Редкость",
+    setLabel: "Сет",
     cardTypeLabel: "Тип карты",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -123,6 +127,7 @@ const ru: Dict = {
     emptyTitle: "Карты не найдены",
     emptyBody:
       "Попробуйте более короткий запрос или проверьте написание. Каталог охватывает англоязычные карты Pokémon TCG.",
+    didYouMean: "Возможно, вы искали…",
     paginationAria: "Постраничная навигация",
   },
 

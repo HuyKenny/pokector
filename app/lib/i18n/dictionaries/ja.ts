@@ -25,7 +25,10 @@ const ja: Dict = {
     navPokedex: "ポケモン図鑑",
     navBlog: "ブログ",
     searchCards: "カードを検索",
-    searchCardsPlaceholder: "カードを検索…",
+    searchCardsPlaceholder: "名前・番号・セット…",
+    searchResults: "検索結果",
+    searchViewAll: "すべての結果を見る →",
+    searchNoResults: "一致するカードがありません",
     myCollection: "マイコレクション",
     signIn: "ログイン",
     getStarted: "はじめる",
@@ -109,6 +112,7 @@ const ja: Dict = {
     searchLabel: "検索",
     searchPlaceholder: "カード名、セット、または番号…",
     rarityLabel: "レアリティ",
+    setLabel: "セット",
     cardTypeLabel: "カードタイプ",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -123,6 +127,7 @@ const ja: Dict = {
     emptyTitle: "カードが見つかりません",
     emptyBody:
       "より短い検索語を試すか、スペルを確認してください。カタログは英語版の Pokémon TCG カードを対象としています。",
+    didYouMean: "もしかして…",
     paginationAria: "ページ送り",
   },
 

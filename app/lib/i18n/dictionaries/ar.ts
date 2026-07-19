@@ -26,7 +26,10 @@ const ar: Dict = {
     navPokedex: "بوكيديكس",
     navBlog: "المدونة",
     searchCards: "ابحث عن بطاقات",
-    searchCardsPlaceholder: "ابحث عن بطاقات…",
+    searchCardsPlaceholder: "الاسم، الرقم، المجموعة…",
+    searchResults: "نتائج البحث",
+    searchViewAll: "عرض كل النتائج ←",
+    searchNoResults: "لا توجد بطاقات مطابقة",
     myCollection: "مجموعتي",
     signIn: "تسجيل الدخول",
     getStarted: "ابدأ",
@@ -110,6 +113,7 @@ const ar: Dict = {
     searchLabel: "بحث",
     searchPlaceholder: "اسم البطاقة أو المجموعة أو الرقم…",
     rarityLabel: "الندرة",
+    setLabel: "المجموعة",
     cardTypeLabel: "نوع البطاقة",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -124,6 +128,7 @@ const ar: Dict = {
     emptyTitle: "لم يُعثَر على بطاقات",
     emptyBody:
       "جرّب كلمة بحث أقصر أو تحقّق من التهجئة. يشمل الكتالوج بطاقات Pokémon TCG باللغة الإنجليزية.",
+    didYouMean: "هل تقصد…",
     paginationAria: "ترقيم الصفحات",
   },
 

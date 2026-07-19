@@ -50,6 +50,13 @@
       "when": 1784448000000,
       "tag": "0006_graded_sold_stats",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1784462400000,
+      "tag": "0007_card_search_fts",
+      "breakpoints": true
     }
   ]
 }

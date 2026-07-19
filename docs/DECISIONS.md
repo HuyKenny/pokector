@@ -346,3 +346,36 @@ European collectors see Cardmarket EUR (more relevant) instead of TCGplayer USD.
   (grows forward) so EU movers/charts fill in over time. i18n +7 keys ×11.
 - Verified live (staging + prod): geo default (CZ IP → EU), cookie override both ways,
   EU Cardmarket EUR table + PSA USD note, US unchanged, switch persists.
+
+### D24. Collector-grade card search — FTS5 + typeahead (owner 2026-07-19)
+
+The old search was a single-needle LIKE (prefix-on-name OR substring on a weak
+haystack that held the set ID, not its name, and no artist/dex): "base charizard",
+"charizard 4/102", and set-name queries returned nothing, there was no ranking, it
+full-scanned every query, and there was no typeahead (and no search at all on mobile).
+
+- **FTS5 engine** (migration 0007): standalone `card_search` virtual table over
+  name / set_name / series / number(+set total) / rarity / artist / dex / supertype+subtypes,
+  `tokenize='unicode61 remove_diacritics 2'`. Populated from the catalog sync
+  (`catalog.server.ts`, delete-then-insert per card, no ON CONFLICT on FTS5) and a
+  one-time backfill (INSERT…SELECT). D1 supports FTS5.
+- **Query builder** `buildFtsMatch` (`catalog/search.server.ts`): splits the query on
+  non-alphanumerics (so "4/102" → 4, 102), diacritics-folds, wraps each token as a prefix
+  term — except **purely numeric tokens match exactly** so "4/102" hits #4, not #40–49.
+  All tokens AND together; a relaxed OR variant powers "did you mean". Ranked by `bm25`
+  with column weights (name 10 > number 6 > set 3 > …). `searchCards` branches: text query
+  → FTS path, browse (filters only) → the plain indexed path.
+- **Typeahead**: public `GET /api/v1/cards/suggest` (rate-limited by IP, min 2 chars, top 8)
+  + `HeaderSearch` client component (`components/header-search.tsx`) — debounced 250ms,
+  card-thumbnail dropdown (name + set · #number), keyboard nav (↑/↓/Enter/Esc), Enter →
+  full `/cards` results. Reuses the debounce pattern from the collection AddCardPanel. Now
+  visible on mobile (was `hidden md:block`).
+- **/cards page**: added the Set filter (query already supported it), result tiles show
+  set year for cross-set disambiguation, and the empty state renders relaxed suggestions.
+- Number reality: card `number` is "4" (the "/102" is the set's printedTotal) — so the FTS
+  number column indexes `number + printedTotal` to match collector "4/102" notation.
+- i18n +5 keys ×11. Unit tests for the query builder. FTS also removes the per-query full
+  scan (indexed) — cheaper on the Workers CPU budget. No fuzzy/typo tolerance (owner choice);
+  covered by prefix + the relaxed OR fallback.
+- Verified live (staging + prod): "base charizard"→Base #4 first, "charizard 4/102"→#4,
+  "espeon vmax", "surging sparks" (set name), typeahead dropdown with thumbnails.

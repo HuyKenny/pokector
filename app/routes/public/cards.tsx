@@ -3,7 +3,12 @@ import { Form, Link, useSearchParams } from "react-router";
 import type { Route } from "./+types/cards";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
-import { searchCards } from "~/lib/catalog/queries.server";
+import {
+  listSetsBrief,
+  searchCards,
+  searchCardsRelaxed,
+  type CardListItem,
+} from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
@@ -46,11 +51,16 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     page: Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1,
   };
   const db = createDb(env.DB);
-  const result = await searchCards(db, params);
+  const [result, sets] = await Promise.all([searchCards(db, params), listSetsBrief(db)]);
   const filtered = Boolean(q || params.setId || params.rarity || params.supertype || params.sort);
+  // On a zero-result text search, offer relaxed "did you mean" suggestions.
+  const suggestions =
+    q && result.total === 0 ? await searchCardsRelaxed(db, q, 12) : ([] as CardListItem[]);
 
   return {
     result,
+    suggestions,
+    sets,
     q,
     filtered,
     locale,
@@ -65,7 +75,7 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
 const RARITIES = ["Common", "Uncommon", "Rare", "Rare Holo", "Rare Ultra", "Rare Secret"];
 
 export default function Cards({ loaderData }: Route.ComponentProps) {
-  const { result, q, appUrl, locale, t, c } = loaderData;
+  const { result, suggestions, sets, q, appUrl, locale, t, c } = loaderData;
   const [searchParams] = useSearchParams();
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
@@ -116,6 +126,24 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
             placeholder={t.searchPlaceholder}
             className="min-h-11 rounded-lg border border-edge bg-surface px-3 text-fg placeholder:text-fg-faint"
           />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label htmlFor="set" className="text-sm font-medium text-fg">
+            {t.setLabel}
+          </label>
+          <select
+            id="set"
+            name="set"
+            defaultValue={searchParams.get("set") ?? ""}
+            className="min-h-11 max-w-48 rounded-lg border border-edge bg-surface px-3 text-fg"
+          >
+            <option value="">{c.any}</option>
+            {sets.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.name}
+              </option>
+            ))}
+          </select>
         </div>
         <div className="flex flex-col gap-1">
           <label htmlFor="rarity" className="text-sm font-medium text-fg">
@@ -190,43 +218,35 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
       </p>
 
       {result.items.length === 0 ? (
-        <div className="rounded-(--radius-card) border border-edge bg-surface p-10 text-center">
-          <p className="mb-2 text-lg font-medium text-fg">{t.emptyTitle}</p>
-          <p className="text-sm text-fg-muted">{t.emptyBody}</p>
+        <div className="flex flex-col gap-6">
+          <div className="rounded-(--radius-card) border border-edge bg-surface p-10 text-center">
+            <p className="mb-2 text-lg font-medium text-fg">{t.emptyTitle}</p>
+            <p className="text-sm text-fg-muted">{t.emptyBody}</p>
+          </div>
+          {suggestions.length > 0 ? (
+            <div className="flex flex-col gap-3">
+              <h2 className="text-sm font-semibold text-fg-muted">{t.didYouMean}</h2>
+              <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                {suggestions.map((card) => (
+                  <li key={card.id}>
+                    <CardTile card={card} to={lp(`/cards/${card.slug}`)} noImage={c.noImage} />
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ) : null}
         </div>
       ) : (
         <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
           {result.items.map((card) => (
             <li key={card.id}>
-              <Link to={lp(`/cards/${card.slug}`)} className="group flex h-full flex-col gap-2">
-                {card.imageSmallUrl ? (
-                  <img
-                    src={card.imageSmallUrl}
-                    alt={`${card.name} — ${card.setName ?? card.setId} ${card.number}`}
-                    loading="lazy"
-                    className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-                  />
-                ) : (
-                  <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-sm text-fg-faint">
-                    {c.noImage}
-                  </span>
-                )}
-                <div>
-                  <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
-                    {card.name}
-                  </p>
-                  <p className="truncate text-xs text-fg-faint">
-                    {card.setName} · #{card.number}
-                    {card.rarity ? ` · ${card.rarity}` : ""}
-                  </p>
-                </div>
-              </Link>
+              <CardTile card={card} to={lp(`/cards/${card.slug}`)} noImage={c.noImage} />
             </li>
           ))}
         </ul>
       )}
 
-      {result.pageCount > 1 ? (
+      {result.pageCount > 1 && result.items.length > 0 ? (
         <nav aria-label={t.paginationAria} className="flex items-center justify-center gap-2">
           {result.page > 1 ? (
             <Link
@@ -250,5 +270,34 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
         </nav>
       ) : null}
     </div>
+  );
+}
+
+/** Result tile — image + name + set/year/number/rarity for cross-set disambiguation. */
+function CardTile({ card, to, noImage }: { card: CardListItem; to: string; noImage: string }) {
+  const year = card.releaseDate?.slice(0, 4);
+  return (
+    <Link to={to} className="group flex h-full flex-col gap-2">
+      {card.imageSmallUrl ? (
+        <img
+          src={card.imageSmallUrl}
+          alt={`${card.name} — ${card.setName ?? card.setId} ${card.number}`}
+          loading="lazy"
+          className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+        />
+      ) : (
+        <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-sm text-fg-faint">
+          {noImage}
+        </span>
+      )}
+      <div>
+        <p className="truncate text-sm font-medium text-fg group-hover:text-accent">{card.name}</p>
+        <p className="truncate text-xs text-fg-faint">
+          {card.setName}
+          {year ? ` · ${year}` : ""} · #{card.number}
+          {card.rarity ? ` · ${card.rarity}` : ""}
+        </p>
+      </div>
+    </Link>
   );
 }

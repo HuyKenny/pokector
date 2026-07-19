@@ -8,6 +8,7 @@
 import { and, eq, inArray, lt, sql } from "drizzle-orm";
 
 import { normalizeCard, normalizeSet } from "../../catalog/normalize";
+import { ftsRowValues } from "../../catalog/search.server";
 import { createDb, schema, type Database } from "../../db/index.server";
 import { log } from "../../log.server";
 import { CARDS_PAGE_SIZE, PtcgClient, SETS_PAGE_SIZE } from "../../ptcg/client.server";
@@ -166,16 +167,22 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
       return row !== null;
     });
 
-  // Guard: skip cards whose set is unknown (FK) — counted as malformed.
+  // Guard: skip cards whose set is unknown (FK) — counted as malformed. Also grab
+  // set name/series here to feed the FTS search index below.
   const setIds = [...new Set(normalized.map((n) => n.card.setId))];
-  const knownSets = new Set(
-    (
-      await db
-        .select({ id: schema.pokemonSets.id })
-        .from(schema.pokemonSets)
-        .where(inArray(schema.pokemonSets.id, setIds))
-    ).map((r) => r.id),
-  );
+  const setInfo = new Map<string, { name: string; series: string; printedTotal: number | null }>();
+  for (const r of await db
+    .select({
+      id: schema.pokemonSets.id,
+      name: schema.pokemonSets.name,
+      series: schema.pokemonSets.series,
+      printedTotal: schema.pokemonSets.printedTotal,
+    })
+    .from(schema.pokemonSets)
+    .where(inArray(schema.pokemonSets.id, setIds))) {
+    setInfo.set(r.id, { name: r.name, series: r.series, printedTotal: r.printedTotal });
+  }
+  const knownSets = new Set(setInfo.keys());
   const usable = normalized.filter((n) => {
     if (!knownSets.has(n.card.setId)) {
       malformed++;
@@ -216,6 +223,34 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
       }),
   );
   await batchStatements(db, cardStatements);
+
+  // Keep the FTS5 search index in sync. No ON CONFLICT on FTS5 tables, so replace
+  // by card_id (delete-then-insert). Includes set name/series for set-name search.
+  const ftsStatements = usable.flatMap(({ card }) => {
+    const info = setInfo.get(card.setId);
+    const v = ftsRowValues({
+      id: card.id,
+      name: card.name,
+      number: card.number,
+      printedTotal: info?.printedTotal ?? null,
+      rarity: card.rarity,
+      artist: card.artist,
+      supertype: card.supertype,
+      subtypesJson: card.subtypesJson,
+      nationalPokedexNumbersJson: card.nationalPokedexNumbersJson,
+      setName: info?.name ?? "",
+      series: info?.series ?? "",
+    });
+    return [
+      db.run(sql`DELETE FROM card_search WHERE card_id = ${card.id}`),
+      db.run(sql`
+        INSERT INTO card_search
+          (card_id, name, set_name, series, number, rarity, artist, dex, supertype)
+        VALUES (${v[0]}, ${v[1]}, ${v[2]}, ${v[3]}, ${v[4]}, ${v[5]}, ${v[6]}, ${v[7]}, ${v[8]})
+      `),
+    ];
+  });
+  await batchStatements(db, ftsStatements);
 
   let pricesUpserted = 0;
   const priceStatements = usable.flatMap(({ card, prices }) =>

@@ -33,7 +33,10 @@ export const en = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Search cards",
-    searchCardsPlaceholder: "Search cards…",
+    searchCardsPlaceholder: "Name, number, set…",
+    searchResults: "Search results",
+    searchViewAll: "See all results →",
+    searchNoResults: "No matching cards",
     myCollection: "My collection",
     signIn: "Sign in",
     getStarted: "Get started",
@@ -117,6 +120,7 @@ export const en = {
     searchLabel: "Search",
     searchPlaceholder: "Card name, set, or number…",
     rarityLabel: "Rarity",
+    setLabel: "Set",
     cardTypeLabel: "Card type",
     typePokemon: "Pokémon",
     typeTrainer: "Trainer",
@@ -131,6 +135,7 @@ export const en = {
     emptyTitle: "No cards found",
     emptyBody:
       "Try a shorter search term, or check the spelling. The catalog covers English-language Pokémon TCG cards.",
+    didYouMean: "Did you mean…",
     paginationAria: "Pagination",
   },
 

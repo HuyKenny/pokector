@@ -25,7 +25,10 @@ const fr: Dict = {
     navPokedex: "Pokédex",
     navBlog: "Blog",
     searchCards: "Rechercher des cartes",
-    searchCardsPlaceholder: "Rechercher des cartes…",
+    searchCardsPlaceholder: "Nom, numéro, série…",
+    searchResults: "Résultats de recherche",
+    searchViewAll: "Voir tous les résultats →",
+    searchNoResults: "Aucune carte correspondante",
     myCollection: "Ma collection",
     signIn: "Se connecter",
     getStarted: "Commencer",
@@ -111,6 +114,7 @@ const fr: Dict = {
     searchLabel: "Rechercher",
     searchPlaceholder: "Nom de carte, set ou numéro…",
     rarityLabel: "Rareté",
+    setLabel: "Série",
     cardTypeLabel: "Type de carte",
     typePokemon: "Pokémon",
     typeTrainer: "Dresseur",
@@ -125,6 +129,7 @@ const fr: Dict = {
     emptyTitle: "Aucune carte trouvée",
     emptyBody:
       "Essayez un terme de recherche plus court ou vérifiez l’orthographe. Le catalogue couvre les cartes Pokémon TCG en anglais.",
+    didYouMean: "Vouliez-vous dire…",
     paginationAria: "Pagination",
   },
 
