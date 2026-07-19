@@ -368,7 +368,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                       ? cmRow && (
                           <tr className="border-b border-edge/50">
                             <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
-                              {t.cardmarketRow}
+                              {variantLabel(euVariant)}
                             </th>
                             <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
                               {money(cmRow.trendMinor ?? cmRow.normalizedPriceMinor, "EUR")}

@@ -84,7 +84,12 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
                 className="w-44 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint"
               />
             </Form>
-            <MarketSwitcher current={market} redirectTo={location.pathname} label={t.marketLabel} />
+            <MarketSwitcher
+              current={market}
+              redirectTo={location.pathname}
+              label={t.marketLabel}
+              regionLabel={{ us: t.marketUs, eu: t.marketEu }}
+            />
             <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
             {signedIn ? (
               <Link
@@ -199,20 +204,17 @@ function LanguageSwitcher({
 
 /** Market (price world) switcher — mirrors LanguageSwitcher but persists a
  * cookie via a JS-free form POST to /market instead of changing the URL, so
- * SEO/canonical stay untouched. Each option carries the source + currency. */
-const MARKET_META: Record<Market, { source: string; label: string }> = {
-  us: { source: "TCGplayer", label: "USD" },
-  eu: { source: "Cardmarket", label: "EUR" },
-};
-
+ * SEO/canonical stay untouched. Each option shows its region + currency. */
 function MarketSwitcher({
   current,
   redirectTo,
   label,
+  regionLabel,
 }: {
   current: Market;
   redirectTo: string;
   label: string;
+  regionLabel: Record<Market, string>;
 }) {
   return (
     <details className="relative">
@@ -237,8 +239,8 @@ function MarketSwitcher({
                 }`}
               >
                 <span aria-hidden="true">{MARKET_FLAG[m]}</span>
-                <span>{MARKET_META[m].source}</span>
-                <span className="ms-auto text-xs text-fg-faint">{MARKET_META[m].label}</span>
+                <span>{regionLabel[m]}</span>
+                <span className="ms-auto text-xs text-fg-faint">{MARKET_CURRENCY[m]}</span>
               </button>
             </form>
           </li>

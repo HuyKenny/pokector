@@ -39,6 +39,8 @@ const zh: Dict = {
     footerRss: "RSS",
     languageLabel: "语言",
     marketLabel: "价格市场",
+    marketUs: "美国区",
+    marketEu: "欧洲区",
     disclaimer:
       "Pokector 是一个独立的收藏追踪工具，与 Nintendo、The Pokémon Company、Game Freak、Creatures、TCGplayer、Cardmarket 或 Pokémon TCG API 均无关联，也未获其认可、赞助或官方授权。Pokémon 及 Pokémon 角色名称是 Nintendo 的商标。卡牌图片和目录数据由各自来源提供。所显示的价格是未评级卡牌的估价，不构成任何财务建议。",
   },
@@ -140,7 +142,6 @@ const zh: Dict = {
     pricesHeading: "当前市场价格（美元）",
     colTrend: "趋势",
     colAvgSell: "平均售价",
-    cardmarketRow: "Cardmarket",
     sourceCardmarket: "来源：Cardmarket 价格数据",
     tcgplayerPrice: "TCGplayer（USD）：{price}",
     psaGlobalUsdNote: "PSA 价格来自全球评级市场（eBay US），以 USD 计价。",

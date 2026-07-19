@@ -47,6 +47,8 @@ export const en = {
     footerRss: "RSS",
     languageLabel: "Language",
     marketLabel: "Price market",
+    marketUs: "US region",
+    marketEu: "EU region",
     disclaimer:
       "Pokector is an independent collection tracker and is not affiliated with, endorsed by, sponsored by, or officially connected to Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket, or the Pokémon TCG API. Pokémon and Pokémon character names are trademarks of Nintendo. Card images and catalog data are provided by their respective sources. Displayed prices are estimates for raw (ungraded) cards and are not financial advice.",
   },
@@ -151,7 +153,6 @@ export const en = {
     pricesHeading: "Current market prices ({currency})",
     colTrend: "Trend",
     colAvgSell: "Avg. sell",
-    cardmarketRow: "Cardmarket",
     sourceCardmarket: "Source: Cardmarket price data",
     tcgplayerPrice: "TCGplayer (USD): {price}",
     psaGlobalUsdNote: "PSA prices are the global graded market (eBay US), shown in USD.",

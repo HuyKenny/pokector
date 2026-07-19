@@ -39,6 +39,8 @@ const pt: Dict = {
     footerRss: "RSS",
     languageLabel: "Idioma",
     marketLabel: "Mercado de preços",
+    marketUs: "Região EUA",
+    marketEu: "Região UE",
     disclaimer:
       "O Pokector é um rastreador de coleções independente e não é afiliado, endossado, patrocinado nem oficialmente ligado à Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket ou à API do Pokémon TCG. Pokémon e os nomes dos personagens Pokémon são marcas registradas da Nintendo. As imagens das cartas e os dados do catálogo são fornecidos pelas respectivas fontes. Os preços exibidos são estimativas para cartas sem graduação e não constituem aconselhamento financeiro.",
   },
@@ -145,7 +147,6 @@ const pt: Dict = {
     pricesHeading: "Preços de mercado atuais ({currency})",
     colTrend: "Tendência",
     colAvgSell: "Venda média",
-    cardmarketRow: "Cardmarket",
     sourceCardmarket: "Fonte: dados de preços da Cardmarket",
     tcgplayerPrice: "TCGplayer (USD): {price}",
     psaGlobalUsdNote: "Os preços PSA são do mercado global de cartas graduadas (eBay US), em USD.",

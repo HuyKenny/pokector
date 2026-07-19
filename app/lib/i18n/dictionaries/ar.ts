@@ -40,6 +40,8 @@ const ar: Dict = {
     footerRss: "RSS",
     languageLabel: "اللغة",
     marketLabel: "سوق الأسعار",
+    marketUs: "منطقة الولايات المتحدة",
+    marketEu: "منطقة الاتحاد الأوروبي",
     disclaimer:
       "‏Pokector أداة مستقلة لتتبّع المجموعات، وليست تابعة لـ Nintendo أو The Pokémon Company أو Game Freak أو Creatures أو TCGplayer أو Cardmarket أو Pokémon TCG API، ولا معتمدة أو مموَّلة أو مرتبطة بها رسميًا. إن Pokémon وأسماء شخصيات Pokémon علامات تجارية لشركة Nintendo. صور البطاقات وبيانات الكتالوج مقدَّمة من مصادرها المعنية. الأسعار المعروضة تقديرات للبطاقات غير المصنّفة وليست نصيحة مالية.",
   },
@@ -144,7 +146,6 @@ const ar: Dict = {
     pricesHeading: "أسعار السوق الحالية (بالدولار)",
     colTrend: "الاتجاه",
     colAvgSell: "متوسط البيع",
-    cardmarketRow: "Cardmarket",
     sourceCardmarket: "المصدر: بيانات أسعار Cardmarket",
     tcgplayerPrice: "TCGplayer (USD): {price}",
     psaGlobalUsdNote: "أسعار PSA من سوق التقييم العالمي (eBay US)، بالدولار الأمريكي.",
