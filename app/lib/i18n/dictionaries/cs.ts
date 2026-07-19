@@ -19,6 +19,7 @@ const cs: Dict = {
     skipToContent: "Přejít na obsah",
     homeAria: "Domovská stránka Pokector",
     navMain: "Hlavní",
+    menu: "Nabídka",
     navCards: "Karty",
     navSets: "Sety",
     navPriceMovers: "Cenové pohyby",

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { Link, NavLink, Outlet, useLocation, useNavigation } from "react-router";
 
 import type { Route } from "./+types/layout";
@@ -29,6 +30,15 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
   const navigation = useNavigation();
   const lp = useLocalePath();
   const location = useLocation();
+  const [menuOpen, setMenuOpen] = useState(false);
+  // Close the mobile menu whenever the route changes — the "adjust state during
+  // render" pattern (not an effect) so a navigation from inside the menu (nav
+  // link, market/language switch) collapses it.
+  const [prevPath, setPrevPath] = useState(location.pathname);
+  if (location.pathname !== prevPath) {
+    setPrevPath(location.pathname);
+    setMenuOpen(false);
+  }
   // Unprefixed path so the language switcher can point at the same page in
   // another locale (English-only pages 301 back to their root form — harmless).
   const barePath = stripLocalePrefix(location.pathname);
@@ -40,6 +50,39 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
     { to: lp("/pokedex"), label: t.navPokedex },
     { to: "/blog", label: t.navBlog }, // blog is English-only
   ];
+
+  // Close the mobile menu on Escape.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const onKey = (e: KeyboardEvent) => e.key === "Escape" && setMenuOpen(false);
+    document.addEventListener("keydown", onKey);
+    return () => document.removeEventListener("keydown", onKey);
+  }, [menuOpen]);
+
+  // Auth actions — shared between the desktop bar and the mobile menu.
+  const authLinks = signedIn ? (
+    <Link
+      to="/app"
+      className="rounded-lg bg-accent px-4 py-2 text-center text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
+    >
+      {t.myCollection}
+    </Link>
+  ) : (
+    <>
+      <Link
+        to={lp("/login")}
+        className="rounded-lg px-3 py-2 text-center text-sm font-medium text-fg-muted hover:text-fg"
+      >
+        {t.signIn}
+      </Link>
+      <Link
+        to={lp("/register")}
+        className="rounded-lg bg-accent px-4 py-2 text-center text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
+      >
+        {t.getStarted}
+      </Link>
+    </>
+  );
 
   return (
     <div className="flex min-h-screen flex-col">
@@ -54,10 +97,9 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
           <Link to={lp("/")} aria-label={t.homeAria}>
             <PokectorWordmark className="h-8" />
           </Link>
-          <nav
-            aria-label={t.navMain}
-            className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto"
-          >
+
+          {/* Desktop nav (≥ lg) */}
+          <nav aria-label={t.navMain} className="hidden gap-1 lg:flex">
             {nav.map((item) => (
               <NavLink
                 key={item.to}
@@ -73,7 +115,9 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               </NavLink>
             ))}
           </nav>
-          <div className="ms-auto flex items-center gap-2">
+
+          {/* Desktop controls (≥ lg) */}
+          <div className="ms-auto hidden items-center gap-2 lg:flex">
             <HeaderSearch
               label={t.searchCards}
               placeholder={t.searchCardsPlaceholder}
@@ -88,31 +132,65 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               regionLabel={{ us: t.marketUs, eu: t.marketEu }}
             />
             <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
-            {signedIn ? (
-              <Link
-                to="/app"
-                className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
-              >
-                {t.myCollection}
-              </Link>
-            ) : (
-              <>
-                <Link
-                  to={lp("/login")}
-                  className="rounded-lg px-3 py-2 text-sm font-medium text-fg-muted hover:text-fg"
-                >
-                  {t.signIn}
-                </Link>
-                <Link
-                  to={lp("/register")}
-                  className="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
-                >
-                  {t.getStarted}
-                </Link>
-              </>
-            )}
+            {authLinks}
           </div>
+
+          {/* Mobile hamburger (< lg) */}
+          <button
+            type="button"
+            onClick={() => setMenuOpen((v) => !v)}
+            aria-expanded={menuOpen}
+            aria-controls="mobile-menu"
+            aria-label={t.menu}
+            className="ms-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted hover:bg-surface-raised hover:text-fg lg:hidden"
+          >
+            {menuOpen ? <CloseIcon /> : <MenuIcon />}
+          </button>
         </div>
+
+        {/* Mobile menu (< lg) */}
+        {menuOpen ? (
+          <div id="mobile-menu" className="border-t border-edge px-4 py-4 lg:hidden">
+            <div className="mx-auto flex max-w-6xl flex-col gap-4">
+              <HeaderSearch
+                block
+                label={t.searchCards}
+                placeholder={t.searchCardsPlaceholder}
+                resultsLabel={t.searchResults}
+                viewAll={t.searchViewAll}
+                noResults={t.searchNoResults}
+              />
+              <nav aria-label={t.navMain} className="flex flex-col">
+                {nav.map((item) => (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    end={item.to === lp("/")}
+                    className={({ isActive }) =>
+                      `rounded-lg px-3 py-2.5 text-sm font-medium ${
+                        isActive
+                          ? "bg-accent-soft text-accent-strong"
+                          : "text-fg-muted hover:bg-surface-raised hover:text-fg"
+                      }`
+                    }
+                  >
+                    {item.label}
+                  </NavLink>
+                ))}
+              </nav>
+              <div className="flex items-center gap-2 border-t border-edge pt-3">
+                <MarketSwitcher
+                  current={market}
+                  redirectTo={location.pathname}
+                  label={t.marketLabel}
+                  regionLabel={{ us: t.marketUs, eu: t.marketEu }}
+                />
+                <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
+              </div>
+              <div className="flex flex-col gap-2">{authLinks}</div>
+            </div>
+          </div>
+        ) : null}
       </header>
 
       <main
@@ -156,6 +234,29 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
         </div>
       </footer>
     </div>
+  );
+}
+
+/** Inline hamburger / close icons (CSP-safe, no external asset). Decorative —
+ * the toggle button carries the aria-label. */
+function MenuIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M3 6h18M3 12h18M3 18h18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+    </svg>
+  );
+}
+
+function CloseIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path d="M6 6l12 12M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
   );
 }
 

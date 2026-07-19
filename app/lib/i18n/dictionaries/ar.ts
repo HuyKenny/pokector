@@ -20,6 +20,7 @@ const ar: Dict = {
     skipToContent: "تخطَّ إلى المحتوى",
     homeAria: "الصفحة الرئيسية لـ Pokector",
     navMain: "الرئيسية",
+    menu: "القائمة",
     navCards: "البطاقات",
     navSets: "المجموعات",
     navPriceMovers: "تحركات الأسعار",

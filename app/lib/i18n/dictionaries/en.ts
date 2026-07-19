@@ -27,6 +27,7 @@ export const en = {
     skipToContent: "Skip to content",
     homeAria: "Pokector home",
     navMain: "Main",
+    menu: "Menu",
     navCards: "Cards",
     navSets: "Sets",
     navPriceMovers: "Price movers",

@@ -19,6 +19,7 @@ const fr: Dict = {
     skipToContent: "Aller au contenu",
     homeAria: "Accueil Pokector",
     navMain: "Principal",
+    menu: "Menu",
     navCards: "Cartes",
     navSets: "Sets",
     navPriceMovers: "Mouvements de prix",

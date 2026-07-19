@@ -19,6 +19,7 @@ const zh: Dict = {
     skipToContent: "跳到内容",
     homeAria: "Pokector 首页",
     navMain: "主菜单",
+    menu: "菜单",
     navCards: "卡牌",
     navSets: "系列",
     navPriceMovers: "价格波动",

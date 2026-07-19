@@ -19,6 +19,7 @@ const vi: Dict = {
     skipToContent: "Bỏ qua tới nội dung",
     homeAria: "Trang chủ Pokector",
     navMain: "Chính",
+    menu: "Menu",
     navCards: "Thẻ bài",
     navSets: "Bộ thẻ",
     navPriceMovers: "Biến động giá",

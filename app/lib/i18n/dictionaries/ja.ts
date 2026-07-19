@@ -19,6 +19,7 @@ const ja: Dict = {
     skipToContent: "コンテンツへスキップ",
     homeAria: "Pokector ホーム",
     navMain: "メイン",
+    menu: "メニュー",
     navCards: "カード",
     navSets: "セット",
     navPriceMovers: "価格変動",

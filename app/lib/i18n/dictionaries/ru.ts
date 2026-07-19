@@ -19,6 +19,7 @@ const ru: Dict = {
     skipToContent: "Перейти к содержимому",
     homeAria: "Главная Pokector",
     navMain: "Главное меню",
+    menu: "Меню",
     navCards: "Карты",
     navSets: "Сеты",
     navPriceMovers: "Движение цен",

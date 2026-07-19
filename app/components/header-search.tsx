@@ -10,6 +10,8 @@ interface Labels {
   resultsLabel: string;
   viewAll: string;
   noResults: string;
+  /** Full-width input (used inside the mobile menu). */
+  block?: boolean;
 }
 
 /**
@@ -17,7 +19,14 @@ interface Labels {
  * keyboard navigation (↑/↓/Enter/Esc), and a "see all results" fallback. Enter
  * with no active item runs a full search on /cards. Works on mobile too.
  */
-export function HeaderSearch({ label, placeholder, resultsLabel, viewAll, noResults }: Labels) {
+export function HeaderSearch({
+  label,
+  placeholder,
+  resultsLabel,
+  viewAll,
+  noResults,
+  block = false,
+}: Labels) {
   const fetcher = useFetcher<{ items: SuggestItem[] }>();
   const lp = useLocalePath();
   const navigate = useNavigate();
@@ -88,7 +97,7 @@ export function HeaderSearch({ label, placeholder, resultsLabel, viewAll, noResu
   }
 
   return (
-    <div ref={rootRef} className="relative">
+    <div ref={rootRef} className={block ? "relative w-full" : "relative"}>
       <input
         type="search"
         role="combobox"
@@ -101,7 +110,9 @@ export function HeaderSearch({ label, placeholder, resultsLabel, viewAll, noResu
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}
         onFocus={() => value.trim().length >= 2 && setOpen(true)}
-        className="w-36 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint sm:w-52"
+        className={`rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint ${
+          block ? "w-full" : "w-36 sm:w-52"
+        }`}
       />
       {showDropdown ? (
         <div className="absolute end-0 z-50 mt-1 w-80 max-w-[85vw] overflow-hidden rounded-lg border border-edge bg-surface shadow-(--shadow-card)">
