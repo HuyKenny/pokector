@@ -350,8 +350,9 @@ export interface PriceMover {
 }
 
 /**
- * Movers require REAL history: a tracked card with an observation at/before the
- * window start and a current price. No history → empty result (never fabricated).
+ * Movers require REAL history over the WHOLE catalog (not just collected cards):
+ * a card with an observation at/before the window start and a current price.
+ * No history → empty result (never fabricated).
  */
 export async function getPriceMovers(
   db: Database,

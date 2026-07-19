@@ -73,7 +73,7 @@ export default function PriceMovers({ loaderData }: Route.ComponentProps) {
           <p className="mb-2 text-lg font-medium text-fg">{t.emptyTitle}</p>
           <p className="mx-auto max-w-md text-sm text-fg-muted">
             {t.emptyBodyPre}
-            <Link to={lp("/register")} className="text-accent hover:underline">
+            <Link to={lp("/cards")} className="text-accent hover:underline">
               {t.emptyBodyLink}
             </Link>
             {t.emptyBodyPost}

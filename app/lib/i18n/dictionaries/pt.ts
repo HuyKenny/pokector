@@ -259,12 +259,12 @@ const pt: Dict = {
     breadcrumb: "Variações de preço",
     heading: "Variações de preço",
     intro:
-      "As maiores movimentações de mercado de cartas sem graduação entre as cartas que o Pokector rastreia ativamente. As variações são calculadas apenas a partir de observações reais registradas — uma carta precisa de pelo menos uma semana (ou um mês) de histórico rastreado para aparecer aqui.",
-    emptyTitle: "Ainda não há histórico de preços suficiente",
+      "Os maiores movimentos de mercado de cartas sem graduação em todo o catálogo. As variações são calculadas apenas a partir de observações de preço reais — uma carta precisa de pelo menos uma semana (ou um mês) de histórico para aparecer aqui.",
+    emptyTitle: "Os movimentos de preço estão a aquecer",
     emptyBodyPre:
-      "O Pokector nunca fabrica variações de preço. As variações aparecem quando as cartas rastreadas acumulam pelo menos 7 dias de observações reais. Comece a rastrear cartas na sua ",
-    emptyBodyLink: "coleção",
-    emptyBodyPost: " para ajudar a construir a cobertura.",
+      "Os movimentos aparecem quando as cartas têm pelo menos 7 dias de histórico de preços real. O Pokector regista observações diariamente para todo o catálogo — não precisas de adicionar nada. Entretanto, ",
+    emptyBodyLink: "explora o catálogo",
+    emptyBodyPost: " para ver preços atuais.",
     gainers7: "Altas de 7 dias",
     decliners7: "Baixas de 7 dias",
     gainers30: "Altas de 30 dias",

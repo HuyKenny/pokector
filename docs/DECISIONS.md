@@ -260,3 +260,23 @@ compliance webhook.
 - **eBay compliance**: `/api/ebay/marketplace-deletion` handles the SHA-256 challenge validation
   (`EBAY_VERIFICATION_TOKEN` secret) and ack (we store no eBay user data). Configure the endpoint
   URL + token in the eBay console to clear "Non Compliant".
+
+### D21. Card CTA layout, 3× eBay buttons, proactive PSA seeding, price-movers copy (owner 2026-07-18)
+
+- **Card page**: "Add to collection" / "Add to wishlist" moved out of the eBay panel to
+  directly under the market-prices table. The "Get this card" panel now shows **three stacked
+  Buy-on-eBay buttons** (Raw / PSA 9 / PSA 10), each with the official logo + "from $X".
+- **Proactive PSA seeding**: new daily job `ebay_graded_seed` (`handleEbayGradedSeed`) fetches
+  eBay graded prices for the most valuable cards WITHOUT waiting for a view — page-chained
+  (~25/invocation, ≤1000/day), advancing by excluding cards with a fresh (≤24h) `ebay_cache`
+  row. Reuses `refreshCardGradedPrices` (exported wrapper of the on-view refresh); seeded
+  `card_graded_prices` then flow into `card_graded_price_history` via the existing daily
+  `recordGradedHistory`. Enqueued in `enqueueDailyJobs` at +2h (before price_history_record).
+- **eBay budget fix**: `refresh` now checks the daily counter via `readCounter` and only
+  `incrementCounter`s when it actually calls eBay — previously it incremented before the cap
+  check, so no-op-over-budget calls inflated the counter (seen at 5016 vs the 1500 cap) and
+  would starve the seed job. Real Browse calls stay ~1500×3 = 4500/day < 5000.
+- **price-movers**: not gated on collections (the query runs over the whole catalog); it's just
+  empty until ~7 days of history accrue. Reworded the empty state (all 11 locales) to stop
+  implying you must register/collect, and pointed the link at the catalog. No data change —
+  the owner chose to let USD history accumulate (Cardmarket avg7/avg30 was considered, deferred).

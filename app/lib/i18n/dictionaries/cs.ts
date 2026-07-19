@@ -257,12 +257,12 @@ const cs: Dict = {
     breadcrumb: "Cenové pohyby",
     heading: "Cenové pohyby",
     intro:
-      "Největší tržní pohyby negradovaných karet mezi kartami, které Pokector aktivně sleduje. Změny se počítají pouze ze skutečných zaznamenaných pozorování — karta potřebuje alespoň týden (nebo měsíc) sledované historie, aby se zde objevila.",
-    emptyTitle: "Zatím není dost historie cen",
+      "Největší tržní pohyby negradovaných karet napříč celým katalogem. Změny se počítají jen z reálně zaznamenaných pozorování cen — karta potřebuje aspoň týden (nebo měsíc) historie, aby se tu objevila.",
+    emptyTitle: "Cenové pohyby se teprve rozjíždějí",
     emptyBodyPre:
-      "Pokector nikdy nevymýšlí cenové změny. Pohyby se objeví, jakmile sledované karty nasbírají alespoň 7 dní skutečných pozorování. Začněte sledovat karty ve své ",
-    emptyBodyLink: "sbírce",
-    emptyBodyPost: " a pomozte tak budovat pokrytí.",
+      "Pohyby se objeví, jakmile mají karty aspoň 7 dní reálné cenové historie. Pokector zaznamenává pozorování denně pro celý katalog — nemusíš nic přidávat. Zatím si ",
+    emptyBodyLink: "projdi katalog",
+    emptyBodyPost: " pro aktuální ceny.",
     gainers7: "Růsty za 7 dní",
     decliners7: "Poklesy za 7 dní",
     gainers30: "Růsty za 30 dní",

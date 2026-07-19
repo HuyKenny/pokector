@@ -560,6 +560,7 @@ export const SYNC_JOB_TYPES = [
   "retention_aggregate",
   "progress_cache_rebuild",
   "import_apply",
+  "ebay_graded_seed",
 ] as const;
 
 export const syncJobs = sqliteTable(

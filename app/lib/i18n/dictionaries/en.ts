@@ -264,12 +264,12 @@ export const en = {
     breadcrumb: "Price movers",
     heading: "Price movers",
     intro:
-      "The biggest raw-card market moves among cards Pokector actively tracks. Changes are computed only from real recorded observations — a card needs at least a week (or a month) of tracked history to appear here.",
-    emptyTitle: "Not enough price history yet",
+      "The biggest raw-card market moves across the whole catalog. Changes are computed only from real recorded price observations — a card needs at least a week (or a month) of history to appear here.",
+    emptyTitle: "Price movers are warming up",
     emptyBodyPre:
-      "Pokector never fabricates price changes. Movers appear once tracked cards accumulate at least 7 days of real observations. Start tracking cards in your ",
-    emptyBodyLink: "collection",
-    emptyBodyPost: " to help build coverage.",
+      "Movers appear once cards have at least 7 days of real recorded price history. Pokector records observations daily for the entire catalog — you don't need to add anything. Meanwhile, ",
+    emptyBodyLink: "browse the catalog",
+    emptyBodyPost: " for current prices.",
     gainers7: "7-day gainers",
     decliners7: "7-day decliners",
     gainers30: "30-day gainers",

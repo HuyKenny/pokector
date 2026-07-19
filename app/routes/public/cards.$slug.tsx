@@ -438,83 +438,77 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             ) : null}
           </section>
 
-          {/* Get this card — conversion panel */}
-          <div className="flex flex-col gap-3 rounded-(--radius-card) border border-edge bg-surface p-5">
-            <h2 className="font-semibold text-fg">{t.getThisCard}</h2>
-            {ebayUrl ? (
-              <a
-                href={ebayUrl}
-                target="_blank"
-                rel="sponsored noopener"
-                aria-label={t.buyOnEbay}
-                className="flex min-h-14 items-center justify-between gap-3 rounded-xl border-2 border-accent bg-white px-5 py-3 shadow-sm transition hover:bg-neutral-50"
+          {/* Add to collection / wishlist — directly under the market prices table */}
+          <div className="flex flex-wrap gap-3">
+            <fetcher.Form method="post" action="/api/v1/collection/quick-add">
+              <input type="hidden" name="cardId" value={card.id} />
+              <button
+                type="submit"
+                className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
               >
-                <span className="flex items-center gap-3">
-                  <EbayLogo className="h-7 w-auto" />
-                  <span className="font-semibold text-neutral-800">{t.buyOnEbay}</span>
-                </span>
-                {ebayPrices?.rawFromMinor != null ? (
-                  <span className="text-lg font-bold tabular-nums text-neutral-900">
-                    {interpolate(t.buyFrom, { price: money(ebayPrices.rawFromMinor) })}
-                  </span>
-                ) : (
-                  <span aria-hidden className="text-xl text-neutral-500">
-                    ↗
-                  </span>
-                )}
-              </a>
-            ) : null}
-            {ebayPrices && (ebayPrices.psa9FromMinor != null || ebayPrices.psa10FromMinor != null) ? (
-              <div className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
-                {ebayPrices.psa9FromMinor != null && ebayPsa9Url ? (
-                  <a
-                    href={ebayPsa9Url}
-                    target="_blank"
-                    rel="sponsored noopener"
-                    className="text-fg-muted hover:text-accent"
-                  >
-                    {interpolate(t.ebayPsa9From, { price: money(ebayPrices.psa9FromMinor) })}
-                  </a>
-                ) : null}
-                {ebayPrices.psa10FromMinor != null && ebayPsa10Url ? (
-                  <a
-                    href={ebayPsa10Url}
-                    target="_blank"
-                    rel="sponsored noopener"
-                    className="text-fg-muted hover:text-accent"
-                  >
-                    {interpolate(t.ebayPsa10From, { price: money(ebayPrices.psa10FromMinor) })}
-                  </a>
-                ) : null}
-              </div>
-            ) : null}
-            <div className="flex flex-wrap gap-3">
-              <fetcher.Form method="post" action="/api/v1/collection/quick-add">
-                <input type="hidden" name="cardId" value={card.id} />
-                <button
-                  type="submit"
-                  className="min-h-11 rounded-lg bg-accent px-5 py-2 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
-                >
-                  {t.addToCollection}
-                </button>
-              </fetcher.Form>
-              <fetcher.Form method="post" action="/api/v1/wishlist/quick-add">
-                <input type="hidden" name="cardId" value={card.id} />
-                <button
-                  type="submit"
-                  className="min-h-11 rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
-                >
-                  {t.addToWishlist}
-                </button>
-              </fetcher.Form>
-            </div>
-            {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
-              <p className="text-sm text-fg-muted" role="status">
-                {String((fetcher.data as { message: string }).message)}
-              </p>
-            ) : null}
-            {ebayUrl ? <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p> : null}
+                {t.addToCollection}
+              </button>
+            </fetcher.Form>
+            <fetcher.Form method="post" action="/api/v1/wishlist/quick-add">
+              <input type="hidden" name="cardId" value={card.id} />
+              <button
+                type="submit"
+                className="min-h-11 rounded-lg border border-edge bg-surface px-5 py-2 font-medium text-fg hover:bg-surface-raised"
+              >
+                {t.addToWishlist}
+              </button>
+            </fetcher.Form>
           </div>
+          {fetcher.data && typeof fetcher.data === "object" && "message" in fetcher.data ? (
+            <p className="text-sm text-fg-muted" role="status">
+              {String((fetcher.data as { message: string }).message)}
+            </p>
+          ) : null}
+
+          {/* Get this card — three eBay buy options (Raw / PSA 9 / PSA 10) */}
+          {ebayUrl ? (
+            <div className="flex flex-col gap-3 rounded-(--radius-card) border border-edge bg-surface p-5">
+              <h2 className="font-semibold text-fg">{t.getThisCard}</h2>
+              <div className="flex flex-col gap-2">
+                {(
+                  [
+                    ["Raw", ebayUrl, ebayPrices?.rawFromMinor ?? null],
+                    ["PSA 9", ebayPsa9Url, ebayPrices?.psa9FromMinor ?? null],
+                    ["PSA 10", ebayPsa10Url, ebayPrices?.psa10FromMinor ?? null],
+                  ] as const
+                ).map(([label, url, minor]) =>
+                  url ? (
+                    <a
+                      key={label}
+                      href={url}
+                      target="_blank"
+                      rel="sponsored noopener"
+                      aria-label={`${t.buyOnEbay} — ${label}`}
+                      className="flex min-h-14 items-center justify-between gap-3 rounded-xl border-2 border-accent bg-white px-4 py-3 shadow-sm transition hover:bg-neutral-50"
+                    >
+                      <span className="flex items-center gap-2.5">
+                        <EbayLogo className="h-6 w-auto" />
+                        <span className="font-semibold text-neutral-800">{t.buyOnEbay}</span>
+                        <span className="rounded bg-neutral-100 px-2 py-0.5 text-xs font-semibold text-neutral-600">
+                          {label}
+                        </span>
+                      </span>
+                      {minor != null ? (
+                        <span className="text-lg font-bold tabular-nums text-neutral-900">
+                          {interpolate(t.buyFrom, { price: money(minor) })}
+                        </span>
+                      ) : (
+                        <span aria-hidden className="text-xl text-neutral-500">
+                          ↗
+                        </span>
+                      )}
+                    </a>
+                  ) : null,
+                )}
+              </div>
+              <p className="text-xs text-fg-faint">{t.ebayDisclosure}</p>
+            </div>
+          ) : null}
 
           <p className="text-xs text-fg-faint">{t.priceDisclaimer}</p>
         </div>

@@ -259,12 +259,12 @@ const es: Dict = {
     breadcrumb: "Movimientos de precio",
     heading: "Movimientos de precio",
     intro:
-      "Los mayores movimientos de mercado de cartas sin gradar entre las cartas que Pokector rastrea activamente. Los cambios se calculan solo a partir de observaciones reales registradas: una carta necesita al menos una semana (o un mes) de historial rastreado para aparecer aquí.",
-    emptyTitle: "Aún no hay suficiente historial de precios",
+      "Los mayores movimientos de mercado de cartas sin graduar en todo el catálogo. Los cambios se calculan solo a partir de observaciones de precio reales — una carta necesita al menos una semana (o un mes) de historial para aparecer aquí.",
+    emptyTitle: "Los movimientos de precio se están calentando",
     emptyBodyPre:
-      "Pokector nunca fabrica cambios de precio. Los movimientos aparecen cuando las cartas rastreadas acumulan al menos 7 días de observaciones reales. Empieza a rastrear cartas en tu ",
-    emptyBodyLink: "colección",
-    emptyBodyPost: " para ayudar a mejorar la cobertura.",
+      "Los movimientos aparecen cuando las cartas tienen al menos 7 días de historial de precios real. Pokector registra observaciones a diario para todo el catálogo, no necesitas añadir nada. Mientras tanto, ",
+    emptyBodyLink: "explora el catálogo",
+    emptyBodyPost: " para ver precios actuales.",
     gainers7: "Subidas de 7 días",
     decliners7: "Bajadas de 7 días",
     gainers30: "Subidas de 30 días",

@@ -14,7 +14,7 @@
  */
 import { lt } from "drizzle-orm";
 
-import { incrementCounter } from "../counters.server";
+import { incrementCounter, readCounter } from "../counters.server";
 import { schema, type Database } from "../db/index.server";
 
 export interface EbayCardPrices {
@@ -141,11 +141,15 @@ export interface EbayCardRef {
 }
 
 async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void> {
+  // Check the budget WITHOUT incrementing first, so no-op-over-budget calls don't
+  // inflate the counter past the cap (which would starve the seed job). Only count
+  // a refresh once we actually proceed to call eBay.
   const day = new Date().toISOString().slice(0, 10);
-  const used = await incrementCounter(db, `ebay:refresh:${day}`, PRICE_TTL_SEC);
-  if (used !== null && used > DAILY_REFRESH_CAP) return; // protect the rate limit
+  const used = await readCounter(db, `ebay:refresh:${day}`);
+  if (used !== null && used >= DAILY_REFRESH_CAP) return; // protect the rate limit
   const token = await getToken(env, db);
   if (!token) return;
+  await incrementCounter(db, `ebay:refresh:${day}`, PRICE_TTL_SEC); // reserve one refresh
   const base = cardQuery(card);
   const [rawFromMinor, psa9FromMinor, psa10FromMinor] = await Promise.all([
     // Raw = single card, not graded, not novelty.
@@ -218,4 +222,24 @@ export async function getEbayCardPrices(
 /** Delete expired eBay cache rows (daily cron housekeeping). */
 export async function pruneExpiredEbayCache(db: Database): Promise<void> {
   await db.delete(schema.ebayCache).where(lt(schema.ebayCache.expiresAt, nowSec()));
+}
+
+/** Shared daily eBay Browse refresh cap (also used by the proactive seed job). */
+export const EBAY_DAILY_REFRESH_CAP = DAILY_REFRESH_CAP;
+/** D1 counter key for today's eBay refresh budget. */
+export const ebayRefreshBudgetKey = (day: string) => `ebay:refresh:${day}`;
+
+/**
+ * Fetch + persist eBay prices for one card (raw + PSA 9 + PSA 10), the same as a
+ * cache-miss refresh but callable from a server-side batch job (no request
+ * context). Writes ebay_cache + card_graded_prices; self-limited by the shared
+ * daily budget counter. See handleEbayGradedSeed.
+ */
+export async function refreshCardGradedPrices(
+  env: Env,
+  db: Database,
+  card: EbayCardRef,
+): Promise<void> {
+  if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return;
+  await refresh(env, db, card);
 }

@@ -22,6 +22,7 @@ import {
 } from "./handlers/catalog.server";
 import { handleImportApply } from "../csv/import.server";
 import { handleAlertsEvaluate } from "./handlers/alerts.server";
+import { handleEbayGradedSeed } from "./handlers/ebay-seed.server";
 import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
 import {
   claimNextJob,
@@ -53,6 +54,7 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   portfolio_snapshots: handlePortfolioSnapshots,
   alerts_evaluate: handleAlertsEvaluate,
   import_apply: handleImportApply,
+  ebay_graded_seed: handleEbayGradedSeed,
 };
 
 export function registerJobHandler(type: SyncJobType, handler: JobHandler): void {
@@ -127,6 +129,17 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
         runAfter: new Date(Date.now() + 3.5 * 60 * 60 * 1000),
       });
     }
+  }
+
+  // Proactively seed eBay graded (PSA) prices for the most valuable cards so PSA
+  // history builds without needing card views. Before price_history_record (+3h)
+  // so the seeded prices are captured in the same day's graded-history snapshot.
+  if (env.EBAY_APP_ID && env.EBAY_CERT_ID) {
+    await enqueueJob(db, {
+      type: "ebay_graded_seed",
+      idempotencyKey: `ebay-seed:auto:${today}`,
+      runAfter: new Date(Date.now() + 2 * 60 * 60 * 1000),
+    });
   }
 }
 

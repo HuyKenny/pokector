@@ -260,12 +260,12 @@ const fr: Dict = {
     breadcrumb: "Mouvements de prix",
     heading: "Mouvements de prix",
     intro:
-      "Les plus gros mouvements de marché des cartes non gradées parmi celles que Pokector suit activement. Les variations sont calculées uniquement à partir de véritables observations enregistrées — une carte a besoin d’au moins une semaine (ou un mois) d’historique suivi pour apparaître ici.",
-    emptyTitle: "Pas encore assez d’historique de prix",
+      "Les plus grands mouvements de marché des cartes non gradées dans tout le catalogue. Les variations sont calculées uniquement à partir d'observations de prix réelles — une carte a besoin d'au moins une semaine (ou un mois) d'historique pour apparaître ici.",
+    emptyTitle: "Les mouvements de prix se mettent en place",
     emptyBodyPre:
-      "Pokector ne fabrique jamais de variations de prix. Les mouvements apparaissent une fois que les cartes suivies ont accumulé au moins 7 jours de véritables observations. Commencez à suivre des cartes dans votre ",
-    emptyBodyLink: "collection",
-    emptyBodyPost: " pour contribuer à la couverture.",
+      "Les mouvements apparaissent une fois que les cartes ont au moins 7 jours d'historique de prix réel. Pokector enregistre des observations chaque jour pour tout le catalogue — rien à ajouter. En attendant, ",
+    emptyBodyLink: "parcourez le catalogue",
+    emptyBodyPost: " pour les prix actuels.",
     gainers7: "Hausses sur 7 jours",
     decliners7: "Baisses sur 7 jours",
     gainers30: "Hausses sur 30 jours",

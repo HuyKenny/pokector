@@ -259,12 +259,12 @@ const de: Dict = {
     breadcrumb: "Kursbewegungen",
     heading: "Kursbewegungen",
     intro:
-      "Die größten Marktbewegungen ungegradeter Karten unter den von Pokector aktiv verfolgten Karten. Änderungen werden nur aus echten erfassten Beobachtungen berechnet — eine Karte benötigt mindestens eine Woche (oder einen Monat) Tracking-Historie, um hier zu erscheinen.",
-    emptyTitle: "Noch nicht genug Preishistorie",
+      "Die größten Marktbewegungen ungegradeter Karten im gesamten Katalog. Änderungen werden nur aus echten erfassten Preisbeobachtungen berechnet — eine Karte braucht mindestens eine Woche (oder einen Monat) Historie, um hier zu erscheinen.",
+    emptyTitle: "Preisbewegungen sammeln sich noch",
     emptyBodyPre:
-      "Pokector erfindet niemals Preisänderungen. Bewegungen erscheinen, sobald verfolgte Karten mindestens 7 Tage echter Beobachtungen gesammelt haben. Beginne, Karten in deiner ",
-    emptyBodyLink: "Sammlung",
-    emptyBodyPost: " zu verfolgen, um die Abdeckung zu verbessern.",
+      "Bewegungen erscheinen, sobald Karten mindestens 7 Tage echte Preishistorie haben. Pokector erfasst täglich Beobachtungen für den gesamten Katalog — du musst nichts hinzufügen. In der Zwischenzeit ",
+    emptyBodyLink: "durchstöbere den Katalog",
+    emptyBodyPost: " für aktuelle Preise.",
     gainers7: "Gewinner (7 Tage)",
     decliners7: "Verlierer (7 Tage)",
     gainers30: "Gewinner (30 Tage)",

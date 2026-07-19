@@ -257,12 +257,12 @@ const vi: Dict = {
     breadcrumb: "Biến động giá",
     heading: "Biến động giá",
     intro:
-      "Những biến động thị trường lớn nhất của thẻ chưa chấm điểm trong số các thẻ Pokector theo dõi chủ động. Thay đổi chỉ được tính từ những quan sát thật đã ghi — một thẻ cần ít nhất một tuần (hoặc một tháng) lịch sử theo dõi để xuất hiện ở đây.",
-    emptyTitle: "Chưa đủ lịch sử giá",
+      "Những biến động thị trường lớn nhất của thẻ chưa chấm điểm trên toàn bộ danh mục. Thay đổi chỉ được tính từ các quan sát giá thực được ghi lại — một thẻ cần ít nhất một tuần (hoặc một tháng) lịch sử để xuất hiện ở đây.",
+    emptyTitle: "Biến động giá đang được tổng hợp",
     emptyBodyPre:
-      "Pokector không bao giờ bịa ra thay đổi giá. Biến động xuất hiện khi các thẻ được theo dõi tích lũy ít nhất 7 ngày quan sát thật. Hãy bắt đầu theo dõi thẻ trong ",
-    emptyBodyLink: "bộ sưu tập",
-    emptyBodyPost: " của bạn để giúp mở rộng phạm vi.",
+      "Biến động xuất hiện khi thẻ có ít nhất 7 ngày lịch sử giá thực. Pokector ghi lại quan sát hằng ngày cho toàn bộ danh mục — bạn không cần thêm gì. Trong lúc đó, hãy ",
+    emptyBodyLink: "duyệt danh mục",
+    emptyBodyPost: " để xem giá hiện tại.",
     gainers7: "Tăng trong 7 ngày",
     decliners7: "Giảm trong 7 ngày",
     gainers30: "Tăng trong 30 ngày",
