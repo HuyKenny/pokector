@@ -2,6 +2,7 @@ import { Form, Link, NavLink, Outlet, useLocation, useNavigation } from "react-r
 
 import type { Route } from "./+types/layout";
 import { PokectorWordmark } from "~/components/brand";
+import { Flag } from "~/components/flags";
 import { optionalUser } from "~/lib/auth/guards.server";
 import { getMarket } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
@@ -13,7 +14,7 @@ import {
   stripLocalePrefix,
 } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
-import { MARKET_CURRENCY, MARKET_FLAG, MARKETS, type Market } from "~/lib/market/market";
+import { MARKET_CURRENCY, MARKETS, type Market } from "~/lib/market/market";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const session = await optionalUser(context, request);
@@ -179,20 +180,21 @@ function LanguageSwitcher({
         aria-label={label}
         className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
       >
-        <span aria-hidden="true">🌐</span>
+        <Flag code={current} className="h-3.5 w-5 rounded-[2px] border border-edge/40" />
         <span className="uppercase">{current}</span>
       </summary>
-      <ul className="absolute end-0 z-50 mt-1 max-h-80 w-40 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+      <ul className="absolute end-0 z-50 mt-1 max-h-80 w-44 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
         {LOCALES.map((l) => (
           <li key={l}>
             <a
               href={localePath(l, barePath)}
               hrefLang={l}
               aria-current={l === current ? "true" : undefined}
-              className={`block px-3 py-2 text-sm hover:bg-surface-raised ${
+              className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface-raised ${
                 l === current ? "font-semibold text-accent" : "text-fg"
               }`}
             >
+              <Flag code={l} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
               {LOCALE_NAMES[l]}
             </a>
           </li>
@@ -222,7 +224,7 @@ function MarketSwitcher({
         aria-label={label}
         className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
       >
-        <span aria-hidden="true">{MARKET_FLAG[current]}</span>
+        <Flag code={current} className="h-3.5 w-5 rounded-[2px] border border-edge/40" />
         <span>{MARKET_CURRENCY[current]}</span>
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
@@ -238,7 +240,7 @@ function MarketSwitcher({
                   m === current ? "font-semibold text-accent" : "text-fg"
                 }`}
               >
-                <span aria-hidden="true">{MARKET_FLAG[m]}</span>
+                <Flag code={m} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
                 <span>{regionLabel[m]}</span>
                 <span className="ms-auto text-xs text-fg-faint">{MARKET_CURRENCY[m]}</span>
               </button>
