@@ -17,17 +17,40 @@ import { lt } from "drizzle-orm";
 import { incrementCounter, readCounter } from "../counters.server";
 import { schema, type Database } from "../db/index.server";
 
+/** A graded (PSA) market value with its provenance. `source='sold'` = median of
+ * real 90-day sold comps (eBay Marketplace Insights) with a low/high range and
+ * sample size — the "true" market value. `source='listing'` = lowest active
+ * listing ("from $X"), used only as a fallback until Insights access is granted. */
+export interface GradedStat {
+  /** Headline value (minor USD): sold median, or lowest listing when no sold data. */
+  valueMinor: number;
+  lowMinor: number | null;
+  highMinor: number | null;
+  sampleSize: number | null;
+  source: "sold" | "listing";
+}
+
 export interface EbayCardPrices {
+  /** Lowest active listings ("from $X") — power the "Buy on eBay" CTA buttons. */
   rawFromMinor: number | null;
   psa9FromMinor: number | null;
   psa10FromMinor: number | null;
+  /** Market values for the price table + collection valuation (sold median when available). */
+  psa9: GradedStat | null;
+  psa10: GradedStat | null;
 }
 
 /** eBay category "CCG Individual Cards" — narrows results to single cards. */
 const CCG_CATEGORY = "183454";
 const PRICE_TTL_SEC = 24 * 60 * 60;
 const TOKEN_KEY = "ebay:token";
-const DAILY_REFRESH_CAP = 1500; // ×3 Browse calls each ≈ under the 5k/day limit
+const INSIGHTS_TOKEN_KEY = "ebay:token:insights";
+/** Short-lived marker set when the Insights token is refused (app not yet
+ * approved for the limited-release API) so we don't hammer the token endpoint. */
+const INSIGHTS_OFF_KEY = "ebay:insights:off";
+const BROWSE_SCOPE = "https://api.ebay.com/oauth/api_scope";
+const INSIGHTS_SCOPE = "https://api.ebay.com/oauth/api_scope/buy.marketplace.insights";
+const DAILY_REFRESH_CAP = 1500; // ≤5 eBay calls each ≈ under the daily limits
 
 /** Listings that are clearly not the raw single card we're pricing. */
 const NOISE =
@@ -63,26 +86,56 @@ async function cacheSet(db: Database, key: string, value: string, ttlSec: number
   }
 }
 
-/** Cached OAuth client-credentials application token. */
+/** Request an OAuth client-credentials application token for `scope`. */
+async function requestAppToken(env: Env, scope: string): Promise<{ token: string; ttl: number } | null> {
+  if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return null;
+  const basic = btoa(`${env.EBAY_APP_ID}:${env.EBAY_CERT_ID}`);
+  const res = await fetch(`${apiHost(env)}/identity/v1/oauth2/token`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+      Authorization: `Basic ${basic}`,
+    },
+    body: "grant_type=client_credentials&scope=" + encodeURIComponent(scope),
+  });
+  if (!res.ok) return null;
+  const data: { access_token?: string; expires_in?: number } = await res.json();
+  if (!data.access_token) return null;
+  return { token: data.access_token, ttl: Math.max(60, (data.expires_in ?? 7200) - 120) };
+}
+
+/** Cached OAuth token for the Browse API (base scope). */
 async function getToken(env: Env, db: Database): Promise<string | null> {
   const cached = await cacheGet(db, TOKEN_KEY);
   if (cached) return cached;
-  if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return null;
   try {
-    const basic = btoa(`${env.EBAY_APP_ID}:${env.EBAY_CERT_ID}`);
-    const res = await fetch(`${apiHost(env)}/identity/v1/oauth2/token`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/x-www-form-urlencoded",
-        Authorization: `Basic ${basic}`,
-      },
-      body: "grant_type=client_credentials&scope=" + encodeURIComponent("https://api.ebay.com/oauth/api_scope"),
-    });
-    if (!res.ok) return null;
-    const data: { access_token?: string; expires_in?: number } = await res.json();
-    if (!data.access_token) return null;
-    await cacheSet(db, TOKEN_KEY, data.access_token, Math.max(60, (data.expires_in ?? 7200) - 120));
-    return data.access_token;
+    const got = await requestAppToken(env, BROWSE_SCOPE);
+    if (!got) return null;
+    await cacheSet(db, TOKEN_KEY, got.token, got.ttl);
+    return got.token;
+  } catch {
+    return null;
+  }
+}
+
+/**
+ * Cached OAuth token for the Marketplace Insights API (sold comps). This is a
+ * limited-release scope: until eBay grants the app access the token request is
+ * refused, so we cache a short "off" marker and fall back to lowest-listing
+ * prices. Once access is granted the token starts succeeding automatically.
+ */
+async function getInsightsToken(env: Env, db: Database): Promise<string | null> {
+  const cached = await cacheGet(db, INSIGHTS_TOKEN_KEY);
+  if (cached) return cached;
+  if (await cacheGet(db, INSIGHTS_OFF_KEY)) return null; // not approved yet, don't retry hard
+  try {
+    const got = await requestAppToken(env, INSIGHTS_SCOPE);
+    if (!got) {
+      await cacheSet(db, INSIGHTS_OFF_KEY, "1", 3600);
+      return null;
+    }
+    await cacheSet(db, INSIGHTS_TOKEN_KEY, got.token, got.ttl);
+    return got.token;
   } catch {
     return null;
   }
@@ -126,6 +179,48 @@ async function lowestPrice(
   return min;
 }
 
+interface Sale {
+  title?: string;
+  lastSoldPrice?: { value?: string; currency?: string };
+}
+
+/** Median / low / high / count of real USD sold prices (last 90 days, via the
+ * Marketplace Insights API) among sales matching `query` that pass `accept`.
+ * Null when the API is unavailable or nothing sold. This is the "true" market
+ * value: a median over actual transactions, not a single cheapest listing. */
+async function soldStats(
+  env: Env,
+  token: string,
+  query: string,
+  accept: (title: string) => boolean,
+): Promise<{ medianMinor: number; lowMinor: number; highMinor: number; count: number } | null> {
+  const params = new URLSearchParams({
+    q: query,
+    category_ids: CCG_CATEGORY,
+    limit: "100",
+  });
+  const url = `${apiHost(env)}/buy/marketplace_insights/v1_beta/item_sales/search?${params.toString()}`;
+  const res = await fetch(url, {
+    headers: { Authorization: `Bearer ${token}`, "X-EBAY-C-MARKETPLACE-ID": "EBAY_US" },
+  });
+  if (!res.ok) return null;
+  const data: { itemSales?: Sale[] } = await res.json();
+  const vals: number[] = [];
+  for (const s of data.itemSales ?? []) {
+    if ((s.lastSoldPrice?.currency ?? "USD") !== "USD") continue;
+    const value = Number(s.lastSoldPrice?.value);
+    if (!Number.isFinite(value) || value <= 0) continue;
+    if (!accept(s.title ?? "")) continue;
+    vals.push(Math.round(value * 100));
+  }
+  if (vals.length === 0) return null;
+  vals.sort((a, b) => a - b);
+  const mid = vals.length >> 1;
+  const medianMinor =
+    vals.length % 2 === 1 ? vals[mid] : Math.round((vals[mid - 1] + vals[mid]) / 2);
+  return { medianMinor, lowMinor: vals[0], highMinor: vals[vals.length - 1], count: vals.length };
+}
+
 /** Build the exact-card search phrase (name + number[/printedTotal] + set). */
 function cardQuery(card: EbayCardRef): string {
   const number = card.printedTotal ? `${card.number}/${card.printedTotal}` : card.number;
@@ -151,44 +246,92 @@ async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void>
   if (!token) return;
   await incrementCounter(db, `ebay:refresh:${day}`, PRICE_TTL_SEC); // reserve one refresh
   const base = cardQuery(card);
+  const psa9Accept = (t: string) => /psa\s?9\b/i.test(t) && !NOISE.test(t);
+  const psa10Accept = (t: string) => /psa\s?10\b/i.test(t) && !NOISE.test(t);
+  // Lowest active listings power the "Buy on eBay — from $X" CTA buttons.
   const [rawFromMinor, psa9FromMinor, psa10FromMinor] = await Promise.all([
     // Raw = single card, not graded, not novelty.
     lowestPrice(env, token, base, (t) => !NOISE.test(t) && !GRADED.test(t)),
     // PSA 9 / PSA 10 = title must actually say that grade, minus novelty items.
-    lowestPrice(env, token, `${base} PSA 9`, (t) => /psa\s?9\b/i.test(t) && !NOISE.test(t)),
-    lowestPrice(env, token, `${base} PSA 10`, (t) => /psa\s?10\b/i.test(t) && !NOISE.test(t)),
+    lowestPrice(env, token, `${base} PSA 9`, psa9Accept),
+    lowestPrice(env, token, `${base} PSA 10`, psa10Accept),
   ]);
+  // Real 90-day sold comps (median + range) are the true market value. Requires
+  // Marketplace Insights access; absent that, fall back to the lowest listing.
+  const insToken = await getInsightsToken(env, db);
+  const [psa9Sold, psa10Sold] = insToken
+    ? await Promise.all([
+        soldStats(env, insToken, `${base} PSA 9`, psa9Accept),
+        soldStats(env, insToken, `${base} PSA 10`, psa10Accept),
+      ])
+    : [null, null];
+  const psa9 = toStat(psa9Sold, psa9FromMinor);
+  const psa10 = toStat(psa10Sold, psa10FromMinor);
   await cacheSet(
     db,
-    `ebay:prices:v2:${card.id}`,
-    JSON.stringify({ rawFromMinor, psa9FromMinor, psa10FromMinor } satisfies EbayCardPrices),
+    `ebay:prices:v3:${card.id}`,
+    JSON.stringify({
+      rawFromMinor,
+      psa9FromMinor,
+      psa10FromMinor,
+      psa9,
+      psa10,
+    } satisfies EbayCardPrices),
     PRICE_TTL_SEC,
   );
-  // Persist graded prices so they can be valued in portfolios and snapshotted
-  // into history (raw stays TCGplayer — not stored here).
-  await persistGraded(db, card.id, "psa9", psa9FromMinor);
-  await persistGraded(db, card.id, "psa10", psa10FromMinor);
+  // Persist graded market values so they can be valued in portfolios and
+  // snapshotted into history (raw stays TCGplayer — not stored here).
+  await persistGraded(db, card.id, "psa9", psa9);
+  await persistGraded(db, card.id, "psa10", psa10);
 }
 
-/** Upsert (or clear) a graded price for a card. */
+/** Combine an optional sold-comps result with the listing fallback into a stat. */
+function toStat(
+  sold: { medianMinor: number; lowMinor: number; highMinor: number; count: number } | null,
+  listingMinor: number | null,
+): GradedStat | null {
+  if (sold) {
+    return {
+      valueMinor: sold.medianMinor,
+      lowMinor: sold.lowMinor,
+      highMinor: sold.highMinor,
+      sampleSize: sold.count,
+      source: "sold",
+    };
+  }
+  if (listingMinor != null) {
+    return { valueMinor: listingMinor, lowMinor: null, highMinor: null, sampleSize: null, source: "listing" };
+  }
+  return null;
+}
+
+/** Upsert (or skip) a graded market value for a card. */
 async function persistGraded(
   db: Database,
   cardId: string,
   grade: "psa9" | "psa10",
-  fromMinor: number | null,
+  stat: GradedStat | null,
 ): Promise<void> {
   try {
-    if (fromMinor == null) return;
+    if (stat == null) return;
+    const row = {
+      fromMinor: stat.valueMinor,
+      lowMinor: stat.lowMinor,
+      highMinor: stat.highMinor,
+      sampleSize: stat.sampleSize,
+      source: stat.source,
+      observedAt: new Date(),
+    };
     await db
       .insert(schema.cardGradedPrices)
-      .values({ cardId, grade, currency: "USD", fromMinor, observedAt: new Date() })
+      .values({ cardId, grade, currency: "USD", ...row })
       .onConflictDoUpdate({
         target: [
           schema.cardGradedPrices.cardId,
           schema.cardGradedPrices.grade,
           schema.cardGradedPrices.currency,
         ],
-        set: { fromMinor, observedAt: new Date() },
+        set: row,
       });
   } catch {
     // best-effort
@@ -207,7 +350,7 @@ export async function getEbayCardPrices(
   card: EbayCardRef,
 ): Promise<EbayCardPrices | null> {
   if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return null;
-  const cached = await cacheGet(db, `ebay:prices:v2:${card.id}`);
+  const cached = await cacheGet(db, `ebay:prices:v3:${card.id}`);
   if (cached) {
     try {
       return JSON.parse(cached) as EbayCardPrices;

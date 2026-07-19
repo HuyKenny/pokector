@@ -173,6 +173,8 @@ export const en = {
     ebayPsa9From: "PSA 9: from {price}",
     ebayPsa10From: "PSA 10: from {price}",
     psaFromEbay: "PSA prices are the lowest current eBay listing.",
+    psaSoldMedian: "PSA prices are the median of real eBay sales (last 90 days).",
+    psaSampleCount: "· {count} sold",
     ebayDisclosure:
       "“Buy on eBay” is an affiliate link — Pokector may earn a commission from qualifying purchases, at no extra cost to you.",
     historyVariantAria: "Price history variant",

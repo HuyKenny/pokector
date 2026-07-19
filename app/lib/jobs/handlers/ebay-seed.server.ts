@@ -58,7 +58,7 @@ export async function handleEbayGradedSeed(job: SyncJob, env: Env): Promise<void
     WHERE p.source = 'tcgplayer' AND p.currency = 'USD'
       AND NOT EXISTS (
         SELECT 1 FROM ebay_cache e
-        WHERE e.key = ('ebay:prices:v2:' || k.id) AND e.expires_at > ${nowSec}
+        WHERE e.key = ('ebay:prices:v3:' || k.id) AND e.expires_at > ${nowSec}
       )
     ORDER BY p.normalized_price_minor DESC
     LIMIT ${PAGE_SIZE}

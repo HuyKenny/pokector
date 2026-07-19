@@ -164,6 +164,8 @@ const ar: Dict = {
     buyFrom: "من {price}",
     ebayPsa9From: "PSA 9: من {price}",
     psaFromEbay: "أسعار PSA هي أدنى عرض حالي على eBay.",
+    psaSoldMedian: "أسعار PSA هي الوسيط لمبيعات eBay الفعلية (آخر 90 يومًا).",
+    psaSampleCount: "· {count} مبيع",
     ebayFrom: "eBay: من {price}",
     ebayPsa10From: "PSA 10: من {price}",
     ebayDisclosure:

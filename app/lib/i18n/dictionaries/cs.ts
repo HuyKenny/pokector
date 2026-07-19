@@ -163,6 +163,8 @@ const cs: Dict = {
     buyFrom: "od {price}",
     ebayPsa9From: "PSA 9: od {price}",
     psaFromEbay: "Ceny PSA jsou nejnižší aktuální nabídka na eBayi.",
+    psaSoldMedian: "Ceny PSA jsou medián reálných prodejů na eBayi (posledních 90 dní).",
+    psaSampleCount: "· {count} prodejů",
     ebayFrom: "eBay: od {price}",
     ebayPsa10From: "PSA 10: od {price}",
     ebayDisclosure:

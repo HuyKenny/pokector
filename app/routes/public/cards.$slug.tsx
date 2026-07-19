@@ -204,8 +204,8 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
   // History-chart series: each raw print variant, plus PSA 9 / PSA 10 when we
   // have graded data (current price or accumulated history). A "psa*" key uses
   // graded history; anything else is a raw print variant.
-  const hasPsa9 = gradedHistoryPsa9.length > 0 || ebayPrices?.psa9FromMinor != null;
-  const hasPsa10 = gradedHistoryPsa10.length > 0 || ebayPrices?.psa10FromMinor != null;
+  const hasPsa9 = gradedHistoryPsa9.length > 0 || ebayPrices?.psa9 != null;
+  const hasPsa10 = gradedHistoryPsa10.length > 0 || ebayPrices?.psa10 != null;
   const chartSeries: { key: string; label: string }[] = [
     ...availableVariants.map((v) => ({ key: v, label: variantLabel(v) })),
     ...(hasPsa9 ? [{ key: "psa9", label: "PSA 9" }] : []),
@@ -354,11 +354,11 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                     ))}
                     {(
                       [
-                        ["PSA 9", ebayPrices?.psa9FromMinor ?? null, ebayPsa9Url],
-                        ["PSA 10", ebayPrices?.psa10FromMinor ?? null, ebayPsa10Url],
+                        ["PSA 9", ebayPrices?.psa9 ?? null, ebayPsa9Url],
+                        ["PSA 10", ebayPrices?.psa10 ?? null, ebayPsa10Url],
                       ] as const
-                    ).map(([label, minor, url]) =>
-                      minor != null ? (
+                    ).map(([label, stat, url]) =>
+                      stat != null ? (
                         <tr key={label} className="border-b border-edge/50">
                           <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
                             {url ? (
@@ -373,13 +373,18 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                             ) : (
                               label
                             )}
+                            {stat.source === "sold" && stat.sampleSize ? (
+                              <span className="ms-1.5 text-xs font-normal text-fg-faint">
+                                {interpolate(t.psaSampleCount, { count: stat.sampleSize })}
+                              </span>
+                            ) : null}
                           </th>
                           <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
-                            {money(minor)}
+                            {money(stat.valueMinor)}
                           </td>
+                          <td className="py-2 pe-4 text-end tabular-nums">{money(stat.lowMinor)}</td>
                           <td className="py-2 pe-4 text-end tabular-nums">{money(null)}</td>
-                          <td className="py-2 pe-4 text-end tabular-nums">{money(null)}</td>
-                          <td className="py-2 text-end tabular-nums">{money(null)}</td>
+                          <td className="py-2 text-end tabular-nums">{money(stat.highMinor)}</td>
                         </tr>
                       ) : null,
                     )}
@@ -387,8 +392,12 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 </table>
               </div>
             )}
-            {ebayPrices?.psa9FromMinor != null || ebayPrices?.psa10FromMinor != null ? (
-              <p className="mt-2 text-xs text-fg-faint">{t.psaFromEbay}</p>
+            {ebayPrices?.psa9 != null || ebayPrices?.psa10 != null ? (
+              <p className="mt-2 text-xs text-fg-faint">
+                {ebayPrices?.psa9?.source === "sold" || ebayPrices?.psa10?.source === "sold"
+                  ? t.psaSoldMedian
+                  : t.psaFromEbay}
+              </p>
             ) : null}
             <p className="mt-3 text-xs text-fg-faint">
               {t.sourceTcgplayer}

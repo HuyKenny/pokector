@@ -280,3 +280,34 @@ compliance webhook.
   empty until ~7 days of history accrue. Reworded the empty state (all 11 locales) to stop
   implying you must register/collect, and pointed the link at the catalog. No data change —
   the owner chose to let USD history accumulate (Cardmarket avg7/avg30 was considered, deferred).
+
+### D22. Graded (PSA 9/10) prices → real sold comps via Marketplace Insights (owner 2026-07-19)
+
+Owner: the PSA 9/10 numbers ("from $X") felt wrong and wanted **precise market values**.
+Root cause: they were the **single lowest active listing** — vulnerable to one mispriced /
+wrong-grade outlier (e.g. Shining Charizard PSA 10 showing a $30,000 listing). The honest
+"precise" number is the **median of real sold transactions**.
+
+- **Chosen path (owner picked B)**: eBay **Marketplace Insights API** (`buy/marketplace_insights/
+  v1_beta/item_sales/search`) → median + low/high + sample size of USD sales over the last 90
+  days. This is a **limited-release** scope (`…/oauth/api_scope/buy.marketplace.insights`) that
+  needs eBay to grant the app access. Built now, dormant until approved.
+- **eBay client** (`ebay-api.server.ts`): refactored token fetch into `requestAppToken(scope)`;
+  added `getInsightsToken` (separate cache key + a short "off" marker cached on refusal so we
+  don't hammer the token endpoint while unapproved) and `soldStats` (median/low/high/count).
+  `refresh` now fetches lowest listings (raw+psa9+psa10, for the CTA "from") **and** sold stats
+  (psa9+psa10, when the Insights token works), combining them via `toStat`: sold median when
+  available, else listing fallback. Cache key bumped `v2`→`v3` (also in the seed selector).
+- **Data model** (migration 0006): `card_graded_prices` gains `low_minor`, `high_minor`,
+  `sample_size`, `source` ('sold' | 'listing', default 'listing'). `from_minor` = headline
+  (sold median or listing fallback); `recordGradedHistory` snapshots it forward as before.
+- **Card table**: PSA rows now show the median in Market, the sold **range** in Low/High, and a
+  "· N sold" badge; the note switches to "median of real eBay sales (90 days)" when any PSA row
+  is sold-sourced, else "lowest current eBay listing". CTA "from $X" buttons stay lowest-listing.
+- **i18n**: added `psaSoldMedian` + `psaSampleCount` across all 11 locales.
+- **Fallback verified live** (staging + prod): all 616 graded rows are `source='listing'`, table
+  renders correctly with the listing note. Flips to sold medians automatically once eBay grants
+  Insights access.
+- **Owner action**: apply for **Buy Marketplace Insights API** access in the eBay developer
+  console (Application Growth Check / API access request). No new secret — it reuses
+  EBAY_APP_ID / EBAY_CERT_ID.

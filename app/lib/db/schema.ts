@@ -229,8 +229,19 @@ export const cardGradedPrices = sqliteTable(
       .references(() => pokemonCards.id),
     grade: text("grade", { enum: GRADES }).notNull(),
     currency: text("currency", { enum: ["USD", "EUR"] }).notNull(),
-    /** Lowest current eBay listing ("from $X") in minor units. */
+    /** Headline graded price in minor units. When `source='sold'` this is the
+     * median of real 90-day sold comps (eBay Marketplace Insights); when
+     * `source='listing'` it's the lowest current eBay listing ("from $X"). */
     fromMinor: integer("from_minor").notNull(),
+    /** Range of the sold comps (sold source only): lowest / highest sale. */
+    lowMinor: integer("low_minor"),
+    highMinor: integer("high_minor"),
+    /** Number of sold comps behind the median (sold source only). */
+    sampleSize: integer("sample_size"),
+    /** Where `fromMinor` came from: real sold comps or lowest active listing. */
+    source: text("source", { enum: ["sold", "listing"] })
+      .default("listing")
+      .notNull(),
     observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.cardId, t.grade, t.currency] })],

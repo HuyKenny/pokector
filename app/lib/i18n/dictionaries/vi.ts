@@ -163,6 +163,8 @@ const vi: Dict = {
     buyFrom: "từ {price}",
     ebayPsa9From: "PSA 9: từ {price}",
     psaFromEbay: "Giá PSA là mức rao bán thấp nhất hiện tại trên eBay.",
+    psaSoldMedian: "Giá PSA là trung vị của các giao dịch thực tế trên eBay (90 ngày qua).",
+    psaSampleCount: "· {count} đã bán",
     ebayFrom: "eBay: từ {price}",
     ebayPsa10From: "PSA 10: từ {price}",
     ebayDisclosure:

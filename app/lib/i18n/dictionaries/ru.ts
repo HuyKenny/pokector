@@ -163,6 +163,8 @@ const ru: Dict = {
     buyFrom: "от {price}",
     ebayPsa9From: "PSA 9: от {price}",
     psaFromEbay: "Цены PSA — самое низкое текущее предложение на eBay.",
+    psaSoldMedian: "Цены PSA — медиана реальных продаж на eBay (за 90 дней).",
+    psaSampleCount: "· {count} продаж",
     ebayFrom: "eBay: от {price}",
     ebayPsa10From: "PSA 10: от {price}",
     ebayDisclosure:

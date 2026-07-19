@@ -159,6 +159,8 @@ const zh: Dict = {
     buyFrom: "{price} 起",
     ebayPsa9From: "PSA 9：{price} 起",
     psaFromEbay: "PSA 价格为 eBay 当前最低在售价。",
+    psaSoldMedian: "PSA 价格为 eBay 近 90 天真实成交价的中位数。",
+    psaSampleCount: "· {count} 笔成交",
     ebayFrom: "eBay：{price} 起",
     ebayPsa10From: "PSA 10：{price} 起",
     ebayDisclosure:

@@ -43,6 +43,13 @@
       "when": 1784433600000,
       "tag": "0005_grades",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1784448000000,
+      "tag": "0006_graded_sold_stats",
+      "breakpoints": true
     }
   ]
 }

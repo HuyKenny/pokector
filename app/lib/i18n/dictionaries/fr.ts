@@ -165,6 +165,8 @@ const fr: Dict = {
     buyFrom: "à partir de {price}",
     ebayPsa9From: "PSA 9 : à partir de {price}",
     psaFromEbay: "Les prix PSA correspondent à l’offre eBay actuelle la plus basse.",
+    psaSoldMedian: "Les prix PSA correspondent à la médiane des ventes réelles sur eBay (90 derniers jours).",
+    psaSampleCount: "· {count} vendus",
     ebayFrom: "eBay : à partir de {price}",
     ebayPsa10From: "PSA 10 : à partir de {price}",
     ebayDisclosure:

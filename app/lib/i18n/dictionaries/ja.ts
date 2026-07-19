@@ -163,6 +163,8 @@ const ja: Dict = {
     buyFrom: "{price}〜",
     ebayPsa9From: "PSA 9：{price}〜",
     psaFromEbay: "PSA価格は現在のeBay最安出品です。",
+    psaSoldMedian: "PSA価格は過去90日のeBay実売価格の中央値です。",
+    psaSampleCount: "· {count}件販売",
     ebayFrom: "eBay：{price}〜",
     ebayPsa10From: "PSA 10：{price}〜",
     ebayDisclosure:
