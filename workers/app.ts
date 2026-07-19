@@ -1,6 +1,12 @@
 import { createRequestHandler, RouterContextProvider } from "react-router";
 
-import { cloudflareContext, nonceContext, requestIdContext } from "../app/lib/context";
+import {
+  cloudflareContext,
+  marketContext,
+  nonceContext,
+  requestIdContext,
+} from "../app/lib/context";
+import { marketFromCookieHeader, marketFromCountry } from "../app/lib/market/market";
 import { onQueueBatch, onScheduled } from "../app/lib/jobs/runtime.server";
 import { log } from "../app/lib/log.server";
 import { applySecurityHeaders } from "../app/lib/security/headers.server";
@@ -42,6 +48,11 @@ export default {
       routerContext.set(cloudflareContext, { env, ctx });
       routerContext.set(requestIdContext, requestId);
       routerContext.set(nonceContext, nonce);
+      // Market = explicit cookie choice, else Cloudflare geolocation default.
+      const market =
+        marketFromCookieHeader(request.headers.get("cookie")) ??
+        marketFromCountry(request.cf?.country);
+      routerContext.set(marketContext, market);
       const response = await requestHandler(request, routerContext);
       const secured = applySecurityHeaders(response, {
         secure: env.ENVIRONMENT !== "development",

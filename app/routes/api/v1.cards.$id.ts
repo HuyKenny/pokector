@@ -1,8 +1,9 @@
 import type { Route } from "./+types/v1.cards.$id";
 import { apiError, apiJson } from "~/lib/api/respond";
 import { getCardBySlug, getCardPriceHistory } from "~/lib/catalog/queries.server";
-import { getCloudflare, getRequestId } from "~/lib/context";
+import { getCloudflare, getMarket, getRequestId } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
+import { MARKET_SOURCE } from "~/lib/market/market";
 import { eq } from "drizzle-orm";
 
 /**
@@ -30,11 +31,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const detail = await getCardBySlug(db, slug);
   if (!detail) return apiError(404, "not_found", "Card not found.", requestId);
 
+  const market = getMarket(context);
   const url = new URL(request.url);
   const include = url.searchParams.get("include");
   const history =
     include === "history"
-      ? await getCardPriceHistory(db, detail.card.id, { source: "tcgplayer" })
+      ? await getCardPriceHistory(db, detail.card.id, { source: MARKET_SOURCE[market] })
       : undefined;
 
   return apiJson(
@@ -53,7 +55,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
         set: detail.set,
         prices: detail.prices,
         trackingSince: detail.trackingSince,
-        ...(history ? { priceHistory: history } : {}),
+        ...(history ? { market, priceHistory: history } : {}),
       },
     },
     {},

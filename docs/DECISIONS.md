@@ -311,3 +311,38 @@ wrong-grade outlier (e.g. Shining Charizard PSA 10 showing a $30,000 listing). T
 - **Owner action**: apply for **Buy Marketplace Insights API** access in the eBay developer
   console (Application Growth Check / API access request). No new secret — it reuses
   EBAY_APP_ID / EBAY_CERT_ID.
+
+### D23. Market selector — US (TCGplayer/USD) vs EU (Cardmarket/EUR) (owner 2026-07-19)
+
+Public pages now let visitors pick a **price market**, independent of language, so
+European collectors see Cardmarket EUR (more relevant) instead of TCGplayer USD.
+
+- **Model**: a `pk_market` **cookie** (not a URL segment) resolved per request in
+  `workers/app.ts` → `marketContext` (`app/lib/context.ts`). Default for a first-time
+  visitor = **Cloudflare geolocation** (`request.cf.country`; EU/EEA/UK/CH → eu, else us).
+  Registry `app/lib/market/market.ts` (`MARKETS`, `MARKET_SOURCE`, `MARKET_CURRENCY`,
+  `EU_COUNTRIES`, `marketFromCountry`, `marketFromCookieHeader`) mirrors `i18n/locales.ts`.
+  Cookie chosen over URL because canonicals strip query and hreflang is a locale×path
+  matrix — a market URL dimension would bloat the SEO surface for a personalization pref.
+- **Switch**: JS-free `MarketSwitcher` in `public/layout.tsx` posts to a new
+  `app/routes/market.ts` action (`Set-Cookie` + redirect back). SEO unchanged.
+- **Query layer**: `getPriceMovers` / `getSetBySlug` / `listPokedexAggregates` +
+  `getCardPriceHistory` (card page + `api/v1.cards.$id`) + `api/v1.price-movers` take a
+  `market` and switch `source`/`currency` (was hardcoded `tcgplayer`/`USD`). Card page:
+  US = per-variant USD table + USD chart; EU = single **Cardmarket** row (Trend / Low /
+  Avg. sell) + EUR chart, headers relabelled. Cross-market reference line shows the other
+  market's headline. **PSA graded stays USD** in both (global eBay-US market) with a note —
+  no FX conversion. Cardmarket has no variants/mid/high, hence the simpler EU block.
+- **Edge caching**: market-sensitive public routes (card, price-movers, set detail, pokedex)
+  switched from shared `s-maxage` to **`private`** cache-control — a URL-keyed shared cache
+  would leak one market's prices across visitors. Browsers still cache per-user; Googlebot
+  (no cookie) gets the US default, matching canonical. Cost = more Worker invocations on a
+  young low-traffic site (acceptable).
+- **Scope v1 = public pages only.** Portfolio/collection valuation stays USD (mixing
+  currencies + purchase-currency P/L + USD-only graded = a separate future round). The
+  switcher lives only in the public layout, so `/app` is never ambiguous.
+- **Data**: no migration/re-sync — both TCGplayer USD and Cardmarket EUR (current + history)
+  already exist in `card_prices_current` / `card_price_history`. EU history is shallow
+  (grows forward) so EU movers/charts fill in over time. i18n +7 keys ×11.
+- Verified live (staging + prod): geo default (CZ IP → EU), cookie override both ways,
+  EU Cardmarket EUR table + PSA USD note, US unchanged, switch persists.

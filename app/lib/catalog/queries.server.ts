@@ -6,6 +6,7 @@
 import { and, asc, count, desc, eq, gte, like, lt, or, sql, type SQL } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
+import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { normalizeName } from "../seo/slug";
 
 export const CATALOG_PAGE_SIZE = 24;
@@ -275,7 +276,7 @@ export async function listSets(db: Database, params: SetListParams) {
   };
 }
 
-export async function getSetBySlug(db: Database, slug: string) {
+export async function getSetBySlug(db: Database, slug: string, market: Market = "us") {
   const set = await db.query.pokemonSets.findFirst({ where: eq(schema.pokemonSets.slug, slug) });
   if (!set) return null;
 
@@ -286,7 +287,7 @@ export async function getSetBySlug(db: Database, slug: string) {
       priceMinor: sql<number | null>`(
         SELECT p.normalized_price_minor FROM card_prices_current p
         WHERE p.card_id = ${schema.pokemonCards.id}
-          AND p.source = 'tcgplayer'
+          AND p.source = ${MARKET_SOURCE[market]} AND p.currency = ${MARKET_CURRENCY[market]}
         ORDER BY p.normalized_price_minor DESC LIMIT 1
       )`,
     })
@@ -359,6 +360,7 @@ export async function getPriceMovers(
   windowDays: 7 | 30,
   direction: "up" | "down",
   limit = 10,
+  market: Market = "us",
 ): Promise<PriceMover[]> {
   const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000).toISOString().slice(0, 10);
 
@@ -387,7 +389,7 @@ export async function getPriceMovers(
       WHERE h.recorded_date <= ${since}
     ) prev ON prev.card_id = c.card_id AND prev.source = c.source
           AND prev.variant = c.variant AND prev.currency = c.currency AND prev.rn = 1
-    WHERE c.source = 'tcgplayer' AND c.currency = 'USD'
+    WHERE c.source = ${MARKET_SOURCE[market]} AND c.currency = ${MARKET_CURRENCY[market]}
       AND prev.price_minor >= 100
       AND c.normalized_price_minor != prev.price_minor
     ORDER BY (CAST(c.normalized_price_minor - prev.price_minor AS REAL) / prev.price_minor)
@@ -443,7 +445,10 @@ export interface PokedexAggregate {
  * card (MAX across variants) so multi-variant cards don't skew the average;
  * AVG ignores unpriced cards, COUNT includes them.
  */
-export async function listPokedexAggregates(db: Database): Promise<Map<number, PokedexAggregate>> {
+export async function listPokedexAggregates(
+  db: Database,
+  market: Market = "us",
+): Promise<Map<number, PokedexAggregate>> {
   const rows = await db.all<{ dex: number; card_count: number; avg_minor: number | null }>(sql`
     SELECT je.value AS dex,
            COUNT(*) AS card_count,
@@ -452,7 +457,8 @@ export async function listPokedexAggregates(db: Database): Promise<Map<number, P
       SELECT k.id,
              k.national_pokedex_numbers_json AS dexes,
              (SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
-              WHERE p.card_id = k.id AND p.source = 'tcgplayer' AND p.currency = 'USD') AS price_minor
+              WHERE p.card_id = k.id AND p.source = ${MARKET_SOURCE[market]}
+                AND p.currency = ${MARKET_CURRENCY[market]}) AS price_minor
       FROM pokemon_cards k
       WHERE k.active = 1 AND k.national_pokedex_numbers_json IS NOT NULL
     ) kc

@@ -9,7 +9,7 @@ import {
   type ChartRange,
   type HistoryPoint,
 } from "~/components/history-chart";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import {
   bumpCardPopularity,
@@ -23,6 +23,7 @@ import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
+import { MARKET_CURRENCY, MARKET_SOURCE } from "~/lib/market/market";
 import { formatMinor } from "~/lib/money/decimal";
 import { breadcrumbJsonLd, canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
 
@@ -41,7 +42,9 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
   const rarityPart = card.rarity ? interpolate(t.metaRarityPart, { rarity: card.rarity }) : "";
   const pricePart =
     price !== null
-      ? interpolate(t.metaPricePart, { price: formatMinor(price, "USD", langTag) })
+      ? interpolate(t.metaPricePart, {
+          price: formatMinor(price, MARKET_CURRENCY[data.market], langTag),
+        })
       : "";
   return pageMeta({
     title: interpolate(t.metaTitle, {
@@ -63,13 +66,17 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers(_args: Route.HeadersArgs) {
-  return { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" };
+  // `private` (not shared/edge cache): the rendered market depends on the
+  // pk_market cookie, so a shared cache keyed only on the URL would leak one
+  // market's prices to visitors on the other. Browsers still cache per-user.
+  return { "Cache-Control": "private, max-age=300, stale-while-revalidate=3600" };
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env, ctx } = getCloudflare(context);
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
+  const market = getMarket(context);
   const detail = await getCardBySlug(db, params.slug);
   if (!detail) {
     throw new Response("Card not found", { status: 404 });
@@ -79,15 +86,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
 
   const [history, gradedHistoryPsa9, gradedHistoryPsa10] = await Promise.all([
-    getCardPriceHistory(db, detail.card.id, { source: "tcgplayer" }),
+    getCardPriceHistory(db, detail.card.id, { source: MARKET_SOURCE[market] }),
     getGradedPriceHistory(db, detail.card.id, "psa9"),
     getGradedPriceHistory(db, detail.card.id, "psa10"),
   ]);
 
-  const tcgplayerPrices = detail.prices.filter((p) => p.source === "tcgplayer");
+  const activePrices = detail.prices.filter((p) => p.source === MARKET_SOURCE[market]);
   const headlinePriceMinor =
-    tcgplayerPrices.length > 0
-      ? Math.max(...tcgplayerPrices.map((p) => p.normalizedPriceMinor))
+    activePrices.length > 0
+      ? Math.max(...activePrices.map((p) => p.normalizedPriceMinor))
       : null;
 
   // eBay Partner Network affiliate search link (US marketplace). Null when the
@@ -126,6 +133,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     ebayPsa10Url,
     ebayPrices,
     locale,
+    market,
     t: getDict(locale).cardDetail,
     c: getDict(locale).common,
     canonical: canonicalUrl(env.APP_URL, localePath(locale, `/cards/${detail.card.slug}`)),
@@ -185,6 +193,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
     ebayPrices,
     appUrl,
     locale,
+    market,
     t,
     c,
   } = loaderData;
@@ -197,17 +206,28 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
   const [range, setRange] = useState<ChartRange>("MAX");
   const fetcher = useFetcher();
 
+  // Active market: US = TCGplayer/USD (per-variant), EU = Cardmarket/EUR.
+  const isEu = market === "eu";
+  const marketCurrency = MARKET_CURRENCY[market];
   const tcgplayer = prices.filter((p) => p.source === "tcgplayer");
   const cardmarket = prices.filter((p) => p.source === "cardmarket");
+  const activeRows = isEu ? cardmarket : tcgplayer;
+  // Cardmarket publishes ONE value per card (duplicated across variants) → one row.
+  const cmRow = cardmarket[0] ?? null;
+  const euVariant = cmRow?.variant ?? "normal";
   const availableVariants = [...new Set(tcgplayer.map((p) => p.variant))];
 
-  // History-chart series: each raw print variant, plus PSA 9 / PSA 10 when we
-  // have graded data (current price or accumulated history). A "psa*" key uses
-  // graded history; anything else is a raw print variant.
+  // History-chart series. US: each raw print variant. EU: a single Cardmarket
+  // "Trend" series. Both add PSA 9 / PSA 10 (always USD, global graded market).
   const hasPsa9 = gradedHistoryPsa9.length > 0 || ebayPrices?.psa9 != null;
   const hasPsa10 = gradedHistoryPsa10.length > 0 || ebayPrices?.psa10 != null;
+  const rawSeries = isEu
+    ? cmRow
+      ? [{ key: "cm-trend", label: t.colTrend }]
+      : []
+    : availableVariants.map((v) => ({ key: v, label: variantLabel(v) }));
   const chartSeries: { key: string; label: string }[] = [
-    ...availableVariants.map((v) => ({ key: v, label: variantLabel(v) })),
+    ...rawSeries,
     ...(hasPsa9 ? [{ key: "psa9", label: "PSA 9" }] : []),
     ...(hasPsa10 ? [{ key: "psa10", label: "PSA 10" }] : []),
   ];
@@ -215,12 +235,17 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
 
   const today = new Date().toISOString().slice(0, 10);
   const sinceDate = rangeStartDate(range);
+  const isPsaChart = chartKey === "psa9" || chartKey === "psa10";
+  // PSA is always USD; raw series follow the active market currency.
+  const chartCurrency: "USD" | "EUR" = isPsaChart ? "USD" : marketCurrency;
   const rawHistory =
     chartKey === "psa9"
       ? gradedHistoryPsa9
       : chartKey === "psa10"
         ? gradedHistoryPsa10
-        : history.filter((h) => h.variant === chartKey);
+        : isEu
+          ? history.filter((h) => h.variant === euVariant)
+          : history.filter((h) => h.variant === chartKey);
   const chartPoints: HistoryPoint[] = carryForward(
     rawHistory
       .filter((h) => !sinceDate || h.recordedDate >= sinceDate)
@@ -308,9 +333,9 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             className="rounded-(--radius-card) border border-edge bg-surface p-5"
           >
             <h2 id="prices-heading" className="mb-3 font-semibold text-fg">
-              {t.pricesHeading}
+              {interpolate(t.pricesHeading, { currency: marketCurrency })}
             </h2>
-            {tcgplayer.length === 0 ? (
+            {activeRows.length === 0 ? (
               <p className="text-sm text-fg-muted">{t.pricesEmpty}</p>
             ) : (
               <div className="overflow-x-auto">
@@ -325,13 +350,13 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                         {t.colVariant}
                       </th>
                       <th scope="col" className="py-2 pe-4 text-end font-medium">
-                        {t.colMarket}
+                        {isEu ? t.colTrend : t.colMarket}
                       </th>
                       <th scope="col" className="py-2 pe-4 text-end font-medium">
                         {t.colLow}
                       </th>
                       <th scope="col" className="py-2 pe-4 text-end font-medium">
-                        {t.colMid}
+                        {isEu ? t.colAvgSell : t.colMid}
                       </th>
                       <th scope="col" className="py-2 text-end font-medium">
                         {t.colHigh}
@@ -339,19 +364,41 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                     </tr>
                   </thead>
                   <tbody>
-                    {tcgplayer.map((price) => (
-                      <tr key={price.variant} className="border-b border-edge/50">
-                        <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
-                          {variantLabel(price.variant)}
-                        </th>
-                        <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
-                          {money(price.normalizedPriceMinor)}
-                        </td>
-                        <td className="py-2 pe-4 text-end tabular-nums">{money(price.lowMinor)}</td>
-                        <td className="py-2 pe-4 text-end tabular-nums">{money(price.midMinor)}</td>
-                        <td className="py-2 text-end tabular-nums">{money(price.highMinor)}</td>
-                      </tr>
-                    ))}
+                    {isEu
+                      ? cmRow && (
+                          <tr className="border-b border-edge/50">
+                            <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
+                              {t.cardmarketRow}
+                            </th>
+                            <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
+                              {money(cmRow.trendMinor ?? cmRow.normalizedPriceMinor, "EUR")}
+                            </td>
+                            <td className="py-2 pe-4 text-end tabular-nums">
+                              {money(cmRow.lowMinor, "EUR")}
+                            </td>
+                            <td className="py-2 pe-4 text-end tabular-nums">
+                              {money(cmRow.averageSellMinor, "EUR")}
+                            </td>
+                            <td className="py-2 text-end tabular-nums">{money(null, "EUR")}</td>
+                          </tr>
+                        )
+                      : tcgplayer.map((price) => (
+                          <tr key={price.variant} className="border-b border-edge/50">
+                            <th scope="row" className="py-2 pe-4 text-start font-medium text-fg">
+                              {variantLabel(price.variant)}
+                            </th>
+                            <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
+                              {money(price.normalizedPriceMinor)}
+                            </td>
+                            <td className="py-2 pe-4 text-end tabular-nums">
+                              {money(price.lowMinor)}
+                            </td>
+                            <td className="py-2 pe-4 text-end tabular-nums">
+                              {money(price.midMinor)}
+                            </td>
+                            <td className="py-2 text-end tabular-nums">{money(price.highMinor)}</td>
+                          </tr>
+                        ))}
                     {(
                       [
                         ["PSA 9", ebayPrices?.psa9 ?? null, ebayPsa9Url],
@@ -397,54 +444,83 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 {ebayPrices?.psa9?.source === "sold" || ebayPrices?.psa10?.source === "sold"
                   ? t.psaSoldMedian
                   : t.psaFromEbay}
+                {isEu ? ` ${t.psaGlobalUsdNote}` : ""}
               </p>
             ) : null}
+            {/* Primary source attribution (active market) + tracking note. */}
             <p className="mt-3 text-xs text-fg-faint">
-              {t.sourceTcgplayer}
-              {tcgplayer[0]?.sourceUpdatedAt
-                ? interpolate(t.sourceUpdated, { date: tcgplayer[0].sourceUpdatedAt })
+              {isEu ? t.sourceCardmarket : t.sourceTcgplayer}
+              {(isEu ? cmRow?.sourceUpdatedAt : tcgplayer[0]?.sourceUpdatedAt)
+                ? interpolate(t.sourceUpdated, {
+                    date: (isEu ? cmRow?.sourceUpdatedAt : tcgplayer[0]?.sourceUpdatedAt) as string,
+                  })
                 : ""}
               .
               {trackingSince
                 ? interpolate(t.trackedSince, { date: trackingSince })
                 : t.trackingStarts}
-              {card.tcgplayerUrl ? (
+              {(isEu ? card.cardmarketUrl : card.tcgplayerUrl) ? (
                 <>
                   {" "}
                   <a
-                    href={card.tcgplayerUrl}
+                    href={(isEu ? card.cardmarketUrl : card.tcgplayerUrl) as string}
                     rel="noopener noreferrer nofollow"
                     target="_blank"
                     className="text-accent hover:underline"
                   >
-                    {t.viewOnTcgplayer}
+                    {isEu ? t.viewOnCardmarket : t.viewOnTcgplayer}
                   </a>
                 </>
               ) : null}
             </p>
-            {cardmarket.length > 0 ? (
-              <p className="mt-2 text-xs text-fg-muted">
-                {interpolate(t.cardmarketTrend, {
-                  price: money(cardmarket[0].normalizedPriceMinor, "EUR"),
-                })}
-                {cardmarket[0].sourceUpdatedAt
-                  ? interpolate(t.sourceUpdated, { date: cardmarket[0].sourceUpdatedAt })
-                  : ""}
-                {card.cardmarketUrl ? (
-                  <>
-                    {" "}
-                    <a
-                      href={card.cardmarketUrl}
-                      rel="noopener noreferrer nofollow"
-                      target="_blank"
-                      className="text-accent hover:underline"
-                    >
-                      {t.viewOnCardmarket}
-                    </a>
-                  </>
-                ) : null}
-              </p>
-            ) : null}
+            {/* Secondary cross-market reference (the other market's headline). */}
+            {isEu
+              ? tcgplayer.length > 0 && (
+                  <p className="mt-2 text-xs text-fg-muted">
+                    {interpolate(t.tcgplayerPrice, {
+                      price: money(
+                        Math.max(...tcgplayer.map((p) => p.normalizedPriceMinor)),
+                        "USD",
+                      ),
+                    })}
+                    {card.tcgplayerUrl ? (
+                      <>
+                        {" "}
+                        <a
+                          href={card.tcgplayerUrl}
+                          rel="noopener noreferrer nofollow"
+                          target="_blank"
+                          className="text-accent hover:underline"
+                        >
+                          {t.viewOnTcgplayer}
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                )
+              : cardmarket.length > 0 && (
+                  <p className="mt-2 text-xs text-fg-muted">
+                    {interpolate(t.cardmarketTrend, {
+                      price: money(cardmarket[0].normalizedPriceMinor, "EUR"),
+                    })}
+                    {cardmarket[0].sourceUpdatedAt
+                      ? interpolate(t.sourceUpdated, { date: cardmarket[0].sourceUpdatedAt })
+                      : ""}
+                    {card.cardmarketUrl ? (
+                      <>
+                        {" "}
+                        <a
+                          href={card.cardmarketUrl}
+                          rel="noopener noreferrer nofollow"
+                          target="_blank"
+                          className="text-accent hover:underline"
+                        >
+                          {t.viewOnCardmarket}
+                        </a>
+                      </>
+                    ) : null}
+                  </p>
+                )}
           </section>
 
           {/* Add to collection / wishlist — directly under the market prices table */}
@@ -549,6 +625,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             variant: chartSeries.find((s) => s.key === chartKey)?.label ?? "",
           })}
           points={chartPoints}
+          currency={chartCurrency}
           range={range}
           onRangeChange={setRange}
           emptyMessage={t.historyEmpty}

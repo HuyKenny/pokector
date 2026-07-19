@@ -1,5 +1,7 @@
 import { createContext, type RouterContextProvider } from "react-router";
 
+import type { Market } from "./market/market";
+
 /**
  * Typed React Router v8 contexts provided by the Worker fetch handler
  * (workers/app.ts). Loaders/actions read them via `context.get(...)`.
@@ -11,6 +13,10 @@ export interface CloudflareContextValue {
 }
 
 export const cloudflareContext = createContext<CloudflareContextValue>();
+
+/** Active price market (us=TCGplayer/USD, eu=Cardmarket/EUR) — resolved per
+ * request from the market cookie, falling back to Cloudflare geolocation. */
+export const marketContext = createContext<Market>();
 
 /** Correlation ID attached to logs and error responses. */
 export const requestIdContext = createContext<string>();
@@ -25,4 +31,8 @@ export function getCloudflare(context: Readonly<RouterContextProvider>): Cloudfl
 
 export function getRequestId(context: Readonly<RouterContextProvider>): string {
   return context.get(requestIdContext);
+}
+
+export function getMarket(context: Readonly<RouterContextProvider>): Market {
+  return context.get(marketContext);
 }

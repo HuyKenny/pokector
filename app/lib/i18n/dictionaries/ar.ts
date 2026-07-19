@@ -39,6 +39,7 @@ const ar: Dict = {
     footerDisclaimer: "إخلاء المسؤولية",
     footerRss: "RSS",
     languageLabel: "اللغة",
+    marketLabel: "سوق الأسعار",
     disclaimer:
       "‏Pokector أداة مستقلة لتتبّع المجموعات، وليست تابعة لـ Nintendo أو The Pokémon Company أو Game Freak أو Creatures أو TCGplayer أو Cardmarket أو Pokémon TCG API، ولا معتمدة أو مموَّلة أو مرتبطة بها رسميًا. إن Pokémon وأسماء شخصيات Pokémon علامات تجارية لشركة Nintendo. صور البطاقات وبيانات الكتالوج مقدَّمة من مصادرها المعنية. الأسعار المعروضة تقديرات للبطاقات غير المصنّفة وليست نصيحة مالية.",
   },
@@ -141,6 +142,12 @@ const ar: Dict = {
     factSetReleased: "صدرت المجموعة",
     factRegulationMark: "علامة التنظيم",
     pricesHeading: "أسعار السوق الحالية (بالدولار)",
+    colTrend: "الاتجاه",
+    colAvgSell: "متوسط البيع",
+    cardmarketRow: "Cardmarket",
+    sourceCardmarket: "المصدر: بيانات أسعار Cardmarket",
+    tcgplayerPrice: "TCGplayer (USD): {price}",
+    psaGlobalUsdNote: "أسعار PSA من سوق التقييم العالمي (eBay US)، بالدولار الأمريكي.",
     pricesEmpty:
       "لا يتوفّر حاليًا سعر سوقي لهذه البطاقة. تبقى بلا سعر — لا يستبدل Pokector ذلك بتخمين أبدًا.",
     colVariant: "النسخة",

@@ -38,6 +38,7 @@ const ru: Dict = {
     footerDisclaimer: "Правовая информация",
     footerRss: "RSS",
     languageLabel: "Язык",
+    marketLabel: "Ценовой рынок",
     disclaimer:
       "Pokector — независимый трекер коллекций, не связанный, не одобренный, не спонсируемый и официально не связанный с Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket или Pokémon TCG API. Pokémon и имена персонажей Pokémon являются товарными знаками Nintendo. Изображения карт и данные каталога предоставлены соответствующими источниками. Указанные цены являются оценками для неградированных карт и не являются финансовой рекомендацией.",
   },
@@ -139,7 +140,13 @@ const ru: Dict = {
     factArtist: "Иллюстратор",
     factSetReleased: "Сет выпущен",
     factRegulationMark: "Знак регулирования",
-    pricesHeading: "Текущие рыночные цены (USD)",
+    pricesHeading: "Текущие рыночные цены ({currency})",
+    colTrend: "Тренд",
+    colAvgSell: "Ср. продажа",
+    cardmarketRow: "Cardmarket",
+    sourceCardmarket: "Источник: ценовые данные Cardmarket",
+    tcgplayerPrice: "TCGplayer (USD): {price}",
+    psaGlobalUsdNote: "Цены PSA — с глобального рынка грейдинга (eBay US), в USD.",
     pricesEmpty:
       "Для этой карты сейчас нет доступной рыночной цены. Она остаётся без цены — Pokector никогда не подставляет догадку.",
     colVariant: "Вариант",

@@ -1,12 +1,13 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/price-movers";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getPriceMovers, type PriceMover } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, type Locale, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
+import { MARKET_CURRENCY, type Currency } from "~/lib/market/market";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
 import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
@@ -20,18 +21,21 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers(_args: Route.HeadersArgs) {
-  return { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=7200" };
+  // `private`: movers depend on the market cookie (US=TCGplayer/USD vs
+  // EU=Cardmarket/EUR), so a URL-keyed shared cache would leak across markets.
+  return { "Cache-Control": "private, max-age=600, stale-while-revalidate=7200" };
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
+  const market = getMarket(context);
   const [up7, down7, up30, down30] = await Promise.all([
-    getPriceMovers(db, 7, "up"),
-    getPriceMovers(db, 7, "down"),
-    getPriceMovers(db, 30, "up"),
-    getPriceMovers(db, 30, "down"),
+    getPriceMovers(db, 7, "up", 10, market),
+    getPriceMovers(db, 7, "down", 10, market),
+    getPriceMovers(db, 30, "up", 10, market),
+    getPriceMovers(db, 30, "down", 10, market),
   ]);
   return {
     up7,
@@ -39,6 +43,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     up30,
     down30,
     locale,
+    currency: MARKET_CURRENCY[market],
     t: getDict(locale).priceMovers,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
@@ -47,7 +52,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
 }
 
 export default function PriceMovers({ loaderData }: Route.ComponentProps) {
-  const { up7, down7, up30, down30, locale, t } = loaderData;
+  const { up7, down7, up30, down30, locale, currency, t } = loaderData;
   const lp = useLocalePath();
   const hasAny = up7.length + down7.length + up30.length + down30.length > 0;
 
@@ -81,20 +86,36 @@ export default function PriceMovers({ loaderData }: Route.ComponentProps) {
         </div>
       ) : (
         <div className="grid gap-8 lg:grid-cols-2">
-          <MoverSection title={t.gainers7} movers={up7} direction="up" locale={locale} t={t} />
+          <MoverSection
+            title={t.gainers7}
+            movers={up7}
+            direction="up"
+            locale={locale}
+            currency={currency}
+            t={t}
+          />
           <MoverSection
             title={t.decliners7}
             movers={down7}
             direction="down"
             locale={locale}
+            currency={currency}
             t={t}
           />
-          <MoverSection title={t.gainers30} movers={up30} direction="up" locale={locale} t={t} />
+          <MoverSection
+            title={t.gainers30}
+            movers={up30}
+            direction="up"
+            locale={locale}
+            currency={currency}
+            t={t}
+          />
           <MoverSection
             title={t.decliners30}
             movers={down30}
             direction="down"
             locale={locale}
+            currency={currency}
             t={t}
           />
         </div>
@@ -108,12 +129,14 @@ function MoverSection({
   movers,
   direction,
   locale,
+  currency,
   t,
 }: {
   title: string;
   movers: PriceMover[];
   direction: "up" | "down";
   locale: Locale;
+  currency: Currency;
   t: { sectionEmpty: string };
 }) {
   const langTag = LANG_TAGS[locale];
@@ -153,13 +176,13 @@ function MoverSection({
                 </div>
                 <div className="text-end">
                   <p className="text-sm font-semibold text-fg">
-                    {formatMinor(mover.currentMinor, "USD", langTag)}
+                    {formatMinor(mover.currentMinor, currency, langTag)}
                   </p>
                   <p
                     className={`text-xs font-medium ${direction === "up" ? "text-positive" : "text-negative"}`}
                   >
                     {formatPercent(mover.changePercent)} (
-                    {formatMinor(Math.abs(mover.changeMinor), "USD", langTag)})
+                    {formatMinor(Math.abs(mover.changeMinor), currency, langTag)})
                   </p>
                 </div>
               </Link>

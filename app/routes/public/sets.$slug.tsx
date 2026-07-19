@@ -2,9 +2,10 @@ import { data as dataResponse, Link, useSearchParams } from "react-router";
 
 import type { Route } from "./+types/sets.$slug";
 import { optionalUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
@@ -48,7 +49,7 @@ export function headers({ loaderHeaders }: Route.HeadersArgs) {
   // loader sets the right policy via data() headers.
   return {
     "Cache-Control":
-      loaderHeaders.get("Cache-Control") ?? "public, s-maxage=600, stale-while-revalidate=3600",
+      loaderHeaders.get("Cache-Control") ?? "private, max-age=300, stale-while-revalidate=3600",
   };
 }
 
@@ -56,7 +57,8 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
-  const data = await getSetBySlug(db, params.slug);
+  const market = getMarket(context);
+  const data = await getSetBySlug(db, params.slug, market);
   if (!data) throw new Response("Set not found", { status: 404 });
 
   const session = await optionalUser(context, request);
@@ -64,6 +66,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
   const payload = {
     locale,
+    currency: MARKET_CURRENCY[market],
     t: getDict(locale).setDetail,
     c: getDict(locale).common,
     set: {
@@ -98,9 +101,10 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
   return dataResponse(payload, {
     headers: {
+      // `private` even when anonymous: the priced values depend on the market cookie.
       "Cache-Control": progress
         ? "private, no-store"
-        : "public, s-maxage=600, stale-while-revalidate=3600",
+        : "private, max-age=300, stale-while-revalidate=3600",
     },
   });
 }
@@ -108,12 +112,11 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 const RARITY_GROUPS = ["Common", "Uncommon", "Rare"];
 
 export default function SetDetail({ loaderData }: Route.ComponentProps) {
-  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl, locale, t, c } =
+  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl, locale, currency, t, c } =
     loaderData;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
-  const money = (minor: number, currency: "USD" | "EUR" = "USD") =>
-    formatMinor(minor, currency, langTag);
+  const money = (minor: number, cur: "USD" | "EUR" = currency) => formatMinor(minor, cur, langTag);
   const [searchParams, setSearchParams] = useSearchParams();
   const ownedFilter = searchParams.get("show"); // "owned" | "missing" | null
   const rarityFilter = searchParams.get("rarity");

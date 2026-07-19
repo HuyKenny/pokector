@@ -38,6 +38,7 @@ const cs: Dict = {
     footerDisclaimer: "Právní upozornění",
     footerRss: "RSS",
     languageLabel: "Jazyk",
+    marketLabel: "Trh cen",
     disclaimer:
       "Pokector je nezávislý nástroj pro sledování sbírek a není nijak spojen, podporován, sponzorován ani oficiálně propojen se společnostmi Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket ani s Pokémon TCG API. Pokémon a jména postav Pokémon jsou ochranné známky společnosti Nintendo. Obrázky karet a katalogová data pocházejí z příslušných zdrojů. Zobrazené ceny jsou odhady pro negradované karty a nejsou finančním poradenstvím.",
   },
@@ -139,7 +140,13 @@ const cs: Dict = {
     factArtist: "Ilustrátor",
     factSetReleased: "Set vydán",
     factRegulationMark: "Regulační značka",
-    pricesHeading: "Aktuální tržní ceny (USD)",
+    pricesHeading: "Aktuální tržní ceny ({currency})",
+    colTrend: "Trend",
+    colAvgSell: "Prům. prodej",
+    cardmarketRow: "Cardmarket",
+    sourceCardmarket: "Zdroj: cenová data Cardmarket",
+    tcgplayerPrice: "TCGplayer (USD): {price}",
+    psaGlobalUsdNote: "Ceny PSA jsou z globálního graded trhu (eBay US), v USD.",
     pricesEmpty:
       "Pro tuto kartu momentálně není k dispozici žádná tržní cena. Zůstává bez ceny — Pokector nikdy nenahrazuje odhadem.",
     colVariant: "Varianta",

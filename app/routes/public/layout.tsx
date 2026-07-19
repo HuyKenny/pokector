@@ -3,6 +3,7 @@ import { Form, Link, NavLink, Outlet, useLocation, useNavigation } from "react-r
 import type { Route } from "./+types/layout";
 import { PokectorWordmark } from "~/components/brand";
 import { optionalUser } from "~/lib/auth/guards.server";
+import { getMarket } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import {
   LOCALE_NAMES,
@@ -12,16 +13,17 @@ import {
   stripLocalePrefix,
 } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
+import { MARKET_CURRENCY, MARKET_FLAG, MARKETS, type Market } from "~/lib/market/market";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const session = await optionalUser(context, request);
   const locale = resolveLocale(params.locale);
   const d = getDict(locale);
-  return { signedIn: session !== null, locale, t: d.layout };
+  return { signedIn: session !== null, locale, market: getMarket(context), t: d.layout };
 }
 
 export default function PublicLayout({ loaderData }: Route.ComponentProps) {
-  const { signedIn, locale, t } = loaderData;
+  const { signedIn, locale, market, t } = loaderData;
   const navigation = useNavigation();
   const lp = useLocalePath();
   const location = useLocation();
@@ -82,6 +84,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
                 className="w-44 rounded-lg border border-edge bg-canvas px-3 py-2 text-sm text-fg placeholder:text-fg-faint"
               />
             </Form>
+            <MarketSwitcher current={market} redirectTo={location.pathname} label={t.marketLabel} />
             <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
             {signedIn ? (
               <Link
@@ -187,6 +190,57 @@ function LanguageSwitcher({
             >
               {LOCALE_NAMES[l]}
             </a>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Market (price world) switcher — mirrors LanguageSwitcher but persists a
+ * cookie via a JS-free form POST to /market instead of changing the URL, so
+ * SEO/canonical stay untouched. Each option carries the source + currency. */
+const MARKET_META: Record<Market, { source: string; label: string }> = {
+  us: { source: "TCGplayer", label: "USD" },
+  eu: { source: "Cardmarket", label: "EUR" },
+};
+
+function MarketSwitcher({
+  current,
+  redirectTo,
+  label,
+}: {
+  current: Market;
+  redirectTo: string;
+  label: string;
+}) {
+  return (
+    <details className="relative">
+      <summary
+        aria-label={label}
+        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
+      >
+        <span aria-hidden="true">{MARKET_FLAG[current]}</span>
+        <span>{MARKET_CURRENCY[current]}</span>
+      </summary>
+      <ul className="absolute end-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+        {MARKETS.map((m) => (
+          <li key={m}>
+            <form method="post" action="/market">
+              <input type="hidden" name="market" value={m} />
+              <input type="hidden" name="redirectTo" value={redirectTo} />
+              <button
+                type="submit"
+                aria-current={m === current ? "true" : undefined}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                  m === current ? "font-semibold text-accent" : "text-fg"
+                }`}
+              >
+                <span aria-hidden="true">{MARKET_FLAG[m]}</span>
+                <span>{MARKET_META[m].source}</span>
+                <span className="ms-auto text-xs text-fg-faint">{MARKET_META[m].label}</span>
+              </button>
+            </form>
           </li>
         ))}
       </ul>

@@ -48,6 +48,9 @@ export default [
     route("reset-password", "routes/auth/reset-password.tsx", { id: "l10n/auth/reset-password" }),
   ]),
 
+  // ── Preferences ────────────────────────────────────────────────────────────
+  route("market", "routes/market.ts"), // POST: switch price market (cookie)
+
   // ── SEO / machine endpoints ────────────────────────────────────────────────
   route("health", "routes/health.ts"),
   route("robots.txt", "routes/seo/robots.ts"),

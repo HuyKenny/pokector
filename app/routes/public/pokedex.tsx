@@ -3,12 +3,13 @@ import { Link } from "react-router";
 
 import type { Route } from "./+types/pokedex";
 import { listPokedexAggregates } from "~/lib/catalog/queries.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 import { formatMinor } from "~/lib/money/decimal";
 import { generationLabel } from "~/lib/pokedex/generations";
 import { generationOf, GENERATION_MAX, SPECIES } from "~/lib/pokedex/species";
@@ -26,14 +27,16 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 export function headers(_args: Route.HeadersArgs) {
   // Global data only; personal overlay (owned/favourites) is fetched client-side
   // from /api/v1/pokedex/me so this stays edge-cacheable for everyone.
-  return { "Cache-Control": "public, s-maxage=3600, stale-while-revalidate=86400" };
+  // `private`: the average prices depend on the market cookie (USD vs EUR).
+  return { "Cache-Control": "private, max-age=1800, stale-while-revalidate=86400" };
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const locale = resolveLocale(params.locale);
   const db = createDb(env.DB);
-  const agg = await listPokedexAggregates(db);
+  const market = getMarket(context);
+  const agg = await listPokedexAggregates(db, market);
 
   const generations = GENERATION_MAX.map((_, i) => i + 1).map((gen) => ({
     gen,
@@ -51,6 +54,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   return {
     generations,
     locale,
+    currency: MARKET_CURRENCY[market],
     t: getDict(locale).pokedex,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
@@ -62,7 +66,7 @@ type Item = { dex: number; name: string; cardCount: number; avgPriceMinor: numbe
 type Overlay = { signedIn: boolean; owned: Record<number, number>; favorites: number[] };
 
 export default function Pokedex({ loaderData }: Route.ComponentProps) {
-  const { generations, locale, t, c } = loaderData;
+  const { generations, locale, currency, t, c } = loaderData;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
 
@@ -274,7 +278,7 @@ export default function Pokedex({ loaderData }: Route.ComponentProps) {
                             : interpolate(t.cardsCount, { count: p.cardCount })}
                       </span>
                       <span className="text-sm font-semibold tabular-nums text-fg">
-                        {formatMinor(p.avgPriceMinor, "USD", langTag)}
+                        {formatMinor(p.avgPriceMinor, currency, langTag)}
                       </span>
                     </Link>
                   </li>

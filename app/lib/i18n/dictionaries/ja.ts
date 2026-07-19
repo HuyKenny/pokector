@@ -38,6 +38,7 @@ const ja: Dict = {
     footerDisclaimer: "免責事項",
     footerRss: "RSS",
     languageLabel: "言語",
+    marketLabel: "価格市場",
     disclaimer:
       "Pokector は独立したコレクション管理ツールであり、Nintendo、The Pokémon Company、Game Freak、Creatures、TCGplayer、Cardmarket、Pokémon TCG API とは提携・承認・後援・公式な関連のいずれもありません。Pokémon および Pokémon のキャラクター名は Nintendo の商標です。カード画像とカタログデータはそれぞれの提供元によるものです。表示価格は未鑑定カードの推定値であり、金融アドバイスではありません。",
   },
@@ -139,7 +140,13 @@ const ja: Dict = {
     factArtist: "イラストレーター",
     factSetReleased: "セット発売",
     factRegulationMark: "レギュレーションマーク",
-    pricesHeading: "現在の市場価格（USD）",
+    pricesHeading: "現在の市場価格（{currency}）",
+    colTrend: "トレンド",
+    colAvgSell: "平均販売",
+    cardmarketRow: "Cardmarket",
+    sourceCardmarket: "出典: Cardmarket 価格データ",
+    tcgplayerPrice: "TCGplayer（USD）: {price}",
+    psaGlobalUsdNote: "PSA価格はグローバルなグレード市場（eBay US）で、USD表示です。",
     pricesEmpty:
       "このカードの市場価格は現在利用できません。価格なしのままです——Pokector が推測で代用することは決してありません。",
     colVariant: "バリアント",

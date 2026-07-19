@@ -38,6 +38,7 @@ const vi: Dict = {
     footerDisclaimer: "Tuyên bố miễn trừ",
     footerRss: "RSS",
     languageLabel: "Ngôn ngữ",
+    marketLabel: "Thị trường giá",
     disclaimer:
       "Pokector là công cụ theo dõi bộ sưu tập độc lập và không liên kết, không được chứng thực, tài trợ hay kết nối chính thức với Nintendo, The Pokémon Company, Game Freak, Creatures, TCGplayer, Cardmarket hay Pokémon TCG API. Pokémon và tên các nhân vật Pokémon là thương hiệu của Nintendo. Hình ảnh thẻ bài và dữ liệu danh mục do các nguồn tương ứng cung cấp. Giá hiển thị là ước tính cho thẻ chưa chấm điểm và không phải là lời khuyên tài chính.",
   },
@@ -139,7 +140,13 @@ const vi: Dict = {
     factArtist: "Họa sĩ",
     factSetReleased: "Bộ thẻ phát hành",
     factRegulationMark: "Dấu quy định",
-    pricesHeading: "Giá thị trường hiện tại (USD)",
+    pricesHeading: "Giá thị trường hiện tại ({currency})",
+    colTrend: "Xu hướng",
+    colAvgSell: "Bán TB",
+    cardmarketRow: "Cardmarket",
+    sourceCardmarket: "Nguồn: dữ liệu giá Cardmarket",
+    tcgplayerPrice: "TCGplayer (USD): {price}",
+    psaGlobalUsdNote: "Giá PSA từ thị trường thẻ graded toàn cầu (eBay US), theo USD.",
     pricesEmpty:
       "Hiện chưa có giá thị trường cho thẻ này. Thẻ vẫn để trống giá — Pokector không bao giờ thay bằng phỏng đoán.",
     colVariant: "Phiên bản",
