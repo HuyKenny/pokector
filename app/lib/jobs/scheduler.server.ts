@@ -24,6 +24,7 @@ import { handleImportApply } from "../csv/import.server";
 import { handleAlertsEvaluate } from "./handlers/alerts.server";
 import { handleEbayGradedSeed } from "./handlers/ebay-seed.server";
 import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
+import { handleSubscriptionSync } from "./handlers/subscription.server";
 import {
   claimNextJob,
   completeJob,
@@ -55,6 +56,7 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   alerts_evaluate: handleAlertsEvaluate,
   import_apply: handleImportApply,
   ebay_graded_seed: handleEbayGradedSeed,
+  subscription_sync: handleSubscriptionSync,
 };
 
 export function registerJobHandler(type: SyncJobType, handler: JobHandler): void {

@@ -12,6 +12,7 @@ const TRANSLATED_PATHS = [
   "/pokedex",
   "/pokemon-card-collectors",
   "/pokemon-card-grading-calculator",
+  "/pricing",
 ];
 const EN_ONLY_PATHS = [
   "/methodology",

@@ -39,6 +39,11 @@
     "LEGAL_CONTACT_EMAIL": "info@pokector.com",
     "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
     "LEGAL_OPERATOR_ID": "IČO 07876823",
+    // Stripe recurring Price IDs (public, per-env: TEST in dev/staging, LIVE in
+    // production). Replace the placeholders with the IDs from your Stripe products.
+    // The secret key + webhook secret are Worker SECRETS (see docs/SECRETS.md).
+    "STRIPE_PRICE_MONTHLY": "price_test_replace_me_monthly",
+    "STRIPE_PRICE_YEARLY": "price_test_replace_me_yearly",
   },
   "d1_databases": [
     {
@@ -89,6 +94,9 @@
         "LEGAL_CONTACT_EMAIL": "info@pokector.com",
         "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
         "LEGAL_OPERATOR_ID": "IČO 07876823",
+        // Stripe TEST-mode recurring Price IDs for staging.
+        "STRIPE_PRICE_MONTHLY": "price_test_replace_me_monthly",
+        "STRIPE_PRICE_YEARLY": "price_test_replace_me_yearly",
       },
       "d1_databases": [
         {
@@ -142,6 +150,9 @@
         "LEGAL_CONTACT_EMAIL": "info@pokector.com",
         "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
         "LEGAL_OPERATOR_ID": "IČO 07876823",
+        // Stripe LIVE-mode recurring Price IDs for production.
+        "STRIPE_PRICE_MONTHLY": "price_live_replace_me_monthly",
+        "STRIPE_PRICE_YEARLY": "price_live_replace_me_yearly",
       },
       "d1_databases": [
         {

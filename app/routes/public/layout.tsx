@@ -8,6 +8,9 @@ import { createDb } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { localePath, resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
+import { isPremium } from "~/lib/billing/entitlement.server";
+import { schema } from "~/lib/db/index.server";
+import { eq } from "drizzle-orm";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const session = await optionalUser(context, request);
@@ -15,11 +18,25 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   // Signed-in visitors see the account menu + notifications bell even on public
   // pages, so the header is identical everywhere.
-  const unread = session ? await unreadCount(createDb(env.DB), session.user.id) : 0;
+  const db = createDb(env.DB);
+  let unread = 0;
+  let premium = false;
+  if (session) {
+    const [count, profile] = await Promise.all([
+      unreadCount(db, session.user.id),
+      db.query.userProfiles.findFirst({
+        where: eq(schema.userProfiles.userId, session.user.id),
+        columns: { premiumUntil: true },
+      }),
+    ]);
+    unread = count;
+    premium = isPremium(profile);
+  }
   return {
     signedIn: session !== null,
     isAdmin: session?.user.role === "admin",
     unread,
+    premium,
     locale,
     market: getMarket(context),
     t: getDict(locale).layout,
@@ -27,7 +44,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 }
 
 export default function PublicLayout({ loaderData }: Route.ComponentProps) {
-  const { signedIn, isAdmin, unread, locale, market, t } = loaderData;
+  const { signedIn, isAdmin, unread, premium, locale, market, t } = loaderData;
   const navigation = useNavigation();
   const location = useLocation();
   // Unprefixed path so the language switcher can point at the same page in
@@ -52,6 +69,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
         barePath={barePath}
         currentPath={location.pathname}
         inApp={false}
+        premium={premium}
         t={t}
       />
 
@@ -89,6 +107,9 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
                 className="hover:text-fg"
               >
                 {t.footerGrading}
+              </Link>
+              <Link to={localePath(locale, "/pricing")} className="hover:text-fg">
+                {t.navPricing}
               </Link>
             </nav>
             {/* Resources: About, legal, blog, RSS (English-only pages). */}

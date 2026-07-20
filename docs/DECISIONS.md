@@ -490,3 +490,47 @@ tracker (800), collection tracker (400), **price tracker (TP 93k)**, tracker app
 Verified e2e (staging + prod, cache purged): Product/Organization/FAQ JSON-LD live,
 absolute branded OG, card-sitemap hreflang, both landings 200 in EN + `/cs/…`, footer
 hubs, 3 posts indexed. typecheck/lint/**101 tests** green (i18n parity across 11).
+
+### D28. Pokector Pro — subscription billing (Stripe), Phase 1 MVP (owner 2026-07-20)
+
+A competitor gates a Premium tier behind mostly organizational features. Pokector already
+gives most of those away free, so Pro is positioned **"invest smarter"** (scale + market
+intelligence), not "organize more". Confirmed: match competitor pricing (~$3.99/mo, ~$40/yr,
+set in Stripe); Phase-1 MVP; no Discord.
+
+- **Free vs Pro split** — the whole collection stays **free to track** (a marketing win). Pro
+  meters power-user scale: binders 3→∞, wishlist 100→2000, active alerts 3→∞, graded cards
+  10→∞, pinned sets 1→∞, portfolio history 30d→full, plus the Pro badge. Kept **free**
+  (deliberately not paywalled, unlike the competitor): grading calculator, price movers,
+  cost-to-completion, CSV/JSON export, realized+unrealized P/L. **Nothing existing users have
+  is clawed back** — over-cap data is grandfathered (reads stay; only new *adds* are blocked
+  with an `upgrade` hint on the existing `{code:"limit"}` 422).
+- **Architecture** — no `stripe-node` SDK. Raw-`fetch` Stripe client
+  (`app/lib/billing/stripe.server.ts`, form-encoded like the eBay token call) + **hosted**
+  Checkout + Customer Portal (offsite redirects → no CSP change, minimal PCI, no publishable
+  key needed). Webhook (`routes/api/stripe-webhook.ts`) reads the raw body, verifies HMAC-SHA256
+  via WebCrypto (mirrors the eBay digest idiom), then **enqueues `subscription_sync` keyed by the
+  Stripe event id** (queue dedupe = idempotency) and acks 200. The job
+  (`jobs/handlers/subscription.server.ts`) fetches the authoritative subscription and writes the
+  entitlement cache onto `userProfiles`.
+- **Entitlement** — migration `0009` adds `plan / planStatus / planInterval / stripeCustomerId /
+  stripeSubscriptionId / premiumUntil` to `userProfiles`. `isPremium` = `premiumUntil > now`
+  (access kept through the paid period after cancel). `limitsFor(plan)` in `app/lib/limits.ts`
+  (LIMITS kept for non-tiered abuse caps); gating threaded into the existing count-check choke
+  points via `getUserPlan(db, userId)`.
+- **UI** — public **/pricing** (localized ×11, in `:locale` tree + nav + footer +
+  `sitemap-static`): Free-vs-Pro table, monthly/yearly toggle, FAQPage; signed-out CTA →
+  register-then-checkout. **/app/billing** (English, `noindex`): checkout (free) + Customer
+  Portal (pro). Header: Pro badge + "Upgrade to Pro" (layout dict, ×11). App-area billing UI
+  stays English (app is English-only).
+- **Config/secrets** — `STRIPE_SECRET_KEY` + `STRIPE_WEBHOOK_SECRET` are Worker secrets
+  (`app/env.d.ts`, degraded-mode optional); `STRIPE_PRICE_MONTHLY/YEARLY` are non-secret
+  `wrangler.jsonc` vars (per-env, placeholder `price_*_replace_me_*`). Absent key → pricing page
+  still renders, checkout/portal disabled (honest degraded mode). **The live `sk_live` key
+  pasted in chat is compromised → owner rolls it; keys never touch code/git.**
+
+typecheck/lint/**111 tests** green (i18n parity ×11); build clean. Migration applied + deployed
+to **staging** (billing degraded there w/o test keys; pricing/gating verified live). **Not on
+production yet** — pending owner Stripe setup (roll key, create Pro product + monthly/yearly
+prices, set secrets + price-ID vars, add webhook endpoint), because activating the free-tier caps
+before Pro is purchasable would limit existing users with no upgrade path.

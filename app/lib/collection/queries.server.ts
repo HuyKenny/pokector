@@ -3,9 +3,10 @@
  * ownership is enforced here, not in routes (SPEC §7/§22 BOLA defense).
  */
 
-import { and, asc, count, desc, eq, inArray, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, inArray, ne, sql, type SQL } from "drizzle-orm";
 
-import { LIMITS } from "../limits";
+import { LIMITS, limitResponse, limitsFor } from "../limits";
+import { getUserPlan } from "../billing/entitlement.server";
 import { schema, type Database } from "../db/index.server";
 import { invalidateProgressForCard } from "../sets/progress.server";
 import { bumpTrackedCounts } from "./tracked.server";
@@ -133,13 +134,22 @@ export async function addEntry(db: Database, userId: string, input: EntryInput) 
     .from(schema.collectionEntries)
     .where(eq(schema.collectionEntries.userId, userId));
   if (n >= LIMITS.maxCollectionEntriesPerUser) {
-    throw new Response(
-      JSON.stringify({ error: { code: "limit", message: "Collection entry limit reached." } }),
-      {
-        status: 422,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+    throw limitResponse("Collection entry limit reached.", false);
+  }
+  // Graded cards are metered by plan (free = a taste, Pro = unlimited). The whole
+  // raw collection stays free; only graded (PSA) entries count against the cap.
+  const grade = input.grade ?? "raw";
+  if (grade !== "raw") {
+    const plan = await getUserPlan(db, userId);
+    const [{ g }] = await db
+      .select({ g: count() })
+      .from(schema.collectionEntries)
+      .where(
+        and(eq(schema.collectionEntries.userId, userId), ne(schema.collectionEntries.grade, "raw")),
+      );
+    if (g >= limitsFor(plan).maxGradedEntries) {
+      throw limitResponse("Graded-card limit reached — upgrade to Pro for unlimited graded cards.");
+    }
   }
   const id = crypto.randomUUID();
   await db.insert(schema.collectionEntries).values({

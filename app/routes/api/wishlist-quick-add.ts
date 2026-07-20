@@ -7,7 +7,9 @@ import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 import { bumpTrackedCounts } from "~/lib/collection/tracked.server";
 import { enforceRateLimit } from "~/lib/security/rate-limit.server";
-import { eq } from "drizzle-orm";
+import { planOf } from "~/lib/billing/entitlement.server";
+import { limitsFor } from "~/lib/limits";
+import { count, eq } from "drizzle-orm";
 
 const BodySchema = z.object({ cardId: z.string().min(1).max(64) });
 
@@ -39,9 +41,21 @@ export async function action({ request, context }: Route.ActionArgs) {
     }),
     db.query.userProfiles.findFirst({
       where: eq(schema.userProfiles.userId, session.user.id),
-      columns: { defaultCurrency: true },
+      columns: { defaultCurrency: true, premiumUntil: true },
     }),
   ]);
+
+  const [{ n }] = await db
+    .select({ n: count() })
+    .from(schema.wishlistItems)
+    .where(eq(schema.wishlistItems.userId, session.user.id));
+  if (n >= limitsFor(planOf(profile)).maxWishlistItems) {
+    return {
+      ok: false,
+      message: "Your wishlist is full on the free plan — upgrade to Pro for more.",
+      upgrade: true,
+    };
+  }
 
   try {
     await db.insert(schema.wishlistItems).values({

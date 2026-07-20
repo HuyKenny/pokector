@@ -64,6 +64,18 @@ export const userProfiles = sqliteTable("user_profiles", {
   onboardingCompleted: integer("onboarding_completed", { mode: "boolean" })
     .default(false)
     .notNull(),
+  // ── Billing / entitlement (Stripe is source of truth; these are the cache the
+  // subscription webhook keeps fresh). `premiumUntil` drives entitlement:
+  // isPremium == premiumUntil > now (access is kept through the paid period even
+  // after a cancel). See app/lib/billing/.
+  plan: text("plan", { enum: ["free", "pro"] })
+    .default("free")
+    .notNull(),
+  planStatus: text("plan_status"), // Stripe subscription status (active/canceled/…)
+  planInterval: text("plan_interval", { enum: ["month", "year"] }),
+  stripeCustomerId: text("stripe_customer_id").unique(),
+  stripeSubscriptionId: text("stripe_subscription_id"),
+  premiumUntil: integer("premium_until", { mode: "timestamp_ms" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });
@@ -624,6 +636,7 @@ export const SYNC_JOB_TYPES = [
   "progress_cache_rebuild",
   "import_apply",
   "ebay_graded_seed",
+  "subscription_sync",
 ] as const;
 
 export const syncJobs = sqliteTable(

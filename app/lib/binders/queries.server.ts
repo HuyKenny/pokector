@@ -6,7 +6,8 @@
 
 import { and, asc, count, eq, sql } from "drizzle-orm";
 
-import { LIMITS } from "../limits";
+import { LIMITS, limitResponse, limitsFor } from "../limits";
+import { getUserPlan } from "../billing/entitlement.server";
 import { schema, type Database } from "../db/index.server";
 
 export type BinderVisibility = "private" | "unlisted" | "public";
@@ -48,14 +49,9 @@ export async function createBinder(
     .select({ n: count() })
     .from(schema.binders)
     .where(eq(schema.binders.userId, userId));
-  if (n >= LIMITS.maxBindersPerUser) {
-    throw new Response(
-      JSON.stringify({ error: { code: "limit", message: "Binder limit reached." } }),
-      {
-        status: 422,
-        headers: { "Content-Type": "application/json" },
-      },
-    );
+  const plan = await getUserPlan(db, userId);
+  if (n >= limitsFor(plan).maxBinders) {
+    throw limitResponse("Binder limit reached.");
   }
   const id = crypto.randomUUID();
   await db.insert(schema.binders).values({ id, userId, name, description });

@@ -18,6 +18,7 @@ const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
   { to: "/app/sets", label: "Sets" },
   { to: "/app/wishlist", label: "Wishlist" },
   { to: "/app/sales", label: "Sales & P/L" },
+  { to: "/app/billing", label: "Subscription" },
   { to: "/app/settings", label: "Settings" },
 ];
 
@@ -34,6 +35,8 @@ interface SiteHeaderProps {
   /** True on /app pages: language switcher hidden (language lives in Settings). */
   inApp: boolean;
   isAdmin?: boolean;
+  /** True when the signed-in user is on Pokector Pro (shows the badge, hides upgrade). */
+  premium?: boolean;
   t: LayoutDict;
 }
 
@@ -53,6 +56,7 @@ export function SiteHeader({
   currentPath,
   inApp,
   isAdmin = false,
+  premium = false,
   t,
 }: SiteHeaderProps) {
   const location = useLocation();
@@ -69,6 +73,7 @@ export function SiteHeader({
     { to: localePath(locale, "/sets"), label: t.navSets },
     { to: localePath(locale, "/price-movers"), label: t.navPriceMovers },
     { to: localePath(locale, "/pokedex"), label: t.navPokedex },
+    { to: localePath(locale, "/pricing"), label: t.navPricing },
     { to: "/blog", label: t.navBlog }, // blog is English-only
   ];
 
@@ -135,7 +140,13 @@ export function SiteHeader({
           {signedIn ? (
             <>
               <NotificationsBell unread={unread} />
-              <AccountMenu label={t.myCollection} isAdmin={isAdmin} unread={unread} />
+              <AccountMenu
+                label={t.myCollection}
+                isAdmin={isAdmin}
+                unread={unread}
+                premium={premium}
+                t={t}
+              />
             </>
           ) : (
             authButtons
@@ -281,18 +292,27 @@ function AccountMenu({
   label,
   isAdmin,
   unread,
+  premium,
+  t,
 }: {
   label: string;
   isAdmin: boolean;
   unread: number;
+  premium: boolean;
+  t: LayoutDict;
 }) {
   return (
     <div className="group relative">
       <button
         type="button"
         aria-haspopup="menu"
-        className="flex items-center gap-1 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
+        className="flex items-center gap-1.5 rounded-lg bg-accent px-4 py-2 text-sm font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
       >
+        {premium ? (
+          <span className="rounded bg-(color:--color-on-accent)/20 px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide">
+            {t.proBadge}
+          </span>
+        ) : null}
         <span className="max-w-32 truncate">{label}</span>
         <span aria-hidden="true" className="text-xs">
           ▾
@@ -300,6 +320,14 @@ function AccountMenu({
       </button>
       <div className="invisible absolute end-0 top-full z-50 w-52 pt-1 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
         <div className="rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+          {premium ? null : (
+            <Link
+              to="/app/billing"
+              className="mx-1 mb-1 block rounded bg-accent-soft px-3 py-2 text-sm font-semibold text-accent-strong hover:bg-accent-soft/70"
+            >
+              ⭐ {t.upgradeToPro}
+            </Link>
+          )}
           <nav aria-label="Your account" className="flex flex-col py-1">
             {ACCOUNT_NAV.map((item) => (
               <NavLink

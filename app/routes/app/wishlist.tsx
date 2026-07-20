@@ -10,7 +10,9 @@ import { addEntry } from "~/lib/collection/queries.server";
 import { bumpTrackedCounts } from "~/lib/collection/tracked.server";
 import { formatMinor, toMinorUnits } from "~/lib/money/decimal";
 import { enforceRateLimit } from "~/lib/security/rate-limit.server";
-import { and, eq, sql } from "drizzle-orm";
+import { and, count, eq, sql } from "drizzle-orm";
+import { getUserPlan } from "~/lib/billing/entitlement.server";
+import { limitsFor } from "~/lib/limits";
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Wishlist & Alerts — Pokector" }, { name: "robots", content: "noindex" }];
@@ -93,6 +95,26 @@ export async function action({ request, context }: Route.ActionArgs) {
   switch (input.intent) {
     case "configure": {
       const enabled = input.enabled === "1" && input.targetPrice !== null;
+      // Meter active alerts by plan, but only on the off→on transition (editing an
+      // already-enabled alert is always allowed, even for grandfathered users).
+      if (enabled && !owned.alertEnabled) {
+        const plan = await getUserPlan(db, userId);
+        const [{ n }] = await db
+          .select({ n: count() })
+          .from(schema.wishlistItems)
+          .where(
+            and(
+              eq(schema.wishlistItems.userId, userId),
+              eq(schema.wishlistItems.alertEnabled, true),
+            ),
+          );
+        if (n >= limitsFor(plan).maxActiveAlerts) {
+          return {
+            ok: false as const,
+            message: "You've hit the free-plan alert limit — upgrade to Pro for unlimited alerts.",
+          };
+        }
+      }
       await db
         .update(schema.wishlistItems)
         .set({

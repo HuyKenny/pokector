@@ -9,6 +9,7 @@ import { createDb, schema } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
+import { isPremium } from "~/lib/billing/entitlement.server";
 
 export function meta(_args: Route.MetaArgs) {
   return [{ name: "robots", content: "noindex, nofollow" }];
@@ -26,7 +27,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     unreadCount(db, session.user.id),
     db.query.userProfiles.findFirst({
       where: eq(schema.userProfiles.userId, session.user.id),
-      columns: { locale: true },
+      columns: { locale: true, premiumUntil: true },
     }),
   ]);
   // Header nav follows the user's chosen language (Settings); legacy "en-US"
@@ -35,6 +36,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     unread,
     isAdmin: session.user.role === "admin",
+    premium: isPremium(profile),
     locale,
     market: getMarket(context),
     t: getDict(locale).layout,
@@ -42,7 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
-  const { unread, isAdmin, locale, market, t } = loaderData;
+  const { unread, isAdmin, premium, locale, market, t } = loaderData;
   const location = useLocation();
   return (
     <div className="flex min-h-screen flex-col">
@@ -55,6 +57,7 @@ export default function AppLayout({ loaderData }: Route.ComponentProps) {
         barePath={stripLocalePrefix(location.pathname)}
         currentPath={location.pathname}
         inApp
+        premium={premium}
         t={t}
       />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">

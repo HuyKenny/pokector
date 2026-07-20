@@ -9,7 +9,9 @@ import { createDb, schema } from "~/lib/db/index.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { formatMinor } from "~/lib/money/decimal";
-import { and, eq } from "drizzle-orm";
+import { and, count, eq, ne } from "drizzle-orm";
+import { getUserPlan } from "~/lib/billing/entitlement.server";
+import { limitsFor } from "~/lib/limits";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return [
@@ -110,6 +112,28 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 
   const parsed = GoalSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false as const, message: "Invalid input." };
+
+  // Meter pinned sets by plan (free pins a favourite; Pro pins as many as it likes).
+  // Count OTHER pinned sets so re-saving an already-pinned set is always allowed.
+  if (parsed.data.pinned === "1") {
+    const plan = await getUserPlan(db, session.user.id);
+    const [{ n }] = await db
+      .select({ n: count() })
+      .from(schema.setGoals)
+      .where(
+        and(
+          eq(schema.setGoals.userId, session.user.id),
+          eq(schema.setGoals.pinned, true),
+          ne(schema.setGoals.setId, data.set.id),
+        ),
+      );
+    if (n >= limitsFor(plan).maxPinnedSets) {
+      return {
+        ok: false as const,
+        message: "You've reached the free-plan pin limit — upgrade to Pro to pin more sets.",
+      };
+    }
+  }
 
   await db
     .insert(schema.setGoals)

@@ -23,4 +23,10 @@ interface Env {
   EBAY_CERT_ID?: string;
   /** Shared token for the eBay Marketplace Account Deletion endpoint challenge. */
   EBAY_VERIFICATION_TOKEN?: string;
+  /** Stripe secret key (test in staging, live in production). Absent → billing is
+   * disabled: the pricing page still renders but checkout/portal are unavailable. */
+  STRIPE_SECRET_KEY?: string;
+  /** Stripe webhook signing secret (whsec_…) for /api/stripe/webhook signature
+   * verification. Absent → the webhook rejects everything (fail-closed). */
+  STRIPE_WEBHOOK_SECRET?: string;
 }

@@ -13,6 +13,7 @@ export default [
     route("pokedex", "routes/public/pokedex.tsx"),
     route("pokemon-card-collectors", "routes/public/collectors.tsx"),
     route("pokemon-card-grading-calculator", "routes/public/grading.tsx"),
+    route("pricing", "routes/public/pricing.tsx"),
     route("methodology", "routes/public/methodology.tsx"),
     route("about", "routes/public/about.tsx"),
     route("contact", "routes/public/contact.tsx"),
@@ -48,6 +49,7 @@ export default [
       route("pokemon-card-grading-calculator", "routes/public/grading.tsx", {
         id: "l10n/public/grading",
       }),
+      route("pricing", "routes/public/pricing.tsx", { id: "l10n/public/pricing" }),
       route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx", {
         id: "l10n/public/binders.$publicSlug",
       }),
@@ -97,6 +99,8 @@ export default [
   route("api/v1/pokedex/favorite", "routes/api/pokedex-favorite.ts"),
   // eBay Marketplace Account Deletion compliance webhook
   route("api/ebay/marketplace-deletion", "routes/api/ebay-marketplace-deletion.ts"),
+  // Stripe subscription webhook (signature-verified, unauthenticated)
+  route("api/stripe/webhook", "routes/api/stripe-webhook.ts"),
 
   // ── Administration ─────────────────────────────────────────────────────────
   layout("routes/admin/layout.tsx", [
@@ -127,6 +131,7 @@ export default [
       route("account-export", "routes/app/account-export.ts"),
       route("onboarding", "routes/app/onboarding.tsx"),
       route("settings", "routes/app/settings.tsx"),
+      route("billing", "routes/app/billing.tsx"),
     ]),
   ]),
 

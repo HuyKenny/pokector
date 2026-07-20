@@ -64,6 +64,13 @@
       "when": 1784476800000,
       "tag": "0008_card_sales",
       "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1784491200000,
+      "tag": "0009_subscriptions",
+      "breakpoints": true
     }
   ]
 }
