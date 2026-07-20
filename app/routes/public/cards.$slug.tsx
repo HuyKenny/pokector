@@ -582,7 +582,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                 </span>
               ) : null}
               <Link
-                to={lp("/app/collection")}
+                to="/app/collection"
                 className="text-sm font-medium text-accent hover:underline"
               >
                 {t.manageInCollection}

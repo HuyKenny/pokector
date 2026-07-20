@@ -43,7 +43,8 @@ export async function handleAlertsEvaluate(job: SyncJob, env: Env): Promise<void
     JOIN user u ON u.id = w.user_id
     LEFT JOIN card_prices_current p
       ON p.card_id = w.card_id AND p.variant = w.variant
-     AND p.source = 'tcgplayer' AND p.currency = w.currency
+     AND p.source = CASE WHEN w.currency = 'EUR' THEN 'cardmarket' ELSE 'tcgplayer' END
+     AND p.currency = w.currency
     WHERE w.alert_enabled = 1 AND w.target_price_minor IS NOT NULL
     LIMIT 2000
   `);

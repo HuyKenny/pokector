@@ -45,7 +45,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     JOIN pokemon_sets s ON s.id = k.set_id
     LEFT JOIN card_prices_current p
       ON p.card_id = w.card_id AND p.variant = w.variant
-     AND p.source = 'tcgplayer' AND p.currency = w.currency
+     AND p.source = CASE WHEN w.currency = 'EUR' THEN 'cardmarket' ELSE 'tcgplayer' END
+     AND p.currency = w.currency
     WHERE w.user_id = ${session.user.id}
     ORDER BY w.created_at DESC
     LIMIT 500
@@ -63,6 +64,7 @@ const ActionSchema = z.discriminatedUnion("intent", [
       .trim()
       .transform((v) => (v === "" ? null : toMinorUnits(v)))
       .refine((v) => v === null || (v > 0 && v <= 100_000_000), "Invalid target price."),
+    currency: z.enum(["USD", "EUR"]),
     direction: z.enum(["below", "above"]),
     enabled: z.string().optional(),
   }),
@@ -95,10 +97,11 @@ export async function action({ request, context }: Route.ActionArgs) {
         .update(schema.wishlistItems)
         .set({
           targetPriceMinor: input.targetPrice,
+          currency: input.currency,
           alertDirection: input.direction,
           alertEnabled: enabled,
-          // Reset crossing state when the threshold changes — the next
-          // evaluation records the fresh side before any alert can fire.
+          // Reset crossing state when the threshold (or currency) changes — the
+          // next evaluation records the fresh side before any alert can fire.
           priorThresholdState: null,
         })
         .where(eq(schema.wishlistItems.id, owned.id));
@@ -182,20 +185,34 @@ export default function Wishlist({ loaderData, actionData }: Route.ComponentProp
                   <input type="hidden" name="itemId" value={item.id} />
                   <div className="flex flex-col gap-1">
                     <label htmlFor={`target-${item.id}`} className="text-xs font-medium text-fg">
-                      Target price ({item.currency})
+                      Target price
                     </label>
-                    <input
-                      id={`target-${item.id}`}
-                      name="targetPrice"
-                      inputMode="decimal"
-                      defaultValue={
-                        item.target_price_minor !== null
-                          ? (item.target_price_minor / 100).toFixed(2)
-                          : ""
-                      }
-                      placeholder="e.g. 25.00"
-                      className="min-h-10 w-28 rounded-lg border border-edge bg-surface px-2 text-sm text-fg"
-                    />
+                    <div className="flex items-center gap-1.5">
+                      <input
+                        id={`target-${item.id}`}
+                        name="targetPrice"
+                        inputMode="decimal"
+                        defaultValue={
+                          item.target_price_minor !== null
+                            ? (item.target_price_minor / 100).toFixed(2)
+                            : ""
+                        }
+                        placeholder="e.g. 25.00"
+                        className="min-h-10 w-28 rounded-lg border border-edge bg-surface px-2 text-sm text-fg"
+                      />
+                      <label htmlFor={`cur-${item.id}`} className="sr-only">
+                        Currency
+                      </label>
+                      <select
+                        id={`cur-${item.id}`}
+                        name="currency"
+                        defaultValue={item.currency}
+                        className="min-h-10 rounded-lg border border-edge bg-surface px-2 text-sm text-fg"
+                      >
+                        <option value="USD">USD</option>
+                        <option value="EUR">EUR</option>
+                      </select>
+                    </div>
                   </div>
                   <div className="flex flex-col gap-1">
                     <label htmlFor={`dir-${item.id}`} className="text-xs font-medium text-fg">

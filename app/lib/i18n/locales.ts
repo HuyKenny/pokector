@@ -67,6 +67,18 @@ export function resolveLocale(param: string | undefined): Locale {
   return isLocale(param) ? param : DEFAULT_LOCALE;
 }
 
+/** Best-effort locale from an Accept-Language header (first supported primary
+ * subtag), for defaulting a new user's language at registration. Falls back to
+ * the default locale. */
+export function localeFromAcceptLanguage(header: string | null | undefined): Locale {
+  if (!header) return DEFAULT_LOCALE;
+  for (const part of header.split(",")) {
+    const primary = part.split(";")[0].trim().toLowerCase().split("-")[0];
+    if (isLocale(primary)) return primary;
+  }
+  return DEFAULT_LOCALE;
+}
+
 /**
  * Build a locale-aware path from an unprefixed path (always starting with "/").
  * English returns the path unchanged; other locales get the "/xx" prefix.

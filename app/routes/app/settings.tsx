@@ -10,6 +10,8 @@ import { authClient } from "~/lib/auth-client";
 import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 import { isEmailConfigured } from "~/lib/email/index.server";
+import { LOCALE_NAMES, LOCALES } from "~/lib/i18n/locales";
+import { MARKET_CURRENCY, MARKETS } from "~/lib/market/market";
 import { THEME_STORAGE_KEY } from "~/lib/theme";
 
 export function meta(_args: Route.MetaArgs) {
@@ -22,42 +24,57 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const profile = await db.query.userProfiles.findFirst({
     where: eq(schema.userProfiles.userId, session.user.id),
-    columns: { displayName: true, theme: true, defaultCurrency: true },
+    columns: { displayName: true, theme: true, defaultCurrency: true, locale: true },
   });
   return {
     email: session.user.email,
     emailVerified: session.user.emailVerified,
     name: session.user.name,
     theme: profile?.theme ?? "system",
+    defaultCurrency: profile?.defaultCurrency ?? "USD",
+    locale: profile?.locale ?? "en-US",
     emailConfigured: isEmailConfigured(env),
     supportEmail: env.SUPPORT_EMAIL,
   };
 }
 
-const ProfileSchema = z.object({
-  intent: z.literal("profile"),
-  name: z.string().trim().min(1, "Display name is required.").max(50),
-  theme: z.enum(["light", "dark", "system"]),
-});
+const ActionSchema = z.discriminatedUnion("intent", [
+  z.object({
+    intent: z.literal("profile"),
+    name: z.string().trim().min(1, "Display name is required.").max(50),
+    theme: z.enum(["light", "dark", "system"]),
+  }),
+  z.object({
+    intent: z.literal("preferences"),
+    defaultCurrency: z.enum(["USD", "EUR"]),
+    locale: z.enum(LOCALES),
+  }),
+]);
 
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  const formData = Object.fromEntries(await request.formData());
-  const parsed = ProfileSchema.safeParse(formData);
+  const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) {
     return { ok: false as const, error: parsed.error.issues[0]?.message ?? "Invalid input." };
   }
   const db = createDb(env.DB);
-  await db
-    .update(schema.user)
-    .set({ name: parsed.data.name })
-    .where(eq(schema.user.id, session.user.id));
+  const input = parsed.data;
+
+  if (input.intent === "preferences") {
+    await db
+      .update(schema.userProfiles)
+      .set({ defaultCurrency: input.defaultCurrency, locale: input.locale })
+      .where(eq(schema.userProfiles.userId, session.user.id));
+    return { ok: true as const, section: "preferences" as const };
+  }
+
+  await db.update(schema.user).set({ name: input.name }).where(eq(schema.user.id, session.user.id));
   await db
     .update(schema.userProfiles)
-    .set({ displayName: parsed.data.name, theme: parsed.data.theme })
+    .set({ displayName: input.name, theme: input.theme })
     .where(eq(schema.userProfiles.userId, session.user.id));
-  return { ok: true as const };
+  return { ok: true as const, section: "profile" as const };
 }
 
 export default function Settings({ loaderData, actionData }: Route.ComponentProps) {
@@ -65,6 +82,7 @@ export default function Settings({ loaderData, actionData }: Route.ComponentProp
     <div className="flex max-w-2xl flex-col gap-6">
       <h1 className="text-2xl font-bold text-fg">Settings</h1>
       <ProfileSection loaderData={loaderData} actionData={actionData} />
+      <PreferencesSection loaderData={loaderData} actionData={actionData} />
       <PasswordSection />
       <DataSection />
       <DangerSection emailConfigured={loaderData.emailConfigured} />
@@ -102,7 +120,7 @@ function ProfileSection({
         Signed in as <span className="font-medium">{loaderData.email}</span>
         {loaderData.emailVerified ? " (verified)" : ""}
       </p>
-      {actionData?.ok === true ? (
+      {actionData?.ok === true && actionData.section === "profile" ? (
         <div className="mb-4">
           <Alert tone="success">Profile saved.</Alert>
         </div>
@@ -147,6 +165,82 @@ function ProfileSection({
         </fieldset>
         <Button type="submit" className="self-start">
           Save profile
+        </Button>
+      </Form>
+    </Card>
+  );
+}
+
+function PreferencesSection({
+  loaderData,
+  actionData,
+}: {
+  loaderData: Route.ComponentProps["loaderData"];
+  actionData: Route.ComponentProps["actionData"];
+}) {
+  const currentLocale = LOCALES.includes(loaderData.locale as (typeof LOCALES)[number])
+    ? (loaderData.locale as (typeof LOCALES)[number])
+    : "en";
+  return (
+    <Card>
+      <h2 className="mb-1 text-lg font-semibold text-fg">Region &amp; language</h2>
+      <p className="mb-4 text-sm text-fg-muted">
+        Your region sets the currency for wishlist price targets and alerts. Your language is used
+        across the public catalog.
+      </p>
+      {actionData?.ok === true && actionData.section === "preferences" ? (
+        <div className="mb-4">
+          <Alert tone="success">Preferences saved.</Alert>
+        </div>
+      ) : null}
+      <Form method="post" className="flex flex-col gap-4">
+        <input type="hidden" name="intent" value="preferences" />
+        <fieldset className="flex flex-col gap-1.5">
+          <legend className="text-sm font-medium text-fg">Region</legend>
+          <div className="flex gap-2" role="radiogroup" aria-label="Region">
+            {MARKETS.map((m) => {
+              const currency = MARKET_CURRENCY[m];
+              return (
+                <label
+                  key={m}
+                  className={`flex min-h-11 cursor-pointer items-center gap-2 rounded-lg border px-3 py-2 text-sm ${
+                    loaderData.defaultCurrency === currency
+                      ? "border-accent bg-accent-soft"
+                      : "border-edge"
+                  }`}
+                >
+                  <input
+                    type="radio"
+                    name="defaultCurrency"
+                    value={currency}
+                    defaultChecked={loaderData.defaultCurrency === currency}
+                    className="sr-only"
+                  />
+                  {m === "us" ? "US region" : "EU region"} ({currency})
+                </label>
+              );
+            })}
+          </div>
+        </fieldset>
+        <div className="flex flex-col gap-1.5">
+          <label htmlFor="pref-locale" className="text-sm font-medium text-fg">
+            Language
+          </label>
+          <select
+            id="pref-locale"
+            name="locale"
+            defaultValue={currentLocale}
+            className="min-h-11 max-w-xs rounded-lg border border-edge bg-surface px-3 text-fg"
+          >
+            {LOCALES.map((l) => (
+              <option key={l} value={l}>
+                {LOCALE_NAMES[l]}
+              </option>
+            ))}
+          </select>
+        </div>
+        <Button type="submit" className="self-start">
+          Save preferences
         </Button>
       </Form>
     </Card>

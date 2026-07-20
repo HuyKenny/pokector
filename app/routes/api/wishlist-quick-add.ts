@@ -32,10 +32,16 @@ export async function action({ request, context }: Route.ActionArgs) {
   });
   if (!card) return { ok: false, message: "Card not found." };
 
-  const price = await db.query.cardPricesCurrent.findFirst({
-    where: eq(schema.cardPricesCurrent.cardId, card.id),
-    columns: { variant: true },
-  });
+  const [price, profile] = await Promise.all([
+    db.query.cardPricesCurrent.findFirst({
+      where: eq(schema.cardPricesCurrent.cardId, card.id),
+      columns: { variant: true },
+    }),
+    db.query.userProfiles.findFirst({
+      where: eq(schema.userProfiles.userId, session.user.id),
+      columns: { defaultCurrency: true },
+    }),
+  ]);
 
   try {
     await db.insert(schema.wishlistItems).values({
@@ -43,7 +49,8 @@ export async function action({ request, context }: Route.ActionArgs) {
       userId: session.user.id,
       cardId: card.id,
       variant: price?.variant ?? "normal",
-      currency: "USD",
+      // Target-price currency follows the user's region (Settings); default USD.
+      currency: profile?.defaultCurrency ?? "USD",
     });
   } catch (error) {
     if (error instanceof Error && /UNIQUE/i.test([error.message, String(error.cause)].join(" "))) {

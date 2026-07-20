@@ -1,10 +1,13 @@
-import { Form, Link, NavLink, Outlet } from "react-router";
+import { eq } from "drizzle-orm";
+import { Outlet, useLocation } from "react-router";
 
 import type { Route } from "./+types/layout";
-import { PokectorWordmark } from "~/components/brand";
+import { SiteHeader } from "~/components/site-header";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
-import { createDb } from "~/lib/db/index.server";
+import { getCloudflare, getMarket } from "~/lib/context";
+import { createDb, schema } from "~/lib/db/index.server";
+import { getDict } from "~/lib/i18n/dictionaries.server";
+import { resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
 
 export function meta(_args: Route.MetaArgs) {
@@ -18,161 +21,45 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  const unread = await unreadCount(createDb(env.DB), session.user.id);
+  const db = createDb(env.DB);
+  const [unread, profile] = await Promise.all([
+    unreadCount(db, session.user.id),
+    db.query.userProfiles.findFirst({
+      where: eq(schema.userProfiles.userId, session.user.id),
+      columns: { locale: true },
+    }),
+  ]);
+  // Header nav follows the user's chosen language (Settings); legacy "en-US"
+  // and unknown values resolve to English.
+  const locale = resolveLocale(profile?.locale);
   return {
-    user: {
-      name: session.user.name,
-      email: session.user.email,
-      role: session.user.role ?? "user",
-    },
     unread,
+    isAdmin: session.user.role === "admin",
+    locale,
+    market: getMarket(context),
+    t: getDict(locale).layout,
   };
 }
 
-/** Public browse nav — identical to the signed-out header so the top bar looks
- * the same whether or not you're logged in (owner request 2026-07-18). These
- * are the unprefixed English public routes (the app area is English-only). */
-const BROWSE_NAV: { to: string; label: string }[] = [
-  { to: "/cards", label: "Cards" },
-  { to: "/sets", label: "Sets" },
-  { to: "/price-movers", label: "Price movers" },
-  { to: "/pokedex", label: "Pokédex" },
-  { to: "/blog", label: "Blog" },
-];
-
-/** Personal area — tucked under the user-name dropdown, not the top bar. */
-const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
-  { to: "/app", label: "Dashboard", end: true },
-  { to: "/app/collection", label: "Collection" },
-  { to: "/app/binders", label: "Binders" },
-  { to: "/app/sets", label: "Sets" },
-  { to: "/app/wishlist", label: "Wishlist" },
-  { to: "/app/sales", label: "Sales & P/L" },
-  { to: "/app/settings", label: "Settings" },
-];
-
 export default function AppLayout({ loaderData }: Route.ComponentProps) {
-  const { user, unread } = loaderData;
+  const { unread, isAdmin, locale, market, t } = loaderData;
+  const location = useLocation();
   return (
     <div className="flex min-h-screen flex-col">
-      <header className="border-b border-edge bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-          <Link to="/" aria-label="Pokector home">
-            <PokectorWordmark className="h-8" />
-          </Link>
-          <nav
-            aria-label="Browse"
-            className="order-3 flex w-full gap-1 overflow-x-auto sm:order-none sm:w-auto"
-          >
-            {BROWSE_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                className={({ isActive }) =>
-                  `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
-                    isActive ? "bg-accent-soft text-accent-strong" : "text-fg-muted hover:text-fg"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-          </nav>
-          <div className="ms-auto flex items-center gap-2">
-            <Link
-              to="/app/notifications"
-              className="relative rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
-              aria-label={unread > 0 ? `Notifications, ${unread} unread` : "Notifications"}
-            >
-              <span aria-hidden="true">🔔</span>
-              {unread > 0 ? (
-                <span
-                  aria-hidden="true"
-                  className="absolute -right-0.5 -top-0.5 flex h-4 min-w-4 items-center justify-center rounded-full bg-secondary px-1 text-[10px] font-bold text-(color:--color-on-secondary)"
-                >
-                  {unread > 9 ? "9+" : unread}
-                </span>
-              ) : null}
-            </Link>
-            <UserMenu name={user.name} isAdmin={user.role === "admin"} unread={unread} />
-          </div>
-        </div>
-      </header>
+      <SiteHeader
+        signedIn
+        isAdmin={isAdmin}
+        unread={unread}
+        locale={locale}
+        market={market}
+        barePath={stripLocalePrefix(location.pathname)}
+        currentPath={location.pathname}
+        inApp
+        t={t}
+      />
       <main className="mx-auto w-full max-w-6xl flex-1 px-4 py-6">
         <Outlet />
       </main>
-    </div>
-  );
-}
-
-/**
- * User-name dropdown holding the personal-area links. Opens on hover
- * (`group-hover`) and on keyboard focus (`group-focus-within`) — no JS, so it
- * works with SSR and the keyboard. On touch, tapping the button focuses it and
- * reveals the menu.
- */
-function UserMenu({ name, isAdmin, unread }: { name: string; isAdmin: boolean; unread: number }) {
-  return (
-    <div className="group relative">
-      <button
-        type="button"
-        aria-haspopup="menu"
-        className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-fg-muted hover:text-fg group-focus-within:text-fg"
-      >
-        <span className="max-w-32 truncate">{name}</span>
-        <span aria-hidden="true" className="text-xs">
-          ▾
-        </span>
-      </button>
-      {/* top-full + transparent pt-1 (padding, not margin) bridges the gap
-          between the button and the card so moving the mouse down keeps the
-          group hovered — otherwise the menu closes as the cursor crosses a
-          margin gap. */}
-      <div className="invisible absolute end-0 top-full z-50 w-52 pt-1 opacity-0 transition-opacity group-hover:visible group-hover:opacity-100 group-focus-within:visible group-focus-within:opacity-100">
-        <div className="rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
-          <nav aria-label="Your account" className="flex flex-col py-1">
-            {ACCOUNT_NAV.map((item) => (
-              <NavLink
-                key={item.to}
-                to={item.to}
-                end={item.end}
-                className={({ isActive }) =>
-                  `px-4 py-2 text-sm ${
-                    isActive
-                      ? "bg-accent-soft font-medium text-accent-strong"
-                      : "text-fg hover:bg-surface-raised"
-                  }`
-                }
-              >
-                {item.label}
-              </NavLink>
-            ))}
-            <Link
-              to="/app/notifications"
-              className="px-4 py-2 text-sm text-fg hover:bg-surface-raised"
-            >
-              Notifications{unread > 0 ? ` (${unread > 9 ? "9+" : unread})` : ""}
-            </Link>
-            {isAdmin ? (
-              <Link
-                to="/admin"
-                className="px-4 py-2 text-sm font-medium text-secondary hover:bg-surface-raised"
-              >
-                Admin
-              </Link>
-            ) : null}
-          </nav>
-          <div className="my-1 border-t border-edge" />
-          <Form method="post" action="/logout">
-            <button
-              type="submit"
-              className="w-full px-4 py-2 text-start text-sm text-fg-muted hover:bg-surface-raised hover:text-fg"
-            >
-              Sign out
-            </button>
-          </Form>
-        </div>
-      </div>
     </div>
   );
 }

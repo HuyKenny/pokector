@@ -4,8 +4,10 @@ import { Form, redirect } from "react-router";
 import type { Route } from "./+types/onboarding";
 import { Button, Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
+import { localeFromAcceptLanguage } from "~/lib/i18n/locales";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 
 export function meta(_args: Route.MetaArgs) {
   return [{ title: "Welcome — Pokector" }, { name: "robots", content: "noindex" }];
@@ -13,6 +15,27 @@ export function meta(_args: Route.MetaArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
+  const { env } = getCloudflare(context);
+  const db = createDb(env.DB);
+
+  // First onboarding view: default region (currency) from the registration
+  // geolocation and language from Accept-Language. Guard on the legacy "en-US"
+  // default so we never overwrite a value the user later set in Settings (which
+  // writes short locale codes like "cs").
+  const profile = await db.query.userProfiles.findFirst({
+    where: eq(schema.userProfiles.userId, session.user.id),
+    columns: { locale: true },
+  });
+  if (profile?.locale === "en-US") {
+    await db
+      .update(schema.userProfiles)
+      .set({
+        defaultCurrency: MARKET_CURRENCY[getMarket(context)],
+        locale: localeFromAcceptLanguage(request.headers.get("accept-language")),
+      })
+      .where(eq(schema.userProfiles.userId, session.user.id));
+  }
+
   return { name: session.user.name };
 }
 
