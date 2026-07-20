@@ -417,3 +417,36 @@ alerts, set goals, binders, import/export already existed).
   Unit tests for grading ROI + realized P/L math + summary. Verified end-to-end on staging
   (register → add → ownership badge → sell → sales page + dashboard strip + CSV; grading calc;
   compare) and on production (ownership/compare/sales; grading calc awaits eBay data).
+
+### D26. i18n 404 fix, wishlist region currency, unified header (owner 2026-07-19)
+
+Three reported bugs.
+
+- **404 on "Manage in collection" in non-English locales.** The link used
+  `lp("/app/collection")` → `/cs/app/collection`; `/app/*` is not in the localized
+  route tree, so client-side navigation flashed the catchall 404 (the server-side
+  301 only helps on a hard load). Fixed to a plain `/app/collection`. A sweep
+  (`grep 'lp("/…'`) confirmed it was the *only* `lp()` pointing at a non-localized
+  route — all other lp() targets (cards/sets/login/register) are localized.
+- **Wishlist was USD-only.** Added a "Region & language" section to Settings
+  (`preferences` intent → `userProfiles.defaultCurrency` + `locale`). New users
+  default from registration location: region from geo (`getMarket`), language from
+  `Accept-Language` (`localeFromAcceptLanguage`), set once at onboarding guarded on
+  the legacy `en-US` default; fallback US/USD + English. `wishlist-quick-add` now
+  stamps the user's region currency; the configure form has a per-item currency
+  toggle. **Critical join fix**: the wishlist loader AND the alert-evaluation job
+  joined `card_prices_current` on `source='tcgplayer'` unconditionally, so EUR items
+  were always "unpriced" and never triggered alerts — now `source = CASE WHEN
+  currency='EUR' THEN 'cardmarket' ELSE 'tcgplayer' END` (cardmarket is stored
+  per-variant, so the PK join still matches one row).
+- **Unified header** — new shared `app/components/site-header.tsx` used by BOTH the
+  public and app layouts (moved MarketSwitcher/LanguageSwitcher + hamburger + account
+  menu out of the layouts). Identical everywhere (PC + mobile, hamburger < lg); the
+  only auth-state difference is the account slot: signed-out = Sign in / Get started;
+  signed-in = notifications bell + "My collection" account dropdown. Public layout now
+  fetches `unreadCount` when signed in so the header is the same on public pages too.
+  App layout passes `locale = profile.locale` so the header nav follows the user's
+  chosen language; the language switcher is hidden in-app (`inApp` — language is set in
+  Settings). App-area menu labels stay English (app is English-only), so no new i18n
+  keys were needed. Verified e2e (staging+prod): CZ registrant → EUR + Czech nav
+  auto-defaulted, Manage link → /app/collection, wishlist EUR, unified header.
