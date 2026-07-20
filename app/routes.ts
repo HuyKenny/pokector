@@ -11,6 +11,8 @@ export default [
     route("sets/:slug", "routes/public/sets.$slug.tsx"),
     route("price-movers", "routes/public/price-movers.tsx"),
     route("pokedex", "routes/public/pokedex.tsx"),
+    route("pokemon-card-collectors", "routes/public/collectors.tsx"),
+    route("pokemon-card-grading-calculator", "routes/public/grading.tsx"),
     route("methodology", "routes/public/methodology.tsx"),
     route("about", "routes/public/about.tsx"),
     route("contact", "routes/public/contact.tsx"),
@@ -40,6 +42,12 @@ export default [
       route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
       route("price-movers", "routes/public/price-movers.tsx", { id: "l10n/public/price-movers" }),
       route("pokedex", "routes/public/pokedex.tsx", { id: "l10n/public/pokedex" }),
+      route("pokemon-card-collectors", "routes/public/collectors.tsx", {
+        id: "l10n/public/collectors",
+      }),
+      route("pokemon-card-grading-calculator", "routes/public/grading.tsx", {
+        id: "l10n/public/grading",
+      }),
       route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx", {
         id: "l10n/public/binders.$publicSlug",
       }),

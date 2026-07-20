@@ -33,6 +33,10 @@ const vi: Dict = {
     myCollection: "Bộ sưu tập của tôi",
     signIn: "Đăng nhập",
     getStarted: "Bắt đầu",
+    footerExplore: "Khám phá",
+    footerCollectors: "Cho người sưu tầm",
+    footerGrading: "Máy tính grading",
+    footerResources: "Tài nguyên",
     footerAbout: "Giới thiệu",
     footerMethodology: "Dữ liệu & phương pháp",
     footerBlog: "Blog",
@@ -57,6 +61,8 @@ const vi: Dict = {
     heroTitleAccent: "như một tài sản",
     heroSubtitle:
       "Bộ sưu tập Pokémon TCG của bạn như một danh mục đầu tư: giá trị thị trường TCGplayer trực tiếp, lịch sử giá thật, lãi & lỗ — những con số trung thực, không thổi phồng.",
+    introSeo:
+      "Pokector là công cụ theo dõi bộ sưu tập và giá miễn phí dành cho những người sưu tầm thẻ bài Pokémon. Ghi lại những thẻ bạn sở hữu, theo dõi giá TCGplayer và Cardmarket hiện tại, hoàn thành danh sách bộ thẻ, sắp xếp binder và xem lãi lỗ thực tế của danh mục theo thời gian — không thổi phồng, chỉ những con số trung thực.",
     heroSearchLabel: "Tìm trong danh mục thẻ bài",
     heroSearchPlaceholder: "Tìm một thẻ bài, ví dụ Charizard…",
     heroSearchButton: "Tìm kiếm",
@@ -99,6 +105,115 @@ const vi: Dict = {
     finalCtaBody:
       "Tạo tài khoản miễn phí, thêm những thẻ đầu tiên trong vài phút và để Pokector ghi điểm từ đây.",
     finalCtaButton: "Tạo tài khoản miễn phí",
+  },
+
+  collectorsLanding: {
+    metaTitle: "Người sưu tầm thẻ Pokémon — công cụ theo dõi bộ sưu tập và giá miễn phí | Pokector",
+    metaDescription:
+      "Bộ công cụ miễn phí cho người sưu tầm thẻ Pokémon: theo dõi bộ sưu tập, giá TCGplayer và Cardmarket, hoàn thành danh sách bộ thẻ, tính ROI grading và xem lãi lỗ thực tế.",
+    breadcrumb: "Cho người sưu tầm",
+    h1: "Bộ công cụ cho người sưu tầm thẻ Pokémon",
+    intro:
+      "Pokector là ứng dụng web miễn phí và độc lập dành cho người sưu tầm và đầu tư thẻ Pokémon. Theo dõi mọi thứ bạn sở hữu, giá thực tế từ TCGplayer và Cardmarket, hoàn thành các bộ thẻ và xem lãi lỗ trung thực của danh mục theo thời gian — không thổi phồng, không giá trị bịa đặt.",
+    browseCards: "Xem danh mục",
+    toolsHeading: "Mọi thứ người sưu tầm cần ở một nơi",
+    tool1Title: "Theo dõi bộ sưu tập",
+    tool1Body:
+      "Ghi lại từng thẻ bạn sở hữu kèm phiên bản, tình trạng và giá đã mua. Bộ sưu tập được định giá theo ước tính thị trường trực tiếp và cập nhật khi giá thay đổi.",
+    tool2Title: "Theo dõi giá và giá trị",
+    tool2Body:
+      "Theo dõi lịch sử giá thực tế theo thẻ và phiên bản, phát hiện biến động 7 ngày lớn nhất và thấy thị trường đang đi đâu trước khi mua hoặc bán.",
+    tool3Title: "Danh sách bộ thẻ",
+    tool3Body:
+      "Danh sách tự động của mỗi bộ thẻ cho thấy bạn có gì, thiếu gì và chi phí ước tính để hoàn thành.",
+    tool4Title: "Máy tính ROI grading",
+    tool4Body:
+      "So sánh giá trị thẻ thô với giá bán PSA 9 và PSA 10, trừ phí grading và vận chuyển, để xem grading có thực sự đáng không.",
+    tool5Title: "So sánh thẻ",
+    tool5Body:
+      "Đặt các thẻ cạnh nhau để so sánh giá và lịch sử giá — hữu ích khi quyết định thêm thẻ nào tiếp theo.",
+    tool6Title: "Binder và danh sách mong muốn",
+    tool6Body:
+      "Sắp xếp thẻ vào các trang binder 9 ngăn trực quan, chia sẻ bằng liên kết và đặt giá mục tiêu cho những thẻ bạn còn muốn.",
+    toolCta: "Mở",
+    whyHeading: "Dành cho người sưu tầm, không phải nhà đầu cơ",
+    whyBody:
+      "Mọi mức giá đều hiển thị nguồn và ngày. Thẻ chưa có giá ghi “chưa có giá”, không phải “0 $”. Lịch sử giá bắt đầu khi Pokector lần đầu ghi nhận một thẻ, và lịch sử danh mục bắt đầu từ ngày bạn bắt đầu — nên những con số bạn thấy là thật, không phải điền bù.",
+    faqHeading: "Câu hỏi thường gặp",
+    faq1Q: "Pokector có miễn phí cho người sưu tầm không?",
+    faq1A: "Có. Tạo tài khoản và theo dõi bộ sưu tập hoàn toàn miễn phí.",
+    faq2Q: "Giá thẻ đến từ đâu?",
+    faq2A:
+      "Giá trị thẻ thô dùng giá TCGplayer hiện tại (USD), kèm Cardmarket (EUR) khi có. Giá trị PSA 9 và PSA 10 lấy từ các giao dịch gần đây. Mỗi mức giá đều hiển thị nguồn và ngày.",
+    faq3Q: "Tôi có thể theo dõi giá trị bộ sưu tập theo thời gian không?",
+    faq3A:
+      "Có. Pokector ghi nhận các quan sát giá thực tế và dựng lịch sử danh mục từ ngày bạn bắt đầu theo dõi — gồm cả lãi lỗ so với số tiền bạn đã trả.",
+    faq4Q: "Pokector có giúp tôi hoàn thành các bộ thẻ không?",
+    faq4A:
+      "Mỗi bộ thẻ có một danh sách tự động cho thấy bạn có gì, thiếu gì và chi phí ước tính để hoàn thành.",
+    faq5Q: "Pokector có chính thức hoặc liên kết với Pokémon không?",
+    faq5A:
+      "Không. Pokector là dự án độc lập và không liên kết, không được chứng thực hay tài trợ bởi Nintendo, The Pokémon Company hay Wizards of the Coast.",
+    ctaHeading: "Bắt đầu theo dõi bộ sưu tập ngay hôm nay",
+    ctaBody:
+      "Tạo tài khoản miễn phí, thêm những thẻ đầu tiên trong vài phút và để Pokector ghi điểm.",
+    ctaButton: "Tạo tài khoản miễn phí",
+  },
+
+  gradingLanding: {
+    metaTitle: "Máy tính grading thẻ Pokémon — PSA có đáng không? | Pokector",
+    metaDescription:
+      "Máy tính grading thẻ Pokémon miễn phí: so sánh giá trị thẻ thô với giá PSA 9 và PSA 10, trừ phí grading và vận chuyển, và xem grading có đáng không.",
+    breadcrumb: "Máy tính grading",
+    h1: "Máy tính grading thẻ Pokémon",
+    intro:
+      "Có nên grading thẻ đó? Nhập giá trị thẻ thô và giá PSA 9, PSA 10 hiện tại, máy tính sẽ trừ phí grading và vận chuyển để cho thấy lợi nhuận thực tế trước khi bạn gửi bất cứ thứ gì cho PSA.",
+    tierLabel: "Hạng PSA",
+    tierValue: "Value",
+    tierRegular: "Regular",
+    tierExpress: "Express",
+    rawLabel: "Giá trị thô ($)",
+    psa9Label: "PSA 9 ($)",
+    psa10Label: "PSA 10 ($)",
+    colGrade: "Điểm",
+    colGradedValue: "Giá trị đã grade",
+    colAllIn: "Tổng chi phí",
+    colNet: "Ròng",
+    colRoi: "ROI",
+    feeNote: "Phí PSA {fee} + vận chuyển {shipping} (ước tính — kiểm tra bảng giá PSA hiện tại).",
+    disclaimer:
+      "Chỉ là ước tính. Không phải thẻ nào cũng đạt PSA 10, và phí thay đổi — hãy nhập những con số bạn thực sự phải trả.",
+    howHeading: "ROI grading hoạt động thế nào",
+    how1Lead: "Giá trị thô đầu vào.",
+    how1Body:
+      " Bắt đầu bằng giá bán hôm nay của thẻ chưa grade — giá vốn nếu bạn đã sở hữu, hoặc giá để mua một thẻ.",
+    how2Lead: "Giá trị đã grade đầu ra.",
+    how2Body:
+      " Bản PSA 9 và PSA 10 thường bán gấp nhiều lần giá thô. Khoảng chênh là lợi nhuận tiềm năng — nhưng chỉ một phần là lãi thật.",
+    how3Lead: "Phí và xác suất.",
+    how3Body:
+      " Grading không miễn phí: PSA tính phí mỗi thẻ cộng phí gửi về, và không phải thẻ nào cũng đạt 10. Hãy tính cả hai trước khi quyết định.",
+    tryHeading: "Thử với một thẻ thật",
+    tryBody:
+      "Máy tính trực tiếp chạy trên mọi trang thẻ có cả giá thô và giao dịch PSA gần đây, dùng số liệu thị trường thật. Mở bất kỳ thẻ nào để xem ROI grading của nó.",
+    tryCta: "Xem thẻ",
+    faqHeading: "FAQ grading",
+    faq1Q: "Grading thẻ Pokémon có đáng không?",
+    faq1A:
+      "Tùy thẻ. Grading có lời khi giá PSA 9/10 trừ phí và vận chuyển rõ ràng cao hơn giá trị thô — thường với thẻ đắt hoặc gần hoàn hảo. Với thẻ rẻ, phí sẽ ăn hết phần lời.",
+    faq2Q: "Grading PSA tốn bao nhiêu?",
+    faq2A:
+      "PSA tính phí mỗi thẻ thay đổi theo hạng dịch vụ và giá trị khai báo, cộng phí gửi về. Luôn kiểm tra bảng giá PSA hiện tại; máy tính này cho bạn nhập mức phí thực tế phải trả.",
+    faq3Q: "PSA 9 và PSA 10 khác nhau thế nào?",
+    faq3A:
+      "PSA 10 (Gem Mint) gần như hoàn hảo và thường bán đắt hơn nhiều PSA 9 (Mint). Vì đa số thẻ không đạt 10, máy tính cho bạn so sánh cả hai kết quả.",
+    faq4Q: "Pokector có hiển thị giá PSA thật không?",
+    faq4A:
+      "Trên các trang thẻ có dữ liệu giao dịch đã grade gần đây thì có — giá trị PSA 9 và PSA 10 hiển thị cạnh giá thô, nên máy tính dùng số liệu thật.",
+    ctaHeading: "Xem ROI grading cho thẻ của bạn",
+    ctaBody:
+      "Tạo tài khoản miễn phí để theo dõi bộ sưu tập và xem lợi nhuận grading trên mọi thẻ bạn sở hữu.",
+    ctaButton: "Tạo tài khoản miễn phí",
   },
 
   cards: {

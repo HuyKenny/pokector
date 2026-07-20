@@ -41,6 +41,10 @@ export const en = {
     myCollection: "My collection",
     signIn: "Sign in",
     getStarted: "Get started",
+    footerExplore: "Explore",
+    footerCollectors: "For collectors",
+    footerGrading: "Grading calculator",
+    footerResources: "Resources",
     footerAbout: "About",
     footerMethodology: "Data & methodology",
     footerBlog: "Blog",
@@ -65,6 +69,8 @@ export const en = {
     heroTitleAccent: "like an asset",
     heroSubtitle:
       "Your Pokémon TCG collection as a portfolio: live TCGplayer market values, real price history, profit & loss — honest numbers, no hype.",
+    introSeo:
+      "Pokector is a free collection tracker and price tracker built for Pokémon card collectors. Log the cards you own, follow live TCGplayer and Cardmarket values, complete set checklists, organize binders, and watch your portfolio's real profit and loss over time — no hype, just honest numbers.",
     heroSearchLabel: "Search the card catalog",
     heroSearchPlaceholder: "Search for a card, e.g. Charizard…",
     heroSearchButton: "Search",
@@ -107,6 +113,115 @@ export const en = {
     finalCtaBody:
       "Create a free account, add your first cards in minutes, and let Pokector keep score from here on.",
     finalCtaButton: "Create free account",
+  },
+
+  collectorsLanding: {
+    metaTitle: "Pokémon Card Collectors — Free Collection & Price Tracker | Pokector",
+    metaDescription:
+      "The free toolkit for Pokémon card collectors: track your collection, follow live TCGplayer & Cardmarket prices, complete set checklists, calculate grading ROI, and see real profit & loss.",
+    breadcrumb: "For collectors",
+    h1: "The toolkit for Pokémon card collectors",
+    intro:
+      "Pokector is a free, independent web app for Pokémon card collectors and investors. Track everything you own, follow real TCGplayer and Cardmarket prices, complete your sets, and watch your portfolio's honest profit and loss over time — no hype, no invented values.",
+    browseCards: "Browse the catalog",
+    toolsHeading: "Everything a collector needs in one place",
+    tool1Title: "Collection tracker",
+    tool1Body:
+      "Log every card you own with its variant, condition, and what you paid. Your collection is valued with live market estimates and updates as prices move.",
+    tool2Title: "Price & value tracker",
+    tool2Body:
+      "Follow real price history per card and variant, spot the biggest 7-day movers, and see where the market is heading before you buy or sell.",
+    tool3Title: "Set checklists",
+    tool3Body:
+      "Automatic checklists for every set show what you own, what's missing, and roughly what completing the set would cost.",
+    tool4Title: "Grading ROI calculator",
+    tool4Body:
+      "Compare a raw card's value against PSA 9 and PSA 10 sales, minus grading fees and shipping, to see whether grading is actually worth it.",
+    tool5Title: "Card comparison",
+    tool5Body:
+      "Put cards side by side to compare prices and price history — handy when deciding which card to add next.",
+    tool6Title: "Binders & wishlists",
+    tool6Body:
+      "Arrange your cards into visual 9-pocket binder pages, share them with a link, and set target prices on cards you still want.",
+    toolCta: "Open",
+    whyHeading: "Built for collectors, not speculators",
+    whyBody:
+      "Every price shows its source and date. Unpriced cards say “unpriced”, not “$0”. Price history starts when Pokector first observes a card, and your portfolio history starts the day you do — so the numbers you see are real, not backfilled.",
+    faqHeading: "Frequently asked questions",
+    faq1Q: "Is Pokector free for collectors?",
+    faq1A: "Yes. Creating an account and tracking your collection is completely free.",
+    faq2Q: "Where do the card prices come from?",
+    faq2A:
+      "Raw card values use current TCGplayer prices (USD), with Cardmarket (EUR) shown where available. PSA 9 and PSA 10 graded values come from recent sales. Every price shows its source and date.",
+    faq3Q: "Can I track the value of my collection over time?",
+    faq3A:
+      "Yes. Pokector records real price observations and builds your portfolio history from the day you start tracking — including profit and loss versus what you paid.",
+    faq4Q: "Does Pokector help me complete my sets?",
+    faq4A:
+      "Every set has an automatic checklist showing what you own, what's missing, and the estimated cost to finish it.",
+    faq5Q: "Is Pokector official or affiliated with Pokémon?",
+    faq5A:
+      "No. Pokector is an independent project and is not affiliated with, endorsed by, or sponsored by Nintendo, The Pokémon Company, or Wizards of the Coast.",
+    ctaHeading: "Start tracking your collection today",
+    ctaBody:
+      "Create a free account, add your first cards in minutes, and let Pokector keep score.",
+    ctaButton: "Create free account",
+  },
+
+  gradingLanding: {
+    metaTitle: "Pokémon Card Grading Calculator — Is PSA Worth It? | Pokector",
+    metaDescription:
+      "Free Pokémon card grading calculator: compare a raw card's value to PSA 9 and PSA 10 prices, subtract grading fees and shipping, and see whether grading is worth it.",
+    breadcrumb: "Grading calculator",
+    h1: "Pokémon card grading calculator",
+    intro:
+      "Should you grade that card? Enter what your raw card is worth and the going PSA 9 and PSA 10 prices, and this calculator subtracts grading fees and shipping to show your real return before you send anything to PSA.",
+    tierLabel: "PSA tier",
+    tierValue: "Value",
+    tierRegular: "Regular",
+    tierExpress: "Express",
+    rawLabel: "Raw value ($)",
+    psa9Label: "PSA 9 ($)",
+    psa10Label: "PSA 10 ($)",
+    colGrade: "Grade",
+    colGradedValue: "Graded value",
+    colAllIn: "All-in cost",
+    colNet: "Net",
+    colRoi: "ROI",
+    feeNote: "PSA fee {fee} + shipping {shipping} (estimate — check PSA's current pricing).",
+    disclaimer:
+      "Estimate only. Not every card earns a PSA 10, and fees change — enter the numbers you'll actually pay.",
+    howHeading: "How the grading ROI works",
+    how1Lead: "Raw value in.",
+    how1Body:
+      " Start with what the ungraded card sells for today — your cost basis if you already own it, or the price to buy one.",
+    how2Lead: "Graded value out.",
+    how2Body:
+      " PSA 9 and PSA 10 copies usually sell for a multiple of the raw price. The gap is your potential upside — but only part of it is profit.",
+    how3Lead: "Fees and odds.",
+    how3Body:
+      " Grading isn't free: PSA charges per card plus return shipping, and not every card grades a 10. Factor both in before deciding.",
+    tryHeading: "Try it on a real card",
+    tryBody:
+      "The live calculator runs on every card page that has both a raw price and recent PSA sales, using real market numbers. Open any card to see its grading ROI.",
+    tryCta: "Browse cards",
+    faqHeading: "Grading FAQ",
+    faq1Q: "Is grading Pokémon cards worth it?",
+    faq1A:
+      "It depends on the card. Grading pays off when the PSA 9/10 price minus grading fees and shipping clearly beats the raw value — usually on expensive or near-mint cards. On cheap cards the fees eat the upside.",
+    faq2Q: "How much does PSA grading cost?",
+    faq2A:
+      "PSA charges a per-card fee that varies by service tier and declared value, plus return shipping. Always check PSA's current pricing; this calculator lets you enter the fee you'll actually pay.",
+    faq3Q: "What's the difference between PSA 9 and PSA 10?",
+    faq3A:
+      "PSA 10 (Gem Mint) is nearly flawless and usually sells for far more than PSA 9 (Mint). Because most cards don't earn a 10, the calculator lets you compare both outcomes.",
+    faq4Q: "Does Pokector show real PSA prices?",
+    faq4A:
+      "On card pages with recent graded sales data, yes — PSA 9 and PSA 10 values are shown alongside the raw price so the calculator uses real numbers.",
+    ctaHeading: "See grading ROI on your cards",
+    ctaBody:
+      "Create a free account to track your collection and see grading returns on every card you own.",
+    ctaButton: "Create free account",
   },
 
   cards: {

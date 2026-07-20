@@ -10,6 +10,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description:
       "Why Pokector exists: an independent, honest collection tracker for Pokémon TCG collectors — transparent prices, real history, no hype.",
     canonical: data?.canonical,
+    appUrl: data?.appUrl,
   });
 }
 
@@ -19,7 +20,7 @@ export function headers(_args: Route.HeadersArgs) {
 
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
-  return { canonical: canonicalUrl(env.APP_URL, "/about") };
+  return { canonical: canonicalUrl(env.APP_URL, "/about"), appUrl: env.APP_URL };
 }
 
 export default function About() {

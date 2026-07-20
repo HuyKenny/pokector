@@ -33,6 +33,10 @@ const zh: Dict = {
     myCollection: "我的收藏",
     signIn: "登录",
     getStarted: "开始使用",
+    footerExplore: "探索",
+    footerCollectors: "面向收藏者",
+    footerGrading: "评级计算器",
+    footerResources: "资源",
     footerAbout: "关于",
     footerMethodology: "数据与方法",
     footerBlog: "博客",
@@ -57,6 +61,8 @@ const zh: Dict = {
     heroTitleAccent: "当作资产来追踪",
     heroSubtitle:
       "把你的 Pokémon TCG 收藏当作投资组合：实时 TCGplayer 市值、真实价格历史、盈亏——诚实的数字，绝无炒作。",
+    introSeo:
+      "Pokector 是一款面向宝可梦卡牌收藏者的免费收藏与价格追踪工具。记录你拥有的卡牌，跟踪 TCGplayer 和 Cardmarket 的实时价格，完成卡包清单，整理卡册，并随时查看你的收藏组合的真实盈亏——没有夸张，只有诚实的数字。",
     heroSearchLabel: "搜索卡牌目录",
     heroSearchPlaceholder: "搜索卡牌，例如 Charizard…",
     heroSearchButton: "搜索",
@@ -97,6 +103,115 @@ const zh: Dict = {
     finalCtaHeading: "准备好看看你的卡册值多少了吗？",
     finalCtaBody: "创建一个免费账户，几分钟内添加你的第一批卡牌，让 Pokector 从此为你记分。",
     finalCtaButton: "创建免费账户",
+  },
+
+  collectorsLanding: {
+    metaTitle: "宝可梦卡牌收藏者 — 免费收藏与价格追踪工具 | Pokector",
+    metaDescription:
+      "面向宝可梦卡牌收藏者的免费工具包：追踪你的收藏，跟踪 TCGplayer 和 Cardmarket 的价格，完成卡包清单，计算评级 ROI，并查看真实盈亏。",
+    breadcrumb: "面向收藏者",
+    h1: "宝可梦卡牌收藏者的工具包",
+    intro:
+      "Pokector 是一款面向宝可梦卡牌收藏者和投资者的免费独立网页应用。追踪你拥有的一切，跟踪 TCGplayer 和 Cardmarket 的真实价格，集齐卡包，并随时查看收藏组合的真实盈亏——没有夸张，也没有编造的数值。",
+    browseCards: "浏览目录",
+    toolsHeading: "收藏者所需的一切，尽在一处",
+    tool1Title: "收藏追踪",
+    tool1Body:
+      "记录你拥有的每张卡牌，包括版本、品相和购入价格。你的收藏会按实时市场估值计价，并随价格变动更新。",
+    tool2Title: "价格与价值追踪",
+    tool2Body:
+      "按卡牌和版本跟踪真实价格历史，发现 7 天内最大的波动，在买卖之前看清市场走向。",
+    tool3Title: "卡包清单",
+    tool3Body:
+      "每个卡包的自动清单会显示你已拥有的、缺少的，以及集齐大约需要多少花费。",
+    tool4Title: "评级 ROI 计算器",
+    tool4Body:
+      "将裸卡价值与 PSA 9、PSA 10 的成交价对比，扣除评级费和运费，看看评级是否真的划算。",
+    tool5Title: "卡牌对比",
+    tool5Body:
+      "将卡牌并排比较价格和价格历史——决定下一张要收哪张时很有用。",
+    tool6Title: "卡册与心愿单",
+    tool6Body:
+      "把卡牌排入直观的 9 格卡册页，通过链接分享，并为你仍想要的卡牌设定目标价。",
+    toolCta: "打开",
+    whyHeading: "为收藏者打造，而非投机者",
+    whyBody:
+      "每个价格都会显示来源和日期。没有价格的卡牌显示“无价格”，而不是“0 美元”。价格历史从 Pokector 首次观测到某张卡牌开始，收藏组合历史从你开始的那天算起——所以你看到的数字是真实的，而非补填的。",
+    faqHeading: "常见问题",
+    faq1Q: "Pokector 对收藏者免费吗？",
+    faq1A: "是的。创建账户和追踪收藏完全免费。",
+    faq2Q: "卡牌价格来自哪里？",
+    faq2A:
+      "裸卡价值采用当前 TCGplayer 价格（美元），在可用时同时显示 Cardmarket（欧元）。PSA 9 和 PSA 10 的价值来自近期成交。每个价格都会显示来源和日期。",
+    faq3Q: "我能随时间追踪收藏价值吗？",
+    faq3A:
+      "可以。Pokector 会记录真实的价格观测，并从你开始追踪的那天起构建收藏组合历史——包括相对于你付出价格的盈亏。",
+    faq4Q: "Pokector 能帮我集齐卡包吗？",
+    faq4A:
+      "每个卡包都有自动清单，显示你已拥有的、缺少的，以及集齐的估算花费。",
+    faq5Q: "Pokector 是官方或与宝可梦有关联吗？",
+    faq5A:
+      "不是。Pokector 是独立项目，与任天堂、宝可梦公司或威世智均无关联，也未获其认可或赞助。",
+    ctaHeading: "今天就开始追踪你的收藏",
+    ctaBody:
+      "创建免费账户，几分钟内添加你的第一批卡牌，剩下的交给 Pokector 记录。",
+    ctaButton: "创建免费账户",
+  },
+
+  gradingLanding: {
+    metaTitle: "宝可梦卡牌评级计算器 — PSA 值得吗？ | Pokector",
+    metaDescription:
+      "免费的宝可梦卡牌评级计算器：将裸卡价值与 PSA 9、PSA 10 价格对比，扣除评级费和运费，看看评级是否值得。",
+    breadcrumb: "评级计算器",
+    h1: "宝可梦卡牌评级计算器",
+    intro:
+      "那张卡该送评吗？输入你裸卡的价值以及当前 PSA 9、PSA 10 的价格，计算器会扣除评级费和运费，在你把卡寄给 PSA 之前告诉你真实回报。",
+    tierLabel: "PSA 档位",
+    tierValue: "Value",
+    tierRegular: "Regular",
+    tierExpress: "Express",
+    rawLabel: "裸卡价值（$）",
+    psa9Label: "PSA 9（$）",
+    psa10Label: "PSA 10（$）",
+    colGrade: "评分",
+    colGradedValue: "评级后价值",
+    colAllIn: "总成本",
+    colNet: "净额",
+    colRoi: "ROI",
+    feeNote: "PSA 费用 {fee} + 运费 {shipping}（估算——请查看 PSA 当前价目）。",
+    disclaimer:
+      "仅为估算。并非每张卡都能拿到 PSA 10，费用也会变动——请输入你实际会支付的数字。",
+    howHeading: "评级 ROI 如何计算",
+    how1Lead: "输入裸卡价值。",
+    how1Body:
+      " 从未评级卡今天的成交价开始——如果你已拥有，就是你的成本；否则是买入价。",
+    how2Lead: "输出评级后价值。",
+    how2Body:
+      " PSA 9 和 PSA 10 通常以裸卡价格的数倍成交。差额是你的潜在收益——但其中只有一部分是利润。",
+    how3Lead: "费用与概率。",
+    how3Body:
+      " 评级并非免费：PSA 按卡收费再加回寄运费，而且并非每张卡都能拿到 10。决定前请把两者都算进去。",
+    tryHeading: "用真实卡牌试一试",
+    tryBody:
+      "实时计算器会在每张同时具备裸卡价格和近期 PSA 成交的卡牌页面上运行，使用真实市场数字。打开任意卡牌即可查看其评级 ROI。",
+    tryCta: "浏览卡牌",
+    faqHeading: "评级常见问题",
+    faq1Q: "宝可梦卡牌评级值得吗？",
+    faq1A:
+      "取决于卡牌。当 PSA 9/10 价格扣除费用和运费后明显高于裸卡价值时，评级才划算——通常是高价或近乎完美的卡牌。便宜卡牌的费用会吃掉收益。",
+    faq2Q: "PSA 评级要多少钱？",
+    faq2A:
+      "PSA 按卡收费，费用随服务档位和申报价值而变，再加回寄运费。请务必查看 PSA 当前价目；本计算器允许你输入实际会支付的费用。",
+    faq3Q: "PSA 9 和 PSA 10 有何区别？",
+    faq3A:
+      "PSA 10（Gem Mint）近乎完美，通常远比 PSA 9（Mint）卖得贵。由于多数卡牌拿不到 10，计算器让你比较两种结果。",
+    faq4Q: "Pokector 显示真实的 PSA 价格吗？",
+    faq4A:
+      "在具有近期评级成交数据的卡牌页面上，是的——PSA 9 和 PSA 10 的价值会显示在裸卡价格旁边，因此计算器使用真实数字。",
+    ctaHeading: "查看你卡牌的评级 ROI",
+    ctaBody:
+      "创建免费账户以追踪收藏，并查看你拥有的每张卡牌的评级回报。",
+    ctaButton: "创建免费账户",
   },
 
   cards: {

@@ -11,6 +11,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description:
       "Practical guides for Pokémon TCG collectors: tracking collections, understanding market prices, organizing binders, and completing sets.",
     canonical: data?.canonical,
+    appUrl: data?.appUrl,
     noindex: Boolean(data?.filtered),
   });
 }
@@ -41,6 +42,7 @@ export function loader({ request, context }: Route.LoaderArgs) {
     categories: BLOG_CATEGORIES,
     filtered: Boolean(category || page > 1),
     canonical: canonicalUrl(env.APP_URL, "/blog"),
+    appUrl: env.APP_URL,
   };
 }
 

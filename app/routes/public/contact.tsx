@@ -7,6 +7,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     title: "Contact | Pokector",
     description: "How to reach the Pokector team for support, data questions, or legal matters.",
     canonical: data?.canonical,
+    appUrl: data?.appUrl,
   });
 }
 
@@ -18,6 +19,7 @@ export function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   return {
     canonical: canonicalUrl(env.APP_URL, "/contact"),
+    appUrl: env.APP_URL,
     supportEmail: env.SUPPORT_EMAIL,
     operatorName: env.LEGAL_OPERATOR_NAME,
     operatorAddress: env.LEGAL_OPERATOR_ADDRESS,

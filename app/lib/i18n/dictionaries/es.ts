@@ -33,6 +33,10 @@ const es: Dict = {
     myCollection: "Mi colección",
     signIn: "Iniciar sesión",
     getStarted: "Empezar",
+    footerExplore: "Explorar",
+    footerCollectors: "Para coleccionistas",
+    footerGrading: "Calculadora de gradeo",
+    footerResources: "Recursos",
     footerAbout: "Acerca de",
     footerMethodology: "Datos y metodología",
     footerBlog: "Blog",
@@ -57,6 +61,8 @@ const es: Dict = {
     heroTitleAccent: "como un activo",
     heroSubtitle:
       "Tu colección de Pokémon TCG como un portafolio: valores de mercado de TCGplayer en tiempo real, historial de precios real, ganancias y pérdidas — números honestos, sin exageraciones.",
+    introSeo:
+      "Pokector es un rastreador gratuito de colección y precios para coleccionistas de cartas Pokémon. Registra las cartas que tienes, sigue los precios actuales de TCGplayer y Cardmarket, completa las listas de sets, organiza tus archivadores y observa las ganancias y pérdidas reales de tu portafolio con el tiempo: sin exageraciones, solo cifras honestas.",
     heroSearchLabel: "Buscar en el catálogo de cartas",
     heroSearchPlaceholder: "Busca una carta, p. ej. Charizard…",
     heroSearchButton: "Buscar",
@@ -100,6 +106,115 @@ const es: Dict = {
     finalCtaBody:
       "Crea una cuenta gratuita, añade tus primeras cartas en minutos y deja que Pokector lleve la cuenta a partir de aquí.",
     finalCtaButton: "Crear cuenta gratuita",
+  },
+
+  collectorsLanding: {
+    metaTitle: "Coleccionistas de cartas Pokémon — rastreador de colección y precios gratis | Pokector",
+    metaDescription:
+      "El kit gratuito para coleccionistas de cartas Pokémon: rastrea tu colección, sigue precios de TCGplayer y Cardmarket, completa listas de sets, calcula el ROI de gradeo y ve ganancias y pérdidas reales.",
+    breadcrumb: "Para coleccionistas",
+    h1: "El kit para coleccionistas de cartas Pokémon",
+    intro:
+      "Pokector es una app web gratuita e independiente para coleccionistas e inversores de cartas Pokémon. Rastrea todo lo que tienes, sigue precios reales de TCGplayer y Cardmarket, completa tus sets y observa las ganancias y pérdidas honestas de tu portafolio a lo largo del tiempo: sin exageraciones ni valores inventados.",
+    browseCards: "Explorar el catálogo",
+    toolsHeading: "Todo lo que un coleccionista necesita en un solo lugar",
+    tool1Title: "Rastreador de colección",
+    tool1Body:
+      "Registra cada carta que tienes con su variante, estado y lo que pagaste. Tu colección se valora con estimaciones de mercado en vivo y se actualiza cuando cambian los precios.",
+    tool2Title: "Rastreador de precios y valor",
+    tool2Body:
+      "Sigue el historial real de precios por carta y variante, detecta los mayores movimientos de 7 días y ve hacia dónde va el mercado antes de comprar o vender.",
+    tool3Title: "Listas de sets",
+    tool3Body:
+      "Las listas automáticas de cada set muestran lo que tienes, lo que falta y aproximadamente cuánto costaría completarlo.",
+    tool4Title: "Calculadora de ROI de gradeo",
+    tool4Body:
+      "Compara el valor de una carta sin gradear con las ventas PSA 9 y PSA 10, menos tarifas de gradeo y envío, para ver si gradear realmente vale la pena.",
+    tool5Title: "Comparación de cartas",
+    tool5Body:
+      "Pon cartas lado a lado para comparar precios e historial de precios: útil al decidir qué carta añadir a continuación.",
+    tool6Title: "Álbumes y listas de deseos",
+    tool6Body:
+      "Organiza tus cartas en páginas visuales de álbum de 9 bolsillos, compártelas con un enlace y fija precios objetivo para las cartas que aún quieres.",
+    toolCta: "Abrir",
+    whyHeading: "Hecho para coleccionistas, no para especuladores",
+    whyBody:
+      "Cada precio muestra su fuente y fecha. Las cartas sin precio dicen «sin precio», no «0 $». El historial de precios empieza cuando Pokector observa una carta por primera vez, y el de tu portafolio el día que empiezas tú: así que las cifras que ves son reales, no rellenadas.",
+    faqHeading: "Preguntas frecuentes",
+    faq1Q: "¿Es Pokector gratis para coleccionistas?",
+    faq1A: "Sí. Crear una cuenta y rastrear tu colección es completamente gratis.",
+    faq2Q: "¿De dónde vienen los precios de las cartas?",
+    faq2A:
+      "Los valores de cartas sin gradear usan precios actuales de TCGplayer (USD), con Cardmarket (EUR) donde esté disponible. Los valores PSA 9 y PSA 10 vienen de ventas recientes. Cada precio muestra su fuente y fecha.",
+    faq3Q: "¿Puedo seguir el valor de mi colección con el tiempo?",
+    faq3A:
+      "Sí. Pokector registra observaciones reales de precios y construye el historial de tu portafolio desde el día que empiezas a rastrear, incluyendo ganancias y pérdidas frente a lo que pagaste.",
+    faq4Q: "¿Me ayuda Pokector a completar mis sets?",
+    faq4A:
+      "Cada set tiene una lista automática que muestra lo que tienes, lo que falta y el coste estimado para terminarlo.",
+    faq5Q: "¿Es Pokector oficial o está afiliado a Pokémon?",
+    faq5A:
+      "No. Pokector es un proyecto independiente y no está afiliado, respaldado ni patrocinado por Nintendo, The Pokémon Company o Wizards of the Coast.",
+    ctaHeading: "Empieza a rastrear tu colección hoy",
+    ctaBody:
+      "Crea una cuenta gratis, añade tus primeras cartas en minutos y deja que Pokector lleve la cuenta.",
+    ctaButton: "Crear cuenta gratis",
+  },
+
+  gradingLanding: {
+    metaTitle: "Calculadora de gradeo de cartas Pokémon — ¿vale la pena PSA? | Pokector",
+    metaDescription:
+      "Calculadora gratuita de gradeo de cartas Pokémon: compara el valor de una carta sin gradear con precios PSA 9 y PSA 10, resta tarifas de gradeo y envío, y ve si vale la pena gradear.",
+    breadcrumb: "Calculadora de gradeo",
+    h1: "Calculadora de gradeo de cartas Pokémon",
+    intro:
+      "¿Deberías gradear esa carta? Introduce lo que vale tu carta sin gradear y los precios actuales de PSA 9 y PSA 10, y esta calculadora resta las tarifas de gradeo y el envío para mostrar tu retorno real antes de enviar nada a PSA.",
+    tierLabel: "Nivel PSA",
+    tierValue: "Value",
+    tierRegular: "Regular",
+    tierExpress: "Express",
+    rawLabel: "Valor sin gradear ($)",
+    psa9Label: "PSA 9 ($)",
+    psa10Label: "PSA 10 ($)",
+    colGrade: "Grado",
+    colGradedValue: "Valor gradeado",
+    colAllIn: "Coste total",
+    colNet: "Neto",
+    colRoi: "ROI",
+    feeNote: "Tarifa PSA {fee} + envío {shipping} (estimación — comprueba los precios actuales de PSA).",
+    disclaimer:
+      "Solo una estimación. No toda carta obtiene un PSA 10, y las tarifas cambian: introduce las cifras que realmente pagarás.",
+    howHeading: "Cómo funciona el ROI de gradeo",
+    how1Lead: "Valor sin gradear de entrada.",
+    how1Body:
+      " Empieza con lo que se vende hoy la carta sin gradear: tu coste base si ya la tienes, o el precio de comprar una.",
+    how2Lead: "Valor gradeado de salida.",
+    how2Body:
+      " Las copias PSA 9 y PSA 10 suelen venderse por un múltiplo del precio sin gradear. La diferencia es tu posible ganancia, pero solo parte de ella es beneficio.",
+    how3Lead: "Tarifas y probabilidades.",
+    how3Body:
+      " Gradear no es gratis: PSA cobra por carta más el envío de vuelta, y no toda carta saca un 10. Ten en cuenta ambos antes de decidir.",
+    tryHeading: "Pruébalo con una carta real",
+    tryBody:
+      "La calculadora en vivo funciona en cada página de carta que tiene precio sin gradear y ventas PSA recientes, usando cifras reales de mercado. Abre cualquier carta para ver su ROI de gradeo.",
+    tryCta: "Explorar cartas",
+    faqHeading: "FAQ de gradeo",
+    faq1Q: "¿Vale la pena gradear cartas Pokémon?",
+    faq1A:
+      "Depende de la carta. Gradear compensa cuando el precio PSA 9/10 menos tarifas y envío supera claramente el valor sin gradear, normalmente en cartas caras o casi perfectas. En cartas baratas las tarifas se comen la ganancia.",
+    faq2Q: "¿Cuánto cuesta el gradeo de PSA?",
+    faq2A:
+      "PSA cobra una tarifa por carta que varía según el nivel de servicio y el valor declarado, más el envío de vuelta. Comprueba siempre los precios actuales de PSA; esta calculadora te deja introducir la tarifa que realmente pagarás.",
+    faq3Q: "¿Cuál es la diferencia entre PSA 9 y PSA 10?",
+    faq3A:
+      "PSA 10 (Gem Mint) es casi impecable y suele venderse mucho más caro que PSA 9 (Mint). Como la mayoría de cartas no saca un 10, la calculadora te deja comparar ambos resultados.",
+    faq4Q: "¿Muestra Pokector precios PSA reales?",
+    faq4A:
+      "En páginas de cartas con datos recientes de ventas gradeadas, sí: los valores PSA 9 y PSA 10 se muestran junto al precio sin gradear, así que la calculadora usa cifras reales.",
+    ctaHeading: "Ve el ROI de gradeo de tus cartas",
+    ctaBody:
+      "Crea una cuenta gratis para rastrear tu colección y ver el retorno de gradeo en cada carta que tienes.",
+    ctaButton: "Crear cuenta gratis",
   },
 
   cards: {

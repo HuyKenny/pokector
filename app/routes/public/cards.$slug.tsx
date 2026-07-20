@@ -28,7 +28,7 @@ import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { MARKET_CURRENCY, MARKET_SOURCE } from "~/lib/market/market";
 import { formatMinor } from "~/lib/money/decimal";
-import { breadcrumbJsonLd, canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
+import { breadcrumbJsonLd, canonicalUrl, JsonLd, pageMeta, productJsonLd } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data) {
@@ -210,6 +210,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
     signedIn,
     cardState,
     appUrl,
+    canonical,
     locale,
     market,
     t,
@@ -295,6 +296,30 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
   ].filter((v): v is GradedValue => v !== null);
   const showGradingCalc = rawUsdMinor !== null && gradedValues.length > 0;
 
+  // Product/AggregateOffer schema — only when the active market actually prices
+  // this card (honest: no $0 offers for unpriced cards). Reflects the real
+  // TCGplayer/Cardmarket estimates already on the page.
+  const offerRows = activeRows.map((p) => p.normalizedPriceMinor);
+  const productSchema =
+    offerRows.length > 0
+      ? productJsonLd({
+          appUrl,
+          name: `${card.name} (${set.name} ${card.number})`,
+          image: card.imageLargeUrl ?? card.imageSmallUrl ?? undefined,
+          brand: set.name,
+          category: card.supertype ?? undefined,
+          sku: card.slug,
+          url: canonical,
+          offers: {
+            lowPriceMinor: Math.min(...offerRows),
+            highPriceMinor: Math.max(...offerRows),
+            currency: marketCurrency,
+            offerCount: offerRows.length,
+            offerUrl: ebayUrl ?? undefined,
+          },
+        })
+      : null;
+
   return (
     <div className="flex flex-col gap-8">
       <JsonLd
@@ -305,6 +330,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             { name: set.name, path: lp(`/sets/${set.slug}`) },
             { name: card.name, path: lp(`/cards/${card.slug}`) },
           ]),
+          ...(productSchema ? [productSchema] : []),
         ]}
       />
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">

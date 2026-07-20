@@ -33,6 +33,10 @@ const cs: Dict = {
     myCollection: "Moje sbírka",
     signIn: "Přihlásit se",
     getStarted: "Začít",
+    footerExplore: "Objevuj",
+    footerCollectors: "Pro sběratele",
+    footerGrading: "Kalkulačka gradingu",
+    footerResources: "Zdroje",
     footerAbout: "O nás",
     footerMethodology: "Data a metodika",
     footerBlog: "Blog",
@@ -57,6 +61,8 @@ const cs: Dict = {
     heroTitleAccent: "jako aktivum",
     heroSubtitle:
       "Vaše sbírka Pokémon TCG jako portfolio: aktuální tržní hodnoty z TCGplayer, skutečná historie cen, zisk a ztráta — poctivá čísla, žádný humbuk.",
+    introSeo:
+      "Pokector je bezplatný sledovač sbírky a cen pro sběratele karet Pokémon. Zapisujte karty, které vlastníte, sledujte aktuální ceny z TCGplayeru a Cardmarketu, doplňujte checklisty setů, organizujte alba a průběžně vidíte reálný zisk i ztrátu svého portfolia — bez balastu, jen poctivá čísla.",
     heroSearchLabel: "Prohledat katalog karet",
     heroSearchPlaceholder: "Hledejte kartu, např. Charizard…",
     heroSearchButton: "Hledat",
@@ -99,6 +105,115 @@ const cs: Dict = {
     finalCtaBody:
       "Vytvořte si účet zdarma, během pár minut přidejte první karty a nechte Pokector počítat skóre odtud dál.",
     finalCtaButton: "Vytvořit účet zdarma",
+  },
+
+  collectorsLanding: {
+    metaTitle: "Sběratelé karet Pokémon — sledovač sbírky a cen zdarma | Pokector",
+    metaDescription:
+      "Bezplatná sada nástrojů pro sběratele karet Pokémon: sledujte sbírku, aktuální ceny z TCGplayeru a Cardmarketu, doplňujte checklisty setů, počítejte ROI gradingu a sledujte reálný zisk i ztrátu.",
+    breadcrumb: "Pro sběratele",
+    h1: "Sada nástrojů pro sběratele karet Pokémon",
+    intro:
+      "Pokector je bezplatná nezávislá webová aplikace pro sběratele a investory do karet Pokémon. Sledujte vše, co vlastníte, aktuální ceny z TCGplayeru a Cardmarketu, doplňujte sety a průběžně sledujte poctivý zisk i ztrátu svého portfolia — bez balastu a bez vymyšlených hodnot.",
+    browseCards: "Procházet katalog",
+    toolsHeading: "Vše, co sběratel potřebuje, na jednom místě",
+    tool1Title: "Sledovač sbírky",
+    tool1Body:
+      "Zapište každou kartu, kterou vlastníte, včetně varianty, stavu a ceny, za kterou jste ji koupili. Sbírka se oceňuje aktuálními tržními odhady a aktualizuje se s pohybem cen.",
+    tool2Title: "Sledovač cen a hodnoty",
+    tool2Body:
+      "Sledujte reálnou historii cen podle karty a varianty, odhalte největší týdenní pohyby a zjistěte, kam trh míří, ještě než nakoupíte nebo prodáte.",
+    tool3Title: "Checklisty setů",
+    tool3Body:
+      "Automatické checklisty u každého setu ukážou, co vlastníte, co chybí a kolik by zhruba stálo set dokončit.",
+    tool4Title: "Kalkulačka ROI gradingu",
+    tool4Body:
+      "Porovnejte hodnotu syrové karty s prodeji PSA 9 a PSA 10 po odečtení poplatků a poštovného a zjistěte, jestli se grading vůbec vyplatí.",
+    tool5Title: "Porovnání karet",
+    tool5Body:
+      "Postavte karty vedle sebe a porovnejte ceny i historii cen — hodí se, když se rozhodujete, kterou kartu přidat.",
+    tool6Title: "Alba a wishlisty",
+    tool6Body:
+      "Uspořádejte karty do vizuálních devítikapsových stránek alba, sdílejte je odkazem a nastavte cílové ceny u karet, které ještě chcete.",
+    toolCta: "Otevřít",
+    whyHeading: "Pro sběratele, ne pro spekulanty",
+    whyBody:
+      "Každá cena ukazuje svůj zdroj a datum. Neoceněné karty říkají „bez ceny“, ne „0 $“. Historie cen začíná, když Pokector kartu poprvé zaznamená, a historie portfolia začíná dnem, kdy začnete vy — čísla, která vidíte, jsou tedy reálná, ne dopočítaná.",
+    faqHeading: "Časté dotazy",
+    faq1Q: "Je Pokector pro sběratele zdarma?",
+    faq1A: "Ano. Založení účtu i sledování sbírky je zcela zdarma.",
+    faq2Q: "Odkud pocházejí ceny karet?",
+    faq2A:
+      "Hodnoty syrových karet používají aktuální ceny z TCGplayeru (USD), případně Cardmarket (EUR), kde je k dispozici. Hodnoty PSA 9 a PSA 10 vycházejí z nedávných prodejů. Každá cena ukazuje svůj zdroj a datum.",
+    faq3Q: "Můžu sledovat hodnotu sbírky v čase?",
+    faq3A:
+      "Ano. Pokector zaznamenává reálná pozorování cen a buduje historii vašeho portfolia ode dne, kdy začnete sledovat — včetně zisku a ztráty oproti tomu, co jste zaplatili.",
+    faq4Q: "Pomůže mi Pokector dokončit sety?",
+    faq4A:
+      "Každý set má automatický checklist, který ukazuje, co vlastníte, co chybí a odhadované náklady na dokončení.",
+    faq5Q: "Je Pokector oficiální nebo spojený s Pokémonem?",
+    faq5A:
+      "Ne. Pokector je nezávislý projekt a není spojen, podporován ani sponzorován společnostmi Nintendo, The Pokémon Company ani Wizards of the Coast.",
+    ctaHeading: "Začněte sledovat svou sbírku ještě dnes",
+    ctaBody:
+      "Založte si účet zdarma, během pár minut přidejte první karty a nechte Pokector počítat skóre.",
+    ctaButton: "Vytvořit účet zdarma",
+  },
+
+  gradingLanding: {
+    metaTitle: "Kalkulačka gradingu karet Pokémon — vyplatí se PSA? | Pokector",
+    metaDescription:
+      "Bezplatná kalkulačka gradingu karet Pokémon: porovnejte hodnotu syrové karty s cenami PSA 9 a PSA 10, odečtěte poplatky za grading a poštovné a zjistěte, jestli se grading vyplatí.",
+    breadcrumb: "Kalkulačka gradingu",
+    h1: "Kalkulačka gradingu karet Pokémon",
+    intro:
+      "Máte tu kartu nechat ohodnotit? Zadejte hodnotu syrové karty a aktuální ceny PSA 9 a PSA 10 a kalkulačka odečte poplatky za grading a poštovné, aby vám ukázala reálný výnos ještě předtím, než cokoli pošlete do PSA.",
+    tierLabel: "Úroveň PSA",
+    tierValue: "Value",
+    tierRegular: "Regular",
+    tierExpress: "Express",
+    rawLabel: "Cena syrové ($)",
+    psa9Label: "PSA 9 ($)",
+    psa10Label: "PSA 10 ($)",
+    colGrade: "Známka",
+    colGradedValue: "Hodnota v gradu",
+    colAllIn: "Celkové náklady",
+    colNet: "Čistý",
+    colRoi: "ROI",
+    feeNote: "Poplatek PSA {fee} + poštovné {shipping} (odhad — ověřte aktuální ceník PSA).",
+    disclaimer:
+      "Pouze odhad. Ne každá karta dostane PSA 10 a poplatky se mění — zadejte čísla, která opravdu zaplatíte.",
+    howHeading: "Jak funguje ROI gradingu",
+    how1Lead: "Hodnota syrové na vstupu.",
+    how1Body:
+      " Začněte tím, za kolik se dnes prodává neohodnocená karta — vaše pořizovací cena, pokud ji už máte, nebo cena za nákup.",
+    how2Lead: "Hodnota v gradu na výstupu.",
+    how2Body:
+      " Kopie PSA 9 a PSA 10 se obvykle prodávají za násobek ceny syrové. Ten rozdíl je váš potenciální výnos — ale ziskem je jen jeho část.",
+    how3Lead: "Poplatky a pravděpodobnost.",
+    how3Body:
+      " Grading není zadarmo: PSA účtuje za kartu plus zpětné poštovné a ne každá karta dostane desítku. Než se rozhodnete, započítejte obojí.",
+    tryHeading: "Vyzkoušejte na reálné kartě",
+    tryBody:
+      "Živá kalkulačka běží na každé stránce karty, která má cenu syrové i nedávné prodeje PSA, a používá reálná tržní čísla. Otevřete libovolnou kartu a uvidíte její ROI gradingu.",
+    tryCta: "Procházet karty",
+    faqHeading: "FAQ ke gradingu",
+    faq1Q: "Vyplatí se grading karet Pokémon?",
+    faq1A:
+      "Záleží na kartě. Grading se vyplatí, když cena PSA 9/10 po odečtení poplatků a poštovného jasně převyšuje hodnotu syrové — obvykle u dražších karet v top stavu. U levných karet poplatky výnos sežerou.",
+    faq2Q: "Kolik stojí grading u PSA?",
+    faq2A:
+      "PSA účtuje poplatek za kartu, který se liší podle úrovně služby a deklarované hodnoty, plus zpětné poštovné. Vždy si ověřte aktuální ceník PSA; tato kalkulačka umožňuje zadat poplatek, který skutečně zaplatíte.",
+    faq3Q: "Jaký je rozdíl mezi PSA 9 a PSA 10?",
+    faq3A:
+      "PSA 10 (Gem Mint) je téměř bezvadná a obvykle se prodává mnohem dráž než PSA 9 (Mint). Protože většina karet desítku nedostane, kalkulačka umožňuje porovnat oba výsledky.",
+    faq4Q: "Ukazuje Pokector reálné ceny PSA?",
+    faq4A:
+      "Na stránkách karet s nedávnými daty o prodejích v gradu ano — hodnoty PSA 9 a PSA 10 se zobrazují vedle ceny syrové, takže kalkulačka používá reálná čísla.",
+    ctaHeading: "Uvidíte ROI gradingu u svých karet",
+    ctaBody:
+      "Založte si účet zdarma, sledujte svou sbírku a uvidíte výnos z gradingu u každé karty, kterou vlastníte.",
+    ctaButton: "Vytvořit účet zdarma",
   },
 
   cards: {

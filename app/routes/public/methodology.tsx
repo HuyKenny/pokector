@@ -10,6 +10,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description:
       "How Pokector sources catalog data, normalizes TCGplayer and Cardmarket prices, records price history, and calculates portfolio values — including all limitations.",
     canonical: data?.canonical,
+    appUrl: data?.appUrl,
   });
 }
 
@@ -19,7 +20,7 @@ export function headers(_args: Route.HeadersArgs) {
 
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
-  return { canonical: canonicalUrl(env.APP_URL, "/methodology") };
+  return { canonical: canonicalUrl(env.APP_URL, "/methodology"), appUrl: env.APP_URL };
 }
 
 export default function Methodology() {

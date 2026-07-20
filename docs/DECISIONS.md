@@ -450,3 +450,43 @@ Three reported bugs.
   Settings). App-area menu labels stay English (app is English-only), so no new i18n
   keys were needed. Verified e2e (staging+prod): CZ registrant → EUR + Czech nav
   auto-defaulted, Manage link → /app/collection, wishlist EUR, unified header.
+
+### D27. SEO overhaul — structured data, keyword pillar pages, on-page (owner 2026-07-20)
+
+Senior-SEO pass targeting "pokemon card collectors" + the tracker/price/checklist/
+grading cluster. Audit finding: the technical SEO layer was already strong (sitemap
+index, env-gated robots, canonical/redirect/noindex/hreflang, unique localized meta),
+so the work is **additive**. Ahrefs reality check: the literal phrase is low-value
+(TP ~60, Reddit/Amazon SERP); the traffic lives in the sibling cluster — pokemon card
+tracker (800), collection tracker (400), **price tracker (TP 93k)**, tracker app (KD
+22), set checklists (KD 0), psa (KD 1). Changes:
+
+- **Structured data** (`app/lib/seo/meta.tsx`): new `productJsonLd` (Product +
+  AggregateOffer) on card detail — **only when the active market prices the card**
+  (guard on `activeRows`, honest: no $0/ratings); `organizationJsonLd` rendered once
+  on home + `WebSite.publisher` `@id` reference; `faqPageJsonLd` on the two new
+  landings. Set detail already had BreadcrumbList + visible nav (agent grep was wrong).
+- **OG images**: `resolveOgImage` makes every `og:image` **absolute** (relative paths
+  are rejected by some crawlers) and falls back to the branded `pokector-og.png` (the
+  previously-unused `DEFAULT_OG_IMAGE`) when a page passes no image; home switched off
+  the square icon. `appUrl` threaded to about/blog/methodology/contact meta.
+- **Card sitemap hreflang**: `sitemap-cards.ts` now emits `<xhtml:link>` alternates per
+  card (parity with sets; compact one-`<url>`-per-card form to stay under 50k/file).
+- **On-page**: home gained an indexable `introSeo` line (keyword-bearing, translated
+  ×11); footer restructured into an **Explore** hub group (Cards/Sets/Price movers/
+  Pokédex + the two new landings, localized) + Resources.
+- **New localized landing pages** (both under `:locale`, all 11 locales, in
+  `sitemap-static` TRANSLATED_PATHS): `/pokemon-card-collectors` (`collectors.tsx`,
+  `collectorsLanding` dict) — pillar owning the keyword, tool cards → tracker/price/
+  sets/grading/compare/binders, FAQPage. `/pokemon-card-grading-calculator`
+  (`grading.tsx`, `gradingLanding` dict) — a **fully interactive** standalone calc
+  (`standalone-grading-calculator.tsx`, all numbers user-entered — no fabricated data)
+  + explainer + FAQ, targeting "psa pokemon cards" / "is grading worth it".
+- **Blog**: 3 new English posts (how to start a collection [KD 0], are cards a good
+  investment, is grading worth it) interlinked to the pillar + tools. **Deferred**: the
+  blog-localization refactor (locale-aware routing + EN fallback) — higher risk/lower
+  value for an English target; posts ship in EN now, refactor is a scoped follow-up.
+
+Verified e2e (staging + prod, cache purged): Product/Organization/FAQ JSON-LD live,
+absolute branded OG, card-sitemap hreflang, both landings 200 in EN + `/cs/…`, footer
+hubs, 3 posts indexed. typecheck/lint/**101 tests** green (i18n parity across 11).

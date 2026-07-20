@@ -6,7 +6,7 @@ import { optionalUser } from "~/lib/auth/guards.server";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
+import { localePath, resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
@@ -64,33 +64,61 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
       </main>
 
       <footer className="border-t border-edge bg-surface">
-        <div className="mx-auto flex max-w-6xl flex-col gap-6 px-4 py-8 text-sm text-fg-muted">
-          <div className="flex flex-wrap gap-x-8 gap-y-2">
-            {/* Footer targets (About, legal, blog, RSS) are English-only pages. */}
-            <Link to="/about" className="hover:text-fg">
-              {t.footerAbout}
-            </Link>
-            <Link to="/methodology" className="hover:text-fg">
-              {t.footerMethodology}
-            </Link>
-            <Link to="/blog" className="hover:text-fg">
-              {t.footerBlog}
-            </Link>
-            <Link to="/contact" className="hover:text-fg">
-              {t.footerContact}
-            </Link>
-            <Link to="/privacy" className="hover:text-fg">
-              {t.footerPrivacy}
-            </Link>
-            <Link to="/terms" className="hover:text-fg">
-              {t.footerTerms}
-            </Link>
-            <Link to="/disclaimer" className="hover:text-fg">
-              {t.footerDisclaimer}
-            </Link>
-            <a href="/rss.xml" className="hover:text-fg">
-              {t.footerRss}
-            </a>
+        <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 text-sm text-fg-muted">
+          <div className="grid gap-8 sm:grid-cols-2">
+            {/* Explore: topical hub pages (localized). */}
+            <nav aria-label={t.footerExplore} className="flex flex-col gap-2">
+              <span className="font-semibold text-fg">{t.footerExplore}</span>
+              <Link to={localePath(locale, "/cards")} className="hover:text-fg">
+                {t.navCards}
+              </Link>
+              <Link to={localePath(locale, "/sets")} className="hover:text-fg">
+                {t.navSets}
+              </Link>
+              <Link to={localePath(locale, "/price-movers")} className="hover:text-fg">
+                {t.navPriceMovers}
+              </Link>
+              <Link to={localePath(locale, "/pokedex")} className="hover:text-fg">
+                {t.navPokedex}
+              </Link>
+              <Link to={localePath(locale, "/pokemon-card-collectors")} className="hover:text-fg">
+                {t.footerCollectors}
+              </Link>
+              <Link
+                to={localePath(locale, "/pokemon-card-grading-calculator")}
+                className="hover:text-fg"
+              >
+                {t.footerGrading}
+              </Link>
+            </nav>
+            {/* Resources: About, legal, blog, RSS (English-only pages). */}
+            <nav aria-label={t.footerResources} className="flex flex-col gap-2">
+              <span className="font-semibold text-fg">{t.footerResources}</span>
+              <Link to="/about" className="hover:text-fg">
+                {t.footerAbout}
+              </Link>
+              <Link to="/methodology" className="hover:text-fg">
+                {t.footerMethodology}
+              </Link>
+              <Link to="/blog" className="hover:text-fg">
+                {t.footerBlog}
+              </Link>
+              <Link to="/contact" className="hover:text-fg">
+                {t.footerContact}
+              </Link>
+              <Link to="/privacy" className="hover:text-fg">
+                {t.footerPrivacy}
+              </Link>
+              <Link to="/terms" className="hover:text-fg">
+                {t.footerTerms}
+              </Link>
+              <Link to="/disclaimer" className="hover:text-fg">
+                {t.footerDisclaimer}
+              </Link>
+              <a href="/rss.xml" className="hover:text-fg">
+                {t.footerRss}
+              </a>
+            </nav>
           </div>
           <p className="max-w-3xl text-xs text-fg-faint">{t.disclaimer}</p>
         </div>

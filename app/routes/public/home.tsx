@@ -9,7 +9,7 @@ import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
-import { canonicalUrl, JsonLd, pageMeta } from "~/lib/seo/meta";
+import { canonicalUrl, JsonLd, organizationJsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
@@ -17,7 +17,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
     alternates: data ? { appUrl: data.appUrl, path: "/" } : undefined,
-    image: "/brand/pokector-icon-512.png",
+    // No explicit image → falls back to the branded OG banner (absolute).
   });
 }
 
@@ -64,17 +64,21 @@ export default function Home({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex flex-col gap-16">
       <JsonLd
-        data={{
-          "@context": "https://schema.org",
-          "@type": "WebSite",
-          name: "Pokector",
-          url: appUrl,
-          potentialAction: {
-            "@type": "SearchAction",
-            target: `${appUrl}/cards?q={search_term_string}`,
-            "query-input": "required name=search_term_string",
+        data={[
+          organizationJsonLd({ appUrl, logo: "/brand/pokector-icon-512.png" }),
+          {
+            "@context": "https://schema.org",
+            "@type": "WebSite",
+            name: "Pokector",
+            url: appUrl,
+            publisher: { "@id": `${appUrl}#organization` },
+            potentialAction: {
+              "@type": "SearchAction",
+              target: `${appUrl}/cards?q={search_term_string}`,
+              "query-input": "required name=search_term_string",
+            },
           },
-        }}
+        ]}
       />
 
       {/* Hero */}
@@ -108,6 +112,7 @@ export default function Home({ loaderData }: Route.ComponentProps) {
           {t.heroTitlePre} <span className="text-accent">{t.heroTitleAccent}</span>.
         </h1>
         <p className="max-w-2xl text-lg text-fg-muted">{t.heroSubtitle}</p>
+        <p className="max-w-2xl text-sm text-fg-faint">{t.introSeo}</p>
         <Form
           method="get"
           action={lp("/cards")}
