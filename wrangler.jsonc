@@ -151,8 +151,8 @@
         "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
         "LEGAL_OPERATOR_ID": "IČO 07876823",
         // Stripe LIVE-mode recurring Price IDs for production.
-        "STRIPE_PRICE_MONTHLY": "price_live_replace_me_monthly",
-        "STRIPE_PRICE_YEARLY": "price_live_replace_me_yearly",
+        "STRIPE_PRICE_MONTHLY": "price_1TvMMnE0DjqLJAGXsWOKIhLL",
+        "STRIPE_PRICE_YEARLY": "price_1TvMLjE0DjqLJAGXtBy8e3JB",
       },
       "d1_databases": [
         {
