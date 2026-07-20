@@ -67,6 +67,10 @@ export function applySecurityHeaders(response: Response, options: SecurityOption
   headers.set("Referrer-Policy", "strict-origin-when-cross-origin");
   headers.set("Permissions-Policy", "camera=(), microphone=(), geolocation=()");
   headers.set("X-Frame-Options", "DENY");
+  // Isolate the browsing context (a cross-origin opener can't reach our window)
+  // and refuse legacy Flash/PDF cross-domain policy files.
+  headers.set("Cross-Origin-Opener-Policy", "same-origin");
+  headers.set("X-Permitted-Cross-Domain-Policies", "none");
   if (options.production) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }

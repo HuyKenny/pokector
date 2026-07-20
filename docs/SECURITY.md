@@ -19,6 +19,8 @@ Last updated: 2026-07-17 (Phase 0 baseline; verified controls updated per phase)
 - `Strict-Transport-Security: max-age=31536000; includeSubDomains` (production only).
 - `X-Content-Type-Options: nosniff`, `Referrer-Policy: strict-origin-when-cross-origin`,
   `Permissions-Policy: camera=(), microphone=(), geolocation=()`, `X-Frame-Options: DENY`.
+- `Cross-Origin-Opener-Policy: same-origin` (browsing-context isolation) and
+  `X-Permitted-Cross-Domain-Policies: none` (no Flash/PDF cross-domain policy) — added 2026-07-19.
 - `/app`, `/admin`, `/api/v1` private responses: `Cache-Control: private, no-store`.
 
 Card images come only from the PTCG image hosts (`images.pokemontcg.io`, and
@@ -69,6 +71,42 @@ Structured JSON logs: request ID, environment, route, status, duration, error co
 job ID. Never logged: passwords, session tokens, API keys, full auth headers, personal
 notes, full CSV contents, e-mail addresses (user IDs only). Error responses in
 production expose a request ID, never a stack trace.
+
+## Cloudflare edge (zone pokector.com, hardened 2026-07-19)
+
+The app runs as a Worker on the `pokector.com` Cloudflare zone; edge controls sit in
+front of the Worker and are defense-in-depth over the in-app protections above.
+
+- **TLS/SSL**: `ssl=strict` (Full Strict), `min_tls_version=1.2` (TLS 1.0/1.1 refused),
+  `always_use_https=on` (edge HTTP→HTTPS redirect), `tls_1_3=on`. (Was full / 1.0 / off.)
+- **WAF custom rule** (phase `http_request_firewall_custom`): **block** requests whose path
+  probes non-existent attack surface — the site serves no PHP/WordPress/git/vendor: matches
+  `wp-login`, `wp-admin`, `wp-includes`, `wp-json`, `xmlrpc`, `.php`, `/.env`, `/.git`, `/.aws`,
+  `/.ssh`, `phpmyadmin`, `/vendor/`. Returns 403 and never reaches the Worker (also saves CPU).
+  Verified: `/wp-login.php`, `/.env`, `/xmlrpc.php`, `/config.php`, `/.git/config` → 403; real
+  pages / API / sitemap / security.txt → 200. (Free plan = `contains` operators, no regex.)
+- **Rate-limiting rule** (phase `http_ratelimit`, Free = 1 rule, 10s window): auth POSTs
+  (`/api/auth/sign-in`, `/sign-up/email`, `/request-password-reset`) → **block** at >8 req/10s per
+  IP per colo (10s mitigation). Coarse distributed-brute-force catch on top of the app's own D1
+  limiter (which is fail-open); the edge rule is fail-closed.
+- **Bot Fight Mode**: enabled (Free) — challenges obvious bots, allows verified search crawlers
+  (Googlebot/Bingbot/Seznam). Verified a real browser + in-session `/api/v1/cards/suggest` still
+  work. Reversible if it interferes with a legitimate API consumer.
+- Applied via the CF API (account global key in `.zaletet-credentials.env`), scoped to
+  pokector.com only — does not touch the 29-zone WordPress WAF automation. All settings/rules are
+  reversible (baseline recorded: ssl=full, min_tls=1.0, always_use_https=off, 0 rules, BFM off).
+
+## Accepted findings / follow-ups
+
+- `pnpm audit`: 1 moderate — `esbuild ≤0.24.2` (GHSA-67mh-4wv8-2f99) via
+  `drizzle-kit > @esbuild-kit/*`. **Dev-only, not exploitable here**: it affects a running
+  esbuild *dev server*, which drizzle-kit never starts, and esbuild is not in the deployed Worker
+  bundle. Not force-overridden (esbuild is shared with Vite; a forced bump risks the build for a
+  non-exploitable dev dep). Re-evaluate when drizzle-kit drops the deprecated `@esbuild-kit` chain.
+- **eBay Cert ID** (`EBAY_CERT_ID`, a Worker secret) transited chat historically — rotate it in the
+  eBay developer console (owner action; no code change — the Worker reads it from the secret).
+- **CF Global API Key** grants full-account access; consider a **scoped API token** (Zone WAF +
+  Zone Settings edit for pokector.com only) for future edge automation.
 
 ## security.txt
 
