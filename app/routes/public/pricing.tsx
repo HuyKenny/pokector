@@ -15,7 +15,7 @@ import { eq } from "drizzle-orm";
 // USD amounts are the same across locales — the surrounding labels are translated.
 const PRICE_MONTHLY = "$3.99";
 const PRICE_YEARLY_PER_MONTH = "$3.33";
-const PRICE_YEARLY_TOTAL = "$39.99";
+const PRICE_YEARLY_TOTAL = "$40";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
