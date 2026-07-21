@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher, useNavigate } from "react-router";
 
-import { useLocalePath } from "~/lib/i18n/react";
+import { type Locale, localePath } from "~/lib/i18n/locales";
 import type { SuggestItem } from "~/routes/api/v1.cards.suggest";
 
 interface Labels {
@@ -10,6 +10,10 @@ interface Labels {
   resultsLabel: string;
   viewAll: string;
   noResults: string;
+  /** Active locale for result links — passed from the layout so search stays
+   * in-locale even on English-only routes (/app), where the URL has no
+   * `:locale` param for `useLocalePath` to read. */
+  locale: Locale;
   /** Full-width input (used inside the mobile menu). */
   block?: boolean;
 }
@@ -25,10 +29,11 @@ export function HeaderSearch({
   resultsLabel,
   viewAll,
   noResults,
+  locale,
   block = false,
 }: Labels) {
   const fetcher = useFetcher<{ items: SuggestItem[] }>();
-  const lp = useLocalePath();
+  const lp = (path: string) => localePath(locale, path);
   const navigate = useNavigate();
   const [value, setValue] = useState("");
   const [open, setOpen] = useState(false);

@@ -127,6 +127,7 @@ export function SiteHeader({
             resultsLabel={t.searchResults}
             viewAll={t.searchViewAll}
             noResults={t.searchNoResults}
+            locale={locale}
           />
           <MarketSwitcher
             current={market}
@@ -177,6 +178,7 @@ export function SiteHeader({
               resultsLabel={t.searchResults}
               viewAll={t.searchViewAll}
               noResults={t.searchNoResults}
+              locale={locale}
             />
             <nav aria-label={t.navMain} className="flex flex-col">
               {nav.map((item) => (
@@ -393,8 +395,11 @@ function CloseIcon() {
   );
 }
 
-/** Native <details> disclosure — works without JS. Each entry links to the same
- * page in the target locale. */
+/** Native <details> disclosure — works without JS. Each entry posts to /locale,
+ * which (for signed-in users) persists the choice on the profile and then
+ * redirects to the same page in the target locale, so the language sticks across
+ * English-only pages instead of snapping back. Authoritative hreflang lives in
+ * <head> (pageMeta), so switching to POST here costs no SEO signal. */
 function LanguageSwitcher({
   current,
   barePath,
@@ -416,17 +421,21 @@ function LanguageSwitcher({
       <ul className="absolute end-0 z-50 mt-1 max-h-80 w-44 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
         {LOCALES.map((l) => (
           <li key={l}>
-            <a
-              href={localePath(l, barePath)}
-              hrefLang={l}
-              aria-current={l === current ? "true" : undefined}
-              className={`flex items-center gap-2 px-3 py-2 text-sm hover:bg-surface-raised ${
-                l === current ? "font-semibold text-accent" : "text-fg"
-              }`}
-            >
-              <Flag code={l} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
-              {LOCALE_NAMES[l]}
-            </a>
+            <form method="post" action="/locale">
+              <input type="hidden" name="locale" value={l} />
+              <input type="hidden" name="redirectTo" value={barePath} />
+              <button
+                type="submit"
+                lang={l}
+                aria-current={l === current ? "true" : undefined}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                  l === current ? "font-semibold text-accent" : "text-fg"
+                }`}
+              >
+                <Flag code={l} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
+                {LOCALE_NAMES[l]}
+              </button>
+            </form>
           </li>
         ))}
       </ul>

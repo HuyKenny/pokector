@@ -6,7 +6,13 @@ import { optionalUser } from "~/lib/auth/guards.server";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
-import { localePath, resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
+import {
+  DEFAULT_LOCALE,
+  isLocale,
+  localePath,
+  resolveLocale,
+  stripLocalePrefix,
+} from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
 import { isPremium } from "~/lib/billing/entitlement.server";
 import { schema } from "~/lib/db/index.server";
@@ -14,24 +20,35 @@ import { eq } from "drizzle-orm";
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {
   const session = await optionalUser(context, request);
-  const locale = resolveLocale(params.locale);
   const { env } = getCloudflare(context);
   // Signed-in visitors see the account menu + notifications bell even on public
   // pages, so the header is identical everywhere.
   const db = createDb(env.DB);
   let unread = 0;
   let premium = false;
+  let profileLocale: string | null = null;
   if (session) {
     const [count, profile] = await Promise.all([
       unreadCount(db, session.user.id),
       db.query.userProfiles.findFirst({
         where: eq(schema.userProfiles.userId, session.user.id),
-        columns: { premiumUntil: true },
+        columns: { premiumUntil: true, locale: true },
       }),
     ]);
     unread = count;
     premium = isPremium(profile);
+    profileLocale = profile?.locale ?? null;
   }
+  // Chrome (header/footer) locale. On a `/:locale` URL the prefix wins. On an
+  // unprefixed URL (English-only pages, /, and the app boundary) we fall back to
+  // the signed-in user's saved language so their nav stays in that language
+  // instead of snapping to English. Anonymous visitors stay URL-derived so the
+  // CDN-shared cache of these pages is never poisoned with someone's language.
+  const locale = isLocale(params.locale)
+    ? params.locale
+    : session
+      ? resolveLocale(profileLocale ?? undefined)
+      : DEFAULT_LOCALE;
   return {
     signedIn: session !== null,
     isAdmin: session?.user.role === "admin",

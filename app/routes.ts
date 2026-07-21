@@ -64,6 +64,7 @@ export default [
 
   // ── Preferences ────────────────────────────────────────────────────────────
   route("market", "routes/market.ts"), // POST: switch price market (cookie)
+  route("locale", "routes/locale.ts"), // POST: switch UI language (profile, signed-in)
 
   // ── SEO / machine endpoints ────────────────────────────────────────────────
   route("health", "routes/health.ts"),
