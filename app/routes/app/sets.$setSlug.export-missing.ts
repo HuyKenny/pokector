@@ -1,8 +1,9 @@
 import type { Route } from "./+types/sets.$setSlug.export-missing";
 import { requireUser } from "~/lib/auth/guards.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { toCsvLine } from "~/lib/csv/escape";
 import { enforceRateLimit } from "~/lib/security/rate-limit.server";
@@ -17,10 +18,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   await enforceRateLimit(createDb(env.DB), "export", session.user.id);
 
   const db = createDb(env.DB);
-  const data = await getSetBySlug(db, params.setSlug);
+  const market = getMarket(context);
+  const currency = MARKET_CURRENCY[market];
+  const data = await getSetBySlug(db, params.setSlug, market);
   if (!data) throw new Response("Set not found", { status: 404 });
 
-  const progress = await computeSetProgress(db, session.user.id, data.set.id);
+  const progress = await computeSetProgress(db, session.user.id, data.set.id, market);
   const ownedSet = new Set(progress.ownedCardIds);
   const missing = data.cards.filter((card) => !ownedSet.has(card.id));
 
@@ -31,7 +34,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
       "set_id",
       "card_number",
       "rarity",
-      "estimated_price_usd",
+      `estimated_price_${currency.toLowerCase()}`,
     ]),
     ...missing.map((card) =>
       toCsvLine([

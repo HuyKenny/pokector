@@ -8,6 +8,7 @@
 import { and, desc, eq } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
+import { MARKET_CURRENCY, type Market } from "../market/market";
 import { deleteEntries, updateEntry } from "./queries.server";
 
 export interface SellInput {
@@ -31,6 +32,7 @@ export async function recordSale(
   db: Database,
   userId: string,
   input: SellInput,
+  market: Market,
 ): Promise<{ ok: boolean; message: string }> {
   const entry = await db.query.collectionEntries.findFirst({
     where: and(
@@ -51,7 +53,7 @@ export async function recordSale(
     quantity: soldQty,
     variant: entry.variant,
     grade: entry.grade,
-    saleCurrency: "USD",
+    saleCurrency: MARKET_CURRENCY[market],
     salePriceMinor: input.salePriceMinor,
     feeMinor: input.feeMinor,
     purchasePriceMinor: entry.purchasePriceMinor,
@@ -119,6 +121,7 @@ export function proceedsFor(sale: {
 export async function listSales(
   db: Database,
   userId: string,
+  market: Market,
   opts: { year?: number } = {},
 ): Promise<SaleRow[]> {
   const rows = await db
@@ -142,7 +145,12 @@ export async function listSales(
     .from(schema.cardSales)
     .innerJoin(schema.pokemonCards, eq(schema.cardSales.cardId, schema.pokemonCards.id))
     .innerJoin(schema.pokemonSets, eq(schema.pokemonCards.setId, schema.pokemonSets.id))
-    .where(eq(schema.cardSales.userId, userId))
+    .where(
+      and(
+        eq(schema.cardSales.userId, userId),
+        eq(schema.cardSales.saleCurrency, MARKET_CURRENCY[market]),
+      ),
+    )
     .orderBy(desc(schema.cardSales.soldDate), desc(schema.cardSales.createdAt))
     .limit(1000);
 

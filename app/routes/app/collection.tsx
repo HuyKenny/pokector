@@ -5,8 +5,9 @@ import { z } from "zod";
 import type { Route } from "./+types/collection";
 import { Alert, Button, Card, Input } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
+import { type Currency, MARKET_CURRENCY } from "~/lib/market/market";
 import {
   addEntry,
   bulkUpdateEntries,
@@ -30,21 +31,28 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const url = new URL(request.url);
+  const market = getMarket(context);
 
-  const result = await listCollection(db, session.user.id, {
-    q: url.searchParams.get("q") ?? undefined,
-    setId: url.searchParams.get("set") ?? undefined,
-    variant: url.searchParams.get("variant") ?? undefined,
-    condition: url.searchParams.get("condition") ?? undefined,
-    unpricedOnly: url.searchParams.get("unpriced") === "1",
-    sort:
-      (url.searchParams.get("sort") as "updated" | "name" | "value" | "quantity" | null) ??
-      undefined,
-    page: Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1,
-  });
+  const result = await listCollection(
+    db,
+    session.user.id,
+    {
+      q: url.searchParams.get("q") ?? undefined,
+      setId: url.searchParams.get("set") ?? undefined,
+      variant: url.searchParams.get("variant") ?? undefined,
+      condition: url.searchParams.get("condition") ?? undefined,
+      unpricedOnly: url.searchParams.get("unpriced") === "1",
+      sort:
+        (url.searchParams.get("sort") as "updated" | "name" | "value" | "quantity" | null) ??
+        undefined,
+      page: Number.parseInt(url.searchParams.get("page") ?? "1", 10) || 1,
+    },
+    market,
+  );
 
   return {
     ...result,
+    currency: MARKET_CURRENCY[market],
     items: result.items.map((item) => ({ ...item, updatedAt: item.updatedAt.getTime() })),
     view: url.searchParams.get("view") === "grid" ? ("grid" as const) : ("table" as const),
   };
@@ -114,6 +122,7 @@ export async function action({ request, context }: Route.ActionArgs) {
   const { env } = getCloudflare(context);
   await enforceRateLimit(createDb(env.DB), "apiWrite", session.user.id);
   const db = createDb(env.DB);
+  const market = getMarket(context);
 
   const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) {
@@ -128,17 +137,22 @@ export async function action({ request, context }: Route.ActionArgs) {
         columns: { id: true, name: true },
       });
       if (!card) return { ok: false as const, message: "Card not found." };
-      await addEntry(db, session.user.id, {
-        cardId: card.id,
-        quantity: input.quantity,
-        variant: input.variant,
-        grade: input.grade,
-        condition: input.condition,
-        language: input.language,
-        purchasePriceMinor: input.purchasePrice,
-        purchaseDate: input.purchaseDate,
-        notes: input.notes,
-      });
+      await addEntry(
+        db,
+        session.user.id,
+        {
+          cardId: card.id,
+          quantity: input.quantity,
+          variant: input.variant,
+          grade: input.grade,
+          condition: input.condition,
+          language: input.language,
+          purchasePriceMinor: input.purchasePrice,
+          purchaseDate: input.purchaseDate,
+          notes: input.notes,
+        },
+        market,
+      );
       return { ok: true as const, message: `${card.name} added to your collection.` };
     }
     case "update": {
@@ -173,14 +187,19 @@ export async function action({ request, context }: Route.ActionArgs) {
       if (input.salePrice === null) {
         return { ok: false as const, message: "Enter a sale price." };
       }
-      const res = await recordSale(db, session.user.id, {
-        entryId: input.entryId,
-        quantity: input.sellQuantity,
-        salePriceMinor: input.salePrice,
-        feeMinor: input.fee,
-        soldDate: input.soldDate ?? new Date().toISOString().slice(0, 10),
-        notes: input.sellNotes,
-      });
+      const res = await recordSale(
+        db,
+        session.user.id,
+        {
+          entryId: input.entryId,
+          quantity: input.sellQuantity,
+          salePriceMinor: input.salePrice,
+          feeMinor: input.fee,
+          soldDate: input.soldDate ?? new Date().toISOString().slice(0, 10),
+          notes: input.sellNotes,
+        },
+        market,
+      );
       return { ok: res.ok, message: res.message };
     }
   }
@@ -189,7 +208,7 @@ export async function action({ request, context }: Route.ActionArgs) {
 type Item = Awaited<ReturnType<typeof loader>>["items"][number];
 
 export default function Collection({ loaderData, actionData }: Route.ComponentProps) {
-  const { items, total, page, pageCount, view } = loaderData;
+  const { items, total, page, pageCount, view, currency } = loaderData;
   const [searchParams] = useSearchParams();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -240,7 +259,7 @@ export default function Collection({ loaderData, actionData }: Route.ComponentPr
         <Alert tone={actionData.ok ? "success" : "error"}>{actionData.message}</Alert>
       ) : null}
 
-      <AddCardPanel />
+      <AddCardPanel currency={currency} />
 
       {/* Filters */}
       <Form method="get" className="flex flex-wrap items-end gap-3">
@@ -417,7 +436,7 @@ export default function Collection({ loaderData, actionData }: Route.ComponentPr
               </p>
               <p className="text-xs text-fg-faint">
                 {item.currentPriceMinor !== null
-                  ? formatMinor(item.currentPriceMinor * item.quantity)
+                  ? formatMinor(item.currentPriceMinor * item.quantity, currency)
                   : "unpriced"}
               </p>
             </li>
@@ -464,6 +483,7 @@ export default function Collection({ loaderData, actionData }: Route.ComponentPr
                   onToggle={() => toggleSelected(item.id)}
                   editing={editingId === item.id}
                   onEdit={() => setEditingId(editingId === item.id ? null : item.id)}
+                  currency={currency}
                 />
               ))}
             </tbody>
@@ -509,12 +529,14 @@ function EntryRow({
   onToggle,
   editing,
   onEdit,
+  currency,
 }: {
   item: Item;
   selected: boolean;
   onToggle: () => void;
   editing: boolean;
   onEdit: () => void;
+  currency: Currency;
 }) {
   const [selling, setSelling] = useState(false);
   return (
@@ -548,12 +570,12 @@ function EntryRow({
         <td className="p-3">{item.quantity}</td>
         <td className="p-3 text-fg-muted">
           {item.purchasePriceMinor !== null
-            ? formatMinor(item.purchasePriceMinor * item.quantity)
+            ? formatMinor(item.purchasePriceMinor * item.quantity, currency)
             : "—"}
         </td>
         <td className="p-3 font-medium">
           {item.currentPriceMinor !== null ? (
-            formatMinor(item.currentPriceMinor * item.quantity)
+            formatMinor(item.currentPriceMinor * item.quantity, currency)
           ) : (
             <span className="text-fg-faint">unpriced</span>
           )}
@@ -584,6 +606,7 @@ function EntryRow({
           <td colSpan={8} className="p-4">
             <EntryForm
               intent="update"
+              currency={currency}
               hidden={{ entryId: item.id }}
               defaults={{
                 quantity: item.quantity,
@@ -606,7 +629,7 @@ function EntryRow({
       {selling ? (
         <tr className="border-b border-edge/50 bg-surface-raised">
           <td colSpan={8} className="p-4">
-            <SellForm item={item} onSubmitted={() => setSelling(false)} />
+            <SellForm item={item} onSubmitted={() => setSelling(false)} currency={currency} />
           </td>
         </tr>
       ) : null}
@@ -616,7 +639,15 @@ function EntryRow({
 
 /** Inline "mark as sold" form. Cost basis for realized P&L is the entry's
  * recorded purchase price (snapshotted server-side at sale time). */
-function SellForm({ item, onSubmitted }: { item: Item; onSubmitted: () => void }) {
+function SellForm({
+  item,
+  onSubmitted,
+  currency,
+}: {
+  item: Item;
+  onSubmitted: () => void;
+  currency: Currency;
+}) {
   const today = new Date().toISOString().slice(0, 10);
   return (
     <Form method="post" className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4" onSubmit={onSubmitted}>
@@ -633,7 +664,7 @@ function SellForm({ item, onSubmitted }: { item: Item; onSubmitted: () => void }
         required
       />
       <Input
-        label="Sale price (USD, per card)"
+        label={`Sale price (${currency}, per card)`}
         id={`sell-price-${item.id}`}
         name="salePrice"
         inputMode="decimal"
@@ -641,12 +672,12 @@ function SellForm({ item, onSubmitted }: { item: Item; onSubmitted: () => void }
         required
         hint={
           item.purchasePriceMinor !== null
-            ? `Paid ${formatMinor(item.purchasePriceMinor)} / card`
+            ? `Paid ${formatMinor(item.purchasePriceMinor, currency)} / card`
             : "No purchase price on file — records proceeds only."
         }
       />
       <Input
-        label="Fees (USD, total)"
+        label={`Fees (${currency}, total)`}
         id={`sell-fee-${item.id}`}
         name="fee"
         inputMode="decimal"
@@ -688,7 +719,7 @@ interface SearchResult {
   variants: string[];
 }
 
-function AddCardPanel() {
+function AddCardPanel({ currency }: { currency: Currency }) {
   const fetcher = useFetcher<{ items: SearchResult[] }>();
   const [open, setOpen] = useState(false);
   const [picked, setPicked] = useState<SearchResult | null>(null);
@@ -792,6 +823,7 @@ function AddCardPanel() {
               </div>
               <EntryForm
                 intent="add"
+                currency={currency}
                 hidden={{ cardId: picked.id }}
                 defaults={{
                   quantity: 1,
@@ -822,6 +854,7 @@ function EntryForm({
   variantOptions,
   submitLabel,
   onSubmitted,
+  currency,
 }: {
   intent: "add" | "update";
   hidden: Record<string, string>;
@@ -838,6 +871,7 @@ function EntryForm({
   variantOptions?: string[];
   submitLabel: string;
   onSubmitted?: () => void;
+  currency: Currency;
 }) {
   const variants = variantOptions ?? [...VARIANTS];
   return (
@@ -919,7 +953,7 @@ function EntryForm({
         maxLength={40}
       />
       <Input
-        label="Purchase price (USD, per card)"
+        label={`Purchase price (${currency}, per card)`}
         id={`${intent}-price`}
         name="purchasePrice"
         inputMode="decimal"

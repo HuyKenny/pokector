@@ -4,8 +4,9 @@ import type { Route } from "./+types/sales";
 import { Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
 import { listSales, summarizeSales, type SaleRow } from "~/lib/collection/sales.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
+import { type Currency, MARKET_CURRENCY } from "~/lib/market/market";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
 
 export function meta(_args: Route.MetaArgs) {
@@ -18,7 +19,6 @@ const GRADE_LABELS: Record<SaleRow["grade"], string> = {
   psa10: "PSA 10",
 };
 
-const money = (minor: number) => formatMinor(minor);
 const dec = (minor: number | null) => (minor === null ? "" : (minor / 100).toFixed(2));
 
 /** RFC-4180-ish CSV cell (quote when it contains a comma, quote, or newline). */
@@ -26,7 +26,8 @@ function csvCell(value: string): string {
   return /[",\n]/.test(value) ? `"${value.replace(/"/g, '""')}"` : value;
 }
 
-function salesCsv(sales: SaleRow[]): string {
+function salesCsv(sales: SaleRow[], currency: Currency): string {
+  const c = currency.toLowerCase();
   const header = [
     "sold_date",
     "card",
@@ -35,11 +36,11 @@ function salesCsv(sales: SaleRow[]): string {
     "variant",
     "grade",
     "quantity",
-    "sale_price_per_card_usd",
-    "fees_usd",
-    "purchase_price_per_card_usd",
-    "proceeds_usd",
-    "realized_pl_usd",
+    `sale_price_per_card_${c}`,
+    `fees_${c}`,
+    `purchase_price_per_card_${c}`,
+    `proceeds_${c}`,
+    `realized_pl_${c}`,
     "notes",
   ];
   const rows = sales.map((s) =>
@@ -69,15 +70,17 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const url = new URL(request.url);
+  const market = getMarket(context);
+  const currency = MARKET_CURRENCY[market];
   const yearParam = url.searchParams.get("year");
   const year = yearParam && /^\d{4}$/.test(yearParam) ? Number(yearParam) : null;
 
-  const all = await listSales(db, session.user.id);
+  const all = await listSales(db, session.user.id, market);
   const years = [...new Set(all.map((s) => s.soldDate.slice(0, 4)))].sort().reverse();
   const sales = year ? all.filter((s) => s.soldDate.slice(0, 4) === String(year)) : all;
 
   if (url.searchParams.get("format") === "csv") {
-    return new Response(salesCsv(sales), {
+    return new Response(salesCsv(sales, currency), {
       headers: {
         "Content-Type": "text/csv; charset=utf-8",
         "Content-Disposition": `attachment; filename="pokector-sales${year ? `-${year}` : ""}.csv"`,
@@ -86,11 +89,12 @@ export async function loader({ request, context }: Route.LoaderArgs) {
     });
   }
 
-  return { sales, summary: summarizeSales(sales), year, years };
+  return { sales, summary: summarizeSales(sales), year, years, currency };
 }
 
 export default function Sales({ loaderData }: Route.ComponentProps) {
-  const { sales, summary, year, years } = loaderData;
+  const { sales, summary, year, years, currency } = loaderData;
+  const money = (minor: number) => formatMinor(minor, currency);
   const roiPercent =
     summary.costBasisMinor > 0 ? (summary.realizedPlMinor / summary.costBasisMinor) * 100 : null;
 

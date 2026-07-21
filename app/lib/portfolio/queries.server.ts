@@ -1,29 +1,35 @@
 /**
- * Portfolio aggregation queries. Valuation source: TCGplayer USD, matching each
- * entry's SELECTED variant exactly (never silently another variant — SPEC §16).
+ * Portfolio aggregation queries. Valuation follows the active market: US =
+ * TCGplayer/USD, EU = Cardmarket/EUR, matching each entry's SELECTED variant
+ * exactly (never silently another variant — SPEC §16). PSA-graded cards are
+ * priced from eBay in USD only, so outside the US market they read as unpriced.
  */
 
 import { and, asc, desc, eq, gte, sql } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
+import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { computePortfolioSummary, type PortfolioSummary } from "./calc";
 
 /** Joined entry rows for summary computation (variant-exact price match). */
-export async function loadPortfolioEntries(db: Database, userId: string) {
+export async function loadPortfolioEntries(db: Database, userId: string, market: Market) {
+  // Graded (eBay/USD) value only participates in the US market; elsewhere it is
+  // NULL so we never add a USD figure into a EUR total.
+  const gradedPrice = market === "us" ? sql`g.from_minor` : sql`NULL`;
   return db.all<{
     quantity: number;
     current_price_minor: number | null;
     purchase_price_minor: number | null;
   }>(sql`
     SELECT e.quantity,
-           CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE g.from_minor END
+           CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE ${gradedPrice} END
              AS current_price_minor,
-           CASE WHEN e.purchase_currency = 'USD' THEN e.purchase_price_minor ELSE NULL END
+           CASE WHEN e.purchase_currency = ${MARKET_CURRENCY[market]} THEN e.purchase_price_minor ELSE NULL END
              AS purchase_price_minor
     FROM collection_entries e
     LEFT JOIN card_prices_current p
       ON p.card_id = e.card_id AND p.variant = e.variant
-     AND p.source = 'tcgplayer' AND p.currency = 'USD'
+     AND p.source = ${MARKET_SOURCE[market]} AND p.currency = ${MARKET_CURRENCY[market]}
     LEFT JOIN card_graded_prices g
       ON g.card_id = e.card_id AND g.grade = e.grade AND g.currency = 'USD'
     WHERE e.user_id = ${userId}
@@ -33,8 +39,9 @@ export async function loadPortfolioEntries(db: Database, userId: string) {
 export async function computeUserPortfolio(
   db: Database,
   userId: string,
+  market: Market,
 ): Promise<PortfolioSummary> {
-  const rows = await loadPortfolioEntries(db, userId);
+  const rows = await loadPortfolioEntries(db, userId, market);
   return computePortfolioSummary(
     rows.map((row) => ({
       quantity: row.quantity,
@@ -81,16 +88,21 @@ export interface DashboardBreakdowns {
 export async function loadDashboardBreakdowns(
   db: Database,
   userId: string,
+  market: Market,
 ): Promise<DashboardBreakdowns> {
-  // Grade-aware price: raw entries use the TCGplayer variant price; PSA-graded
-  // entries use the eBay graded "from" price for that grade.
-  const priceMinor = sql`CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE g.from_minor END`;
+  // Grade-aware, market-aware price: raw entries use the active market's source
+  // (US=TCGplayer/USD, EU=Cardmarket/EUR); PSA-graded entries use the eBay graded
+  // "from" price (USD-only), so they contribute only in the US market.
+  const gradedPrice = market === "us" ? sql`g.from_minor` : sql`NULL`;
+  const gradedPrev = market === "us" ? sql`gprev.price_minor` : sql`NULL`;
+  const priceMinor = sql`CASE WHEN e.grade = 'raw' THEN p.normalized_price_minor ELSE ${gradedPrice} END`;
+  const previousMinor = sql`CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE ${gradedPrev} END`;
   const baseJoins = sql`
     FROM collection_entries e
     JOIN pokemon_cards k ON k.id = e.card_id
     LEFT JOIN card_prices_current p
       ON p.card_id = e.card_id AND p.variant = e.variant
-     AND p.source = 'tcgplayer' AND p.currency = 'USD'
+     AND p.source = ${MARKET_SOURCE[market]} AND p.currency = ${MARKET_CURRENCY[market]}
     LEFT JOIN card_graded_prices g
       ON g.card_id = e.card_id AND g.grade = e.grade AND g.currency = 'USD'
   `;
@@ -142,13 +154,13 @@ export async function loadDashboardBreakdowns(
     }>(sql`
       SELECT DISTINCT e.card_id, k.slug, k.name, e.variant, e.grade,
              ${priceMinor} AS current_minor,
-             CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END AS previous_minor
+             ${previousMinor} AS previous_minor
       ${baseJoins}
       LEFT JOIN (
         SELECT h.card_id, h.variant, h.price_minor,
                ROW_NUMBER() OVER (PARTITION BY h.card_id, h.variant ORDER BY h.recorded_date DESC) rn
         FROM card_price_history h
-        WHERE h.source = 'tcgplayer' AND h.currency = 'USD' AND h.recorded_date <= ${weekAgo}
+        WHERE h.source = ${MARKET_SOURCE[market]} AND h.currency = ${MARKET_CURRENCY[market]} AND h.recorded_date <= ${weekAgo}
       ) prev ON prev.card_id = e.card_id AND prev.variant = e.variant AND prev.rn = 1
       LEFT JOIN (
         SELECT h.card_id, h.grade, h.price_minor,
@@ -157,8 +169,8 @@ export async function loadDashboardBreakdowns(
         WHERE h.currency = 'USD' AND h.recorded_date <= ${weekAgo}
       ) gprev ON gprev.card_id = e.card_id AND gprev.grade = e.grade AND gprev.rn = 1
       ${whereUser}
-        AND (CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END) > 0
-        AND ${priceMinor} != (CASE WHEN e.grade = 'raw' THEN prev.price_minor ELSE gprev.price_minor END)
+        AND (${previousMinor}) > 0
+        AND ${priceMinor} != (${previousMinor})
     `),
     db
       .select({
@@ -215,10 +227,15 @@ export async function loadDashboardBreakdowns(
 }
 
 /** Snapshot history for the portfolio chart; bounded by range start. */
-export async function loadSnapshots(db: Database, userId: string, sinceDate: string | null) {
+export async function loadSnapshots(
+  db: Database,
+  userId: string,
+  sinceDate: string | null,
+  market: Market,
+) {
   const conditions = [
     eq(schema.portfolioSnapshots.userId, userId),
-    eq(schema.portfolioSnapshots.currency, "USD" as const),
+    eq(schema.portfolioSnapshots.currency, MARKET_CURRENCY[market]),
   ];
   if (sinceDate) conditions.push(gte(schema.portfolioSnapshots.snapshotDate, sinceDate));
   return db
@@ -234,10 +251,15 @@ export async function loadSnapshots(db: Database, userId: string, sinceDate: str
 }
 
 /** Snapshot value at-or-before a date (baseline for 1d/7d/30d changes). */
-export async function snapshotAtOrBefore(db: Database, userId: string, date: string) {
+export async function snapshotAtOrBefore(
+  db: Database,
+  userId: string,
+  date: string,
+  market: Market,
+) {
   const row = await db.get<{ market_value_minor: number }>(sql`
     SELECT market_value_minor FROM portfolio_snapshots
-    WHERE user_id = ${userId} AND currency = 'USD' AND snapshot_date <= ${date}
+    WHERE user_id = ${userId} AND currency = ${MARKET_CURRENCY[market]} AND snapshot_date <= ${date}
     ORDER BY snapshot_date DESC LIMIT 1
   `);
   return row?.market_value_minor ?? null;
@@ -251,8 +273,9 @@ export async function writePortfolioSnapshot(
   db: Database,
   userId: string,
   today = new Date().toISOString().slice(0, 10),
+  market: Market = "us",
 ): Promise<PortfolioSummary> {
-  const summary = await computeUserPortfolio(db, userId);
+  const summary = await computeUserPortfolio(db, userId, market);
   const unique = await db.get<{ n: number }>(sql`
     SELECT COUNT(DISTINCT card_id) AS n FROM collection_entries WHERE user_id = ${userId}
   `);
@@ -262,7 +285,7 @@ export async function writePortfolioSnapshot(
     .values({
       userId,
       snapshotDate: today,
-      currency: "USD",
+      currency: MARKET_CURRENCY[market],
       marketValueMinor: summary.marketValueMinor,
       costBasisMinor: summary.costBasisMinor,
       unrealizedPlMinor: summary.unrealizedPlMinor,

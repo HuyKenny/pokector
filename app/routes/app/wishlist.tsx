@@ -4,7 +4,7 @@ import { z } from "zod";
 import type { Route } from "./+types/wishlist";
 import { Alert, Button, Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 import { addEntry } from "~/lib/collection/queries.server";
 import { bumpTrackedCounts } from "~/lib/collection/tracked.server";
@@ -138,16 +138,21 @@ export async function action({ request, context }: Route.ActionArgs) {
       return { ok: true as const, message: "Removed from wishlist." };
     }
     case "to-collection": {
-      await addEntry(db, userId, {
-        cardId: owned.cardId,
-        quantity: 1,
-        variant: owned.variant,
-        condition: "Near Mint",
-        language: "English",
-        purchasePriceMinor: null,
-        purchaseDate: null,
-        notes: null,
-      });
+      await addEntry(
+        db,
+        userId,
+        {
+          cardId: owned.cardId,
+          quantity: 1,
+          variant: owned.variant,
+          condition: "Near Mint",
+          language: "English",
+          purchasePriceMinor: null,
+          purchaseDate: null,
+          notes: null,
+        },
+        getMarket(context),
+      );
       await db.delete(schema.wishlistItems).where(eq(schema.wishlistItems.id, owned.id));
       await bumpTrackedCounts(db, owned.cardId, { wishlist: -1 });
       return { ok: true as const, message: "Moved to your collection." };

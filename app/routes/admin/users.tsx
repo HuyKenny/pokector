@@ -6,6 +6,7 @@ import { Alert, Button, Card } from "~/components/ui";
 import { requireAdmin } from "~/lib/auth/guards.server";
 import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
+import { MARKETS } from "~/lib/market/market";
 import { writePortfolioSnapshot } from "~/lib/portfolio/queries.server";
 import { desc, like, sql } from "drizzle-orm";
 
@@ -56,7 +57,11 @@ export async function action({ request, context }: Route.ActionArgs) {
   const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { ok: false as const, message: "Invalid action." };
 
-  await writePortfolioSnapshot(db, parsed.data.userId);
+  // Recompute today's snapshot for every market currency (USD + EUR).
+  const today = new Date().toISOString().slice(0, 10);
+  for (const market of MARKETS) {
+    await writePortfolioSnapshot(db, parsed.data.userId, today, market);
+  }
   await db.insert(schema.adminAuditLogs).values({
     id: crypto.randomUUID(),
     adminUserId: session.user.id,

@@ -10,8 +10,9 @@ import {
 } from "~/components/history-chart";
 import { Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
+import { type Currency, MARKET_CURRENCY } from "~/lib/market/market";
 import { changeBetween } from "~/lib/portfolio/calc";
 import { listSales, summarizeSales } from "~/lib/collection/sales.server";
 import {
@@ -34,26 +35,28 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env, ctx } = getCloudflare(context);
   const db = createDb(env.DB);
   const userId = session.user.id;
+  const market = getMarket(context);
 
   const [summary, breakdowns, snapshots, prev1, prev7, prev30, sales] = await Promise.all([
-    computeUserPortfolio(db, userId),
-    loadDashboardBreakdowns(db, userId),
-    loadSnapshots(db, userId, null),
-    snapshotAtOrBefore(db, userId, daysAgo(1)),
-    snapshotAtOrBefore(db, userId, daysAgo(7)),
-    snapshotAtOrBefore(db, userId, daysAgo(30)),
-    listSales(db, userId),
+    computeUserPortfolio(db, userId, market),
+    loadDashboardBreakdowns(db, userId, market),
+    loadSnapshots(db, userId, null, market),
+    snapshotAtOrBefore(db, userId, daysAgo(1), market),
+    snapshotAtOrBefore(db, userId, daysAgo(7), market),
+    snapshotAtOrBefore(db, userId, daysAgo(30), market),
+    listSales(db, userId, market),
   ]);
   const realized = summarizeSales(sales);
 
   // Keep today's snapshot fresh after collection changes (idempotent upsert).
   const today = new Date().toISOString().slice(0, 10);
   if (summary.totalEntries > 0 && !snapshots.some((s) => s.snapshotDate === today)) {
-    ctx.waitUntil(writePortfolioSnapshot(db, userId, today).then(() => undefined));
+    ctx.waitUntil(writePortfolioSnapshot(db, userId, today, market).then(() => undefined));
   }
 
   return {
     name: session.user.name,
+    currency: MARKET_CURRENCY[market],
     summary,
     breakdowns,
     snapshots,
@@ -68,7 +71,8 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function Dashboard({ loaderData }: Route.ComponentProps) {
-  const { name, summary, breakdowns, snapshots, changes, trackingSince, realized } = loaderData;
+  const { name, currency, summary, breakdowns, snapshots, changes, trackingSince, realized } =
+    loaderData;
   const [range, setRange] = useState<ChartRange>("MAX");
 
   if (summary.totalEntries === 0) {
@@ -96,7 +100,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
             </Link>
           </div>
         </Card>
-        <RealizedStrip realized={realized} />
+        <RealizedStrip realized={realized} currency={currency} />
       </div>
     );
   }
@@ -121,19 +125,19 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
         <StatCard
           label="Estimated market value"
-          value={formatMinor(summary.marketValueMinor)}
+          value={formatMinor(summary.marketValueMinor, currency)}
           sub={`${summary.pricedEntryCount}/${summary.totalEntries} entries priced (${summary.valuationCoveragePercent.toFixed(0)}%)`}
         />
         <StatCard
           label="Cost basis (recorded)"
-          value={formatMinor(summary.costBasisMinor)}
+          value={formatMinor(summary.costBasisMinor, currency)}
           sub={`${summary.costBasisCoveragePercent.toFixed(0)}% of entries have a purchase price`}
         />
         <StatCard
           label="Unrealized P/L"
-          value={formatMinor(summary.unrealizedPlMinor)}
+          value={formatMinor(summary.unrealizedPlMinor, currency)}
           tone={summary.unrealizedPlMinor >= 0 ? "positive" : "negative"}
-          sub={`over ${formatMinor(summary.matchedMarketValueMinor)} matched value`}
+          sub={`over ${formatMinor(summary.matchedMarketValueMinor, currency)} matched value`}
         />
         <StatCard
           label="ROI"
@@ -151,11 +155,11 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
         <MiniStat label="Unique cards" value={breakdowns.uniqueCardCount.toLocaleString("en-US")} />
         <MiniStat label="Total quantity" value={summary.totalQuantity.toLocaleString("en-US")} />
         <MiniStat label="Unpriced entries" value={String(summary.unpricedEntryCount)} />
-        <ChangeStat label="Daily change" change={changes.daily} />
-        <ChangeStat label="7-day change" change={changes.weekly} />
+        <ChangeStat label="Daily change" change={changes.daily} currency={currency} />
+        <ChangeStat label="7-day change" change={changes.weekly} currency={currency} />
       </div>
 
-      <RealizedStrip realized={realized} />
+      <RealizedStrip realized={realized} currency={currency} />
 
       {/* Portfolio chart */}
       <Card>
@@ -172,7 +176,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           }
         />
         <p className="mt-2 text-xs text-fg-faint">
-          30-day change: <ChangeInline change={changes.monthly} />
+          30-day change: <ChangeInline change={changes.monthly} currency={currency} />
         </p>
       </Card>
 
@@ -207,7 +211,7 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
                       </span>
                     </span>
                     <span className="text-sm font-semibold text-fg">
-                      {formatMinor(card.valueMinor)}
+                      {formatMinor(card.valueMinor, currency)}
                     </span>
                   </Link>
                 </li>
@@ -258,16 +262,19 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
           title="Value by set"
           rows={breakdowns.bySet}
           totalMinor={summary.marketValueMinor}
+          currency={currency}
         />
         <BreakdownCard
           title="Value by rarity"
           rows={breakdowns.byRarity}
           totalMinor={summary.marketValueMinor}
+          currency={currency}
         />
         <BreakdownCard
           title="Value by variant"
           rows={breakdowns.byVariant}
           totalMinor={summary.marketValueMinor}
+          currency={currency}
         />
 
         {/* Recent activity */}
@@ -306,8 +313,10 @@ export default function Dashboard({ loaderData }: Route.ComponentProps) {
 
 function RealizedStrip({
   realized,
+  currency,
 }: {
   realized: { realizedPlMinor: number; proceedsMinor: number; salesCount: number };
+  currency: Currency;
 }) {
   if (realized.salesCount === 0) return null;
   return (
@@ -321,11 +330,11 @@ function RealizedStrip({
             }`}
           >
             {realized.realizedPlMinor >= 0 ? "+" : ""}
-            {formatMinor(realized.realizedPlMinor)}
+            {formatMinor(realized.realizedPlMinor, currency)}
           </p>
           <p className="text-xs text-fg-faint">
             {realized.salesCount} {realized.salesCount === 1 ? "sale" : "sales"} ·{" "}
-            {formatMinor(realized.proceedsMinor)} proceeds
+            {formatMinor(realized.proceedsMinor, currency)} proceeds
           </p>
         </div>
         <Link to="/app/sales" className="text-sm font-medium text-accent hover:underline">
@@ -371,14 +380,16 @@ function MiniStat({ label, value }: { label: string; value: string }) {
 
 function ChangeInline({
   change,
+  currency,
 }: {
   change: { deltaMinor: number; percent: number | null } | null;
+  currency: Currency;
 }) {
   if (!change) return <span className="text-fg-faint">not enough history yet</span>;
   return (
     <span className={change.deltaMinor >= 0 ? "text-positive" : "text-negative"}>
       {change.deltaMinor >= 0 ? "+" : ""}
-      {formatMinor(change.deltaMinor)}
+      {formatMinor(change.deltaMinor, currency)}
       {change.percent !== null ? ` (${formatPercent(change.percent)})` : ""}
     </span>
   );
@@ -387,15 +398,17 @@ function ChangeInline({
 function ChangeStat({
   label,
   change,
+  currency,
 }: {
   label: string;
   change: { deltaMinor: number; percent: number | null } | null;
+  currency: Currency;
 }) {
   return (
     <Card className="!p-3">
       <p className="text-xs text-fg-muted">{label}</p>
       <p className="text-lg font-semibold">
-        <ChangeInline change={change} />
+        <ChangeInline change={change} currency={currency} />
       </p>
     </Card>
   );
@@ -405,10 +418,12 @@ function BreakdownCard({
   title,
   rows,
   totalMinor,
+  currency,
 }: {
   title: string;
   rows: { name: string; valueMinor: number }[];
   totalMinor: number;
+  currency: Currency;
 }) {
   return (
     <Card>
@@ -423,7 +438,9 @@ function BreakdownCard({
               <li key={row.name} className="text-sm">
                 <div className="mb-0.5 flex justify-between gap-3">
                   <span className="truncate text-fg">{row.name}</span>
-                  <span className="shrink-0 text-fg-muted">{formatMinor(row.valueMinor)}</span>
+                  <span className="shrink-0 text-fg-muted">
+                    {formatMinor(row.valueMinor, currency)}
+                  </span>
                 </div>
                 <div
                   aria-hidden="true"

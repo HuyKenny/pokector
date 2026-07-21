@@ -76,14 +76,14 @@ describe("collection CRUD + portfolio", () => {
       purchasePriceMinor: 400,
       purchaseDate: "2026-01-15",
       notes: "trade with Mia",
-    });
+    }, "us");
 
-    const listA = await listCollection(db, USER_A, {});
+    const listA = await listCollection(db, USER_A, {}, "us");
     expect(listA.total).toBe(1);
     expect(listA.items[0].currentPriceMinor).toBe(1000);
 
     // User B sees nothing and cannot modify A's entry.
-    const listB = await listCollection(db, USER_B, {});
+    const listB = await listCollection(db, USER_B, {}, "us");
     expect(listB.total).toBe(0);
     expect(await updateEntry(db, USER_B, entryId, { quantity: 999 })).toBe(false);
     expect(await deleteEntries(db, USER_B, [entryId])).toBe(0);
@@ -113,7 +113,7 @@ describe("collection CRUD + portfolio", () => {
       purchasePriceMinor: null,
       purchaseDate: null,
       notes: null,
-    });
+    }, "us");
     // Unpriced card entirely.
     await addEntry(db, USER_A, {
       cardId: "colset-2",
@@ -124,9 +124,9 @@ describe("collection CRUD + portfolio", () => {
       purchasePriceMinor: 100,
       purchaseDate: null,
       notes: null,
-    });
+    }, "us");
 
-    const summary = await computeUserPortfolio(db, USER_A);
+    const summary = await computeUserPortfolio(db, USER_A, "us");
     // Only the holofoil entry (3 × $10) is priced.
     expect(summary.marketValueMinor).toBe(3000);
     expect(summary.unpricedEntryCount).toBe(2);

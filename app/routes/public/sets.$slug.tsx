@@ -62,7 +62,9 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   if (!data) throw new Response("Set not found", { status: 404 });
 
   const session = await optionalUser(context, request);
-  const progress = session ? await computeSetProgress(db, session.user.id, data.set.id) : null;
+  const progress = session
+    ? await computeSetProgress(db, session.user.id, data.set.id, market)
+    : null;
 
   const payload = {
     locale,

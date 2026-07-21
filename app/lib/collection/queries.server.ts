@@ -8,6 +8,7 @@ import { and, asc, count, desc, eq, inArray, ne, sql, type SQL } from "drizzle-o
 import { LIMITS, limitResponse, limitsFor } from "../limits";
 import { getUserPlan } from "../billing/entitlement.server";
 import { schema, type Database } from "../db/index.server";
+import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { invalidateProgressForCard } from "../sets/progress.server";
 import { bumpTrackedCounts } from "./tracked.server";
 
@@ -24,7 +25,12 @@ export interface CollectionFilters {
   page?: number;
 }
 
-export async function listCollection(db: Database, userId: string, filters: CollectionFilters) {
+export async function listCollection(
+  db: Database,
+  userId: string,
+  filters: CollectionFilters,
+  market: Market,
+) {
   const page = Math.max(1, filters.page ?? 1);
   const conditions: SQL[] = [eq(schema.collectionEntries.userId, userId)];
   if (filters.setId) conditions.push(eq(schema.pokemonCards.setId, filters.setId));
@@ -51,18 +57,25 @@ export async function listCollection(db: Database, userId: string, filters: Coll
     conditions.push(sql`${schema.pokemonCards.searchText} LIKE ${"%" + needle + "%"}`);
   }
 
-  // Grade-aware price: raw → TCGplayer variant price; PSA-graded → eBay graded price.
+  // Grade-aware, market-aware price. Raw → the active market's source/currency
+  // (US=TCGplayer/USD, EU=Cardmarket/EUR). PSA-graded → eBay graded price, which
+  // exists only in USD; in a non-US market graded cards have no comparable value
+  // so they read as unpriced (NULL) rather than mixing currencies.
+  const gradedBranch =
+    market === "us"
+      ? sql`(
+      SELECT g.from_minor FROM card_graded_prices g
+      WHERE g.card_id = ${schema.collectionEntries.cardId}
+        AND g.grade = ${schema.collectionEntries.grade} AND g.currency = 'USD'
+    )`
+      : sql`NULL`;
   const priceExpr = sql<number | null>`(
     CASE WHEN ${schema.collectionEntries.grade} = 'raw' THEN (
       SELECT p.normalized_price_minor FROM card_prices_current p
       WHERE p.card_id = ${schema.collectionEntries.cardId}
         AND p.variant = ${schema.collectionEntries.variant}
-        AND p.source = 'tcgplayer' AND p.currency = 'USD'
-    ) ELSE (
-      SELECT g.from_minor FROM card_graded_prices g
-      WHERE g.card_id = ${schema.collectionEntries.cardId}
-        AND g.grade = ${schema.collectionEntries.grade} AND g.currency = 'USD'
-    ) END
+        AND p.source = ${MARKET_SOURCE[market]} AND p.currency = ${MARKET_CURRENCY[market]}
+    ) ELSE ${gradedBranch} END
   )`;
   if (filters.unpricedOnly) conditions.push(sql`${priceExpr} IS NULL`);
 
@@ -128,7 +141,12 @@ export interface EntryInput {
   notes: string | null;
 }
 
-export async function addEntry(db: Database, userId: string, input: EntryInput) {
+export async function addEntry(
+  db: Database,
+  userId: string,
+  input: EntryInput,
+  market: Market,
+) {
   const [{ n }] = await db
     .select({ n: count() })
     .from(schema.collectionEntries)
@@ -162,7 +180,7 @@ export async function addEntry(db: Database, userId: string, input: EntryInput) 
     condition: input.condition,
     language: input.language,
     purchasePriceMinor: input.purchasePriceMinor,
-    purchaseCurrency: "USD",
+    purchaseCurrency: MARKET_CURRENCY[market],
     purchaseDate: input.purchaseDate,
     notes: input.notes,
   });

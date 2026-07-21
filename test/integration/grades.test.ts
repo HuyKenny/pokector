@@ -50,6 +50,18 @@ async function seed() {
       observedAt: new Date(),
     })
     .onConflictDoNothing();
+  // Raw (Cardmarket holofoil) = €150 — the EU-market price world.
+  await db
+    .insert(schema.cardPricesCurrent)
+    .values({
+      cardId: "g-charizard",
+      source: "cardmarket",
+      variant: "holofoil",
+      currency: "EUR",
+      normalizedPriceMinor: 15000,
+      observedAt: new Date(),
+    })
+    .onConflictDoNothing();
   await db
     .insert(schema.cardGradedPrices)
     .values({ cardId: "g-charizard", grade: "psa10", currency: "USD", fromMinor: 90000, observedAt: new Date() })
@@ -71,8 +83,8 @@ describe("grade-aware valuation", () => {
       purchasePriceMinor: null,
       purchaseDate: null,
       notes: null,
-    });
-    let summary = await computeUserPortfolio(db, USER);
+    }, "us");
+    let summary = await computeUserPortfolio(db, USER, "us");
     expect(summary.marketValueMinor).toBe(20000);
 
     // Add a PSA 10 entry → +$900 (graded price, NOT the raw $200).
@@ -86,8 +98,18 @@ describe("grade-aware valuation", () => {
       purchasePriceMinor: null,
       purchaseDate: null,
       notes: null,
-    });
-    summary = await computeUserPortfolio(db, USER);
+    }, "us");
+    summary = await computeUserPortfolio(db, USER, "us");
     expect(summary.marketValueMinor).toBe(20000 + 90000);
+  });
+
+  it("EU market values raw by Cardmarket/EUR and treats graded as unpriced", async () => {
+    // USER now holds the raw holofoil + a PSA 10 (added above). In the EU market
+    // the raw entry is worth its Cardmarket price (€150) and the graded entry —
+    // which only has a USD eBay price — must NOT contribute to the EUR total.
+    const summary = await computeUserPortfolio(db, USER, "eu");
+    expect(summary.marketValueMinor).toBe(15000);
+    // The graded entry reads as unpriced in EU (no EUR value).
+    expect(summary.unpricedEntryCount).toBe(1);
   });
 });

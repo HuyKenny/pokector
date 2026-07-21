@@ -4,9 +4,10 @@ import { z } from "zod";
 import type { Route } from "./+types/sets.$setSlug";
 import { Alert, Button, Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 import { getSetBySlug } from "~/lib/catalog/queries.server";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { formatMinor } from "~/lib/money/decimal";
 import { and, count, eq, ne } from "drizzle-orm";
@@ -24,11 +25,12 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const data = await getSetBySlug(db, params.setSlug);
+  const market = getMarket(context);
+  const data = await getSetBySlug(db, params.setSlug, market);
   if (!data) throw new Response("Set not found", { status: 404 });
 
   const url = new URL(request.url);
-  const progress = await computeSetProgress(db, session.user.id, data.set.id);
+  const progress = await computeSetProgress(db, session.user.id, data.set.id, market);
 
   const goal = await db.query.setGoals.findFirst({
     where: and(
@@ -70,6 +72,7 @@ export async function loader({ request, params, context }: Route.LoaderArgs) {
   }
 
   return {
+    currency: MARKET_CURRENCY[market],
     set: {
       id: data.set.id,
       slug: data.set.slug,
@@ -153,7 +156,7 @@ export async function action({ request, params, context }: Route.ActionArgs) {
 }
 
 export default function SetChecklist({ loaderData, actionData }: Route.ComponentProps) {
-  const { set, cards, progress, goal, mode, variantRows, ownedVariantKeys } = loaderData;
+  const { set, cards, progress, goal, mode, variantRows, ownedVariantKeys, currency } = loaderData;
   const [searchParams, setSearchParams] = useSearchParams();
   const fetcher = useFetcher();
   const show = searchParams.get("show");
@@ -222,7 +225,7 @@ export default function SetChecklist({ loaderData, actionData }: Route.Component
           <strong className="text-fg">{progress.ownedCount}</strong>/{progress.totalCount} owned ·{" "}
           {progress.missingCount} missing · {progress.completionPercent.toFixed(1)}%
           {progress.missingValueMinor !== null
-            ? ` · missing cards ≈ ${formatMinor(progress.missingValueMinor)}`
+            ? ` · missing cards ≈ ${formatMinor(progress.missingValueMinor, currency)}`
             : ""}
         </p>
         <Form method="post" className="mt-4 flex flex-wrap items-end gap-3">
@@ -319,7 +322,7 @@ export default function SetChecklist({ loaderData, actionData }: Route.Component
                 <span className="text-xs text-fg-faint">
                   #{card.number}
                   {card.rarity ? ` · ${card.rarity}` : ""}
-                  {card.priceMinor !== null ? ` · ${formatMinor(card.priceMinor)}` : ""}
+                  {card.priceMinor !== null ? ` · ${formatMinor(card.priceMinor, currency)}` : ""}
                 </span>
                 {mode === "variant" && cardVariants.length > 0 ? (
                   <span className="mt-0.5 flex flex-wrap gap-1">

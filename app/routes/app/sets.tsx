@@ -3,8 +3,9 @@ import { Link } from "react-router";
 import type { Route } from "./+types/sets";
 import { Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
-import { getCloudflare } from "~/lib/context";
+import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
+import { MARKET_CURRENCY } from "~/lib/market/market";
 import { formatMinor } from "~/lib/money/decimal";
 import { sql } from "drizzle-orm";
 
@@ -17,6 +18,10 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const userId = session.user.id;
+  const market = getMarket(context);
+  // Missing-card value is currency-specific → pick the active market's column.
+  const missingValueCol =
+    market === "us" ? sql`c.missing_value_minor` : sql`c.missing_value_minor_eur`;
 
   // Sets where the user owns at least one card, joined with cached progress
   // (source of truth = collection; cache refreshed on set page views/changes)
@@ -39,7 +44,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
            (SELECT COUNT(DISTINCT e.card_id) FROM collection_entries e
              JOIN pokemon_cards k3 ON k3.id = e.card_id
              WHERE e.user_id = ${userId} AND k3.set_id = s.id AND e.quantity > 0) AS owned_count,
-           (SELECT c.missing_value_minor FROM set_progress_cache c
+           (SELECT ${missingValueCol} FROM set_progress_cache c
              WHERE c.user_id = ${userId} AND c.set_id = s.id AND c.checklist_mode = 'standard') AS cached_missing_value,
            (SELECT g.pinned FROM set_goals g
              WHERE g.user_id = ${userId} AND g.set_id = s.id AND g.checklist_mode = 'standard') AS pinned,
@@ -57,6 +62,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   `);
 
   return {
+    currency: MARKET_CURRENCY[market],
     sets: rows.map((r) => ({
       setId: r.set_id,
       slug: r.slug,
@@ -74,7 +80,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
 }
 
 export default function MySets({ loaderData }: Route.ComponentProps) {
-  const { sets } = loaderData;
+  const { sets, currency } = loaderData;
   return (
     <div className="flex flex-col gap-6">
       <h1 className="text-2xl font-bold text-fg">My set progress</h1>
@@ -126,7 +132,7 @@ export default function MySets({ loaderData }: Route.ComponentProps) {
                   <p className="text-sm text-fg-muted">
                     {set.ownedCount}/{set.totalCards} cards ({pct.toFixed(0)}%)
                     {set.missingValueMinor !== null && set.ownedCount < set.totalCards
-                      ? ` · missing ≈ ${formatMinor(set.missingValueMinor)}`
+                      ? ` · missing ≈ ${formatMinor(set.missingValueMinor, currency)}`
                       : ""}
                   </p>
                   {set.targetDate ? (

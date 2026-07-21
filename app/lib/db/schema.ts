@@ -465,7 +465,11 @@ export const setProgressCache = sqliteTable(
     ownedCount: integer("owned_count").notNull(),
     totalCount: integer("total_count").notNull(),
     missingCount: integer("missing_count").notNull(),
+    /** Missing-card value in the US market (TCGplayer/USD). */
     missingValueMinor: integer("missing_value_minor"),
+    /** Missing-card value in the EU market (Cardmarket/EUR); currency-specific,
+     * so kept separate from the USD column. Populated lazily per market. */
+    missingValueMinorEur: integer("missing_value_minor_eur"),
     calculatedAt: integer("calculated_at", { mode: "timestamp_ms" }).notNull(),
   },
   (t) => [primaryKey({ columns: [t.userId, t.setId, t.checklistMode] })],

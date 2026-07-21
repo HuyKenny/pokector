@@ -6,6 +6,7 @@
 import { and, count, eq, gt, sql } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
+import { MARKET_SOURCE, type Market } from "../market/market";
 
 export interface SetProgress {
   ownedCount: number;
@@ -23,6 +24,7 @@ export async function computeSetProgress(
   db: Database,
   userId: string,
   setId: string,
+  market: Market,
 ): Promise<SetProgress> {
   // Total active cards in the set (no parameter explosion — bound by set_id).
   const [{ total: totalCount }] = await db
@@ -66,7 +68,7 @@ export async function computeSetProgress(
         SELECT pc.card_id, MIN(pc.normalized_price_minor) AS min_price
         FROM card_prices_current pc
         JOIN pokemon_cards k ON k.id = pc.card_id
-        WHERE pc.source = 'tcgplayer' AND k.set_id = ${setId} AND k.active = 1
+        WHERE pc.source = ${MARKET_SOURCE[market]} AND k.set_id = ${setId} AND k.active = 1
           AND pc.card_id NOT IN (
             SELECT DISTINCT e.card_id FROM collection_entries e
             JOIN pokemon_cards k2 ON k2.id = e.card_id
@@ -89,7 +91,14 @@ export async function computeSetProgress(
     ownedCardIds: [...ownedSet],
   };
 
-  // Refresh the cache row (collection remains the source of truth).
+  // Refresh the cache row (collection remains the source of truth). The
+  // missing-value is currency-specific, so it lives in a per-market column; the
+  // counts are market-independent. We only touch the active market's value
+  // column, leaving the other market's cached value intact.
+  const valueCol =
+    market === "us"
+      ? { missingValueMinor: progress.missingValueMinor }
+      : { missingValueMinorEur: progress.missingValueMinor };
   await db
     .insert(schema.setProgressCache)
     .values({
@@ -99,7 +108,7 @@ export async function computeSetProgress(
       ownedCount: progress.ownedCount,
       totalCount: progress.totalCount,
       missingCount: progress.missingCount,
-      missingValueMinor: progress.missingValueMinor,
+      ...valueCol,
       calculatedAt: new Date(),
     })
     .onConflictDoUpdate({
@@ -112,7 +121,7 @@ export async function computeSetProgress(
         ownedCount: progress.ownedCount,
         totalCount: progress.totalCount,
         missingCount: progress.missingCount,
-        missingValueMinor: progress.missingValueMinor,
+        ...valueCol,
         calculatedAt: new Date(),
       },
     });
