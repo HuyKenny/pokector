@@ -363,9 +363,11 @@ export const en = {
     ebayFrom: "eBay: from {price}",
     ebayPsa9From: "PSA 9: from {price}",
     ebayPsa10From: "PSA 10: from {price}",
-    psaFromEbay: "PSA prices are the lowest current eBay listing.",
+    psaFromEbay:
+      "PSA prices are the median of current eBay asking prices (US), outliers trimmed — a rough guide, not completed sales.",
     psaSoldMedian: "PSA prices are the median of real eBay sales (last 90 days).",
     psaSampleCount: "· {count} sold",
+    psaSampleListings: "· {count} listings",
     ebayDisclosure:
       "“Buy on eBay” is an affiliate link — Pokector may earn a commission from qualifying purchases, at no extra cost to you.",
     historyVariantAria: "Price history variant",
@@ -396,7 +398,7 @@ export const en = {
     gradingSoldNote:
       "Graded values are the median of real eBay sales (last 90 days). PSA fees and shipping are estimates and vary by declared value and turnaround.",
     gradingListingDisclaimer:
-      "Graded values are the lowest current eBay listing, not real sales — treat this as a rough guide only.",
+      "Graded values are the median of current eBay asking prices (outliers trimmed), not completed sales — treat this as a rough guide only.",
     gradingFeeNote: "PSA fee {fee} + est. shipping {shipping}.",
   },
 

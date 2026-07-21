@@ -324,7 +324,7 @@ const vi: Dict = {
     gradingWorthIt: "Vượt điểm hòa vốn",
     gradingNotWorth: "Dưới điểm hòa vốn",
     gradingSoldNote: "Giá trị đã grade là trung vị của các giao dịch thật trên eBay (90 ngày qua). Phí PSA và vận chuyển là ước tính, thay đổi theo giá khai báo và thời gian xử lý.",
-    gradingListingDisclaimer: "Giá trị đã grade là tin rao rẻ nhất hiện tại trên eBay, không phải giao dịch thật — chỉ nên xem là tham khảo.",
+    gradingListingDisclaimer: "Giá trị đã grade là trung vị giá rao bán hiện tại trên eBay (đã loại giá trị ngoại lai), không phải giao dịch thật — chỉ nên xem là tham khảo.",
     gradingFeeNote: "Phí PSA {fee} + vận chuyển ước tính {shipping}.",
     notFoundTitle: "Không tìm thấy thẻ | Pokector",
     notFoundDescription: "Không tìm thấy thẻ.",
@@ -369,9 +369,11 @@ const vi: Dict = {
     getThisCard: "Sở hữu thẻ này",
     buyFrom: "từ {price}",
     ebayPsa9From: "PSA 9: từ {price}",
-    psaFromEbay: "Giá PSA là mức rao bán thấp nhất hiện tại trên eBay.",
+    psaFromEbay:
+      "Giá PSA là trung vị giá rao bán hiện tại trên eBay (US), đã loại giá trị ngoại lai — chỉ mang tính tham khảo, không phải giao dịch đã hoàn tất.",
     psaSoldMedian: "Giá PSA là trung vị của các giao dịch thực tế trên eBay (90 ngày qua).",
     psaSampleCount: "· {count} đã bán",
+    psaSampleListings: "· {count} tin rao",
     ebayFrom: "eBay: từ {price}",
     ebayPsa10From: "PSA 10: từ {price}",
     ebayDisclosure:

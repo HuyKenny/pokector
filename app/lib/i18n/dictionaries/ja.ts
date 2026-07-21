@@ -324,7 +324,7 @@ const ja: Dict = {
     gradingWorthIt: "損益分岐点を超える",
     gradingNotWorth: "損益分岐点を下回る",
     gradingSoldNote: "グレード価値はeBayの実売の中央値（過去90日）です。PSA手数料と送料は概算で、申告額や納期により変動します。",
-    gradingListingDisclaimer: "グレード価値はeBayの現在の最安出品で、実売ではありません。おおよその目安としてご利用ください。",
+    gradingListingDisclaimer: "グレード価値はeBayの現在の出品価格の中央値（外れ値を除外）で、実売ではありません。おおよその目安としてご利用ください。",
     gradingFeeNote: "PSA手数料 {fee}＋送料概算 {shipping}。",
     notFoundTitle: "カードが見つかりません | Pokector",
     notFoundDescription: "カードが見つかりません。",
@@ -369,9 +369,11 @@ const ja: Dict = {
     getThisCard: "このカードを入手",
     buyFrom: "{price}〜",
     ebayPsa9From: "PSA 9：{price}〜",
-    psaFromEbay: "PSA価格は現在のeBay最安出品です。",
+    psaFromEbay:
+      "PSA価格は現在のeBay（米国）出品価格の中央値（外れ値を除外）です。実売ではなく、おおよその目安です。",
     psaSoldMedian: "PSA価格は過去90日のeBay実売価格の中央値です。",
     psaSampleCount: "· {count}件販売",
+    psaSampleListings: "· {count}件出品",
     ebayFrom: "eBay：{price}〜",
     ebayPsa10From: "PSA 10：{price}〜",
     ebayDisclosure:

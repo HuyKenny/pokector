@@ -325,7 +325,7 @@ const de: Dict = {
     gradingWorthIt: "Über Break-even",
     gradingNotWorth: "Unter Break-even",
     gradingSoldNote: "Graded-Werte sind der Median echter eBay-Verkäufe (letzte 90 Tage). PSA-Gebühren und Versand sind Schätzungen und variieren je nach Warenwert und Bearbeitungszeit.",
-    gradingListingDisclaimer: "Graded-Werte sind das derzeit günstigste eBay-Angebot, keine echten Verkäufe – nur als grober Anhaltspunkt.",
+    gradingListingDisclaimer: "Graded-Werte sind der Median aktueller eBay-Angebotspreise (Ausreißer entfernt), keine echten Verkäufe – nur als grober Anhaltspunkt.",
     gradingFeeNote: "PSA-Gebühr {fee} + gesch. Versand {shipping}.",
     notFoundTitle: "Karte nicht gefunden | Pokector",
     notFoundDescription: "Karte nicht gefunden.",
@@ -370,9 +370,11 @@ const de: Dict = {
     getThisCard: "Diese Karte holen",
     buyFrom: "ab {price}",
     ebayPsa9From: "PSA 9: ab {price}",
-    psaFromEbay: "PSA-Preise sind das niedrigste aktuelle eBay-Angebot.",
+    psaFromEbay:
+      "PSA-Preise sind der Median aktueller eBay-Angebotspreise (US), Ausreißer entfernt – grober Anhaltspunkt, keine echten Verkäufe.",
     psaSoldMedian: "PSA-Preise sind der Median echter eBay-Verkäufe (letzte 90 Tage).",
     psaSampleCount: "· {count} verkauft",
+    psaSampleListings: "· {count} Angebote",
     ebayFrom: "eBay: ab {price}",
     ebayPsa10From: "PSA 10: ab {price}",
     ebayDisclosure:

@@ -485,9 +485,12 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                             ) : (
                               label
                             )}
-                            {stat.source === "sold" && stat.sampleSize ? (
+                            {stat.sampleSize ? (
                               <span className="ms-1.5 text-xs font-normal text-fg-faint">
-                                {interpolate(t.psaSampleCount, { count: stat.sampleSize })}
+                                {interpolate(
+                                  stat.source === "sold" ? t.psaSampleCount : t.psaSampleListings,
+                                  { count: stat.sampleSize },
+                                )}
                               </span>
                             ) : null}
                           </th>

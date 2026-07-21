@@ -324,7 +324,7 @@ const ru: Dict = {
     gradingWorthIt: "Выше точки безубыточности",
     gradingNotWorth: "Ниже точки безубыточности",
     gradingSoldNote: "Цены в грейде — медиана реальных продаж на eBay (за 90 дней). Сборы PSA и доставка — оценочные и зависят от заявленной стоимости и сроков.",
-    gradingListingDisclaimer: "Цены в грейде — самое дешёвое текущее объявление на eBay, а не реальные продажи; используйте лишь как ориентир.",
+    gradingListingDisclaimer: "Цены в грейде — медиана текущих цен предложений на eBay (без выбросов), а не реальные продажи; используйте лишь как ориентир.",
     gradingFeeNote: "Сбор PSA {fee} + прим. доставка {shipping}.",
     notFoundTitle: "Карта не найдена | Pokector",
     notFoundDescription: "Карта не найдена.",
@@ -369,9 +369,11 @@ const ru: Dict = {
     getThisCard: "Купить эту карту",
     buyFrom: "от {price}",
     ebayPsa9From: "PSA 9: от {price}",
-    psaFromEbay: "Цены PSA — самое низкое текущее предложение на eBay.",
+    psaFromEbay:
+      "Цены PSA — медиана текущих цен предложений на eBay (US) без выбросов: ориентир, а не реальные продажи.",
     psaSoldMedian: "Цены PSA — медиана реальных продаж на eBay (за 90 дней).",
     psaSampleCount: "· {count} продаж",
+    psaSampleListings: "· {count} предложений",
     ebayFrom: "eBay: от {price}",
     ebayPsa10From: "PSA 10: от {price}",
     ebayDisclosure:

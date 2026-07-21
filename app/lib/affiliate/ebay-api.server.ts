@@ -19,10 +19,11 @@ import { schema, type Database } from "../db/index.server";
 
 /** A graded (PSA) market value with its provenance. `source='sold'` = median of
  * real 90-day sold comps (eBay Marketplace Insights) with a low/high range and
- * sample size — the "true" market value. `source='listing'` = lowest active
- * listing ("from $X"), used only as a fallback until Insights access is granted. */
+ * sample size — the "true" market value. `source='listing'` = trimmed median of
+ * current active listings (outliers dropped) with range + sample size, used
+ * until Insights access is granted. */
 export interface GradedStat {
-  /** Headline value (minor USD): sold median, or lowest listing when no sold data. */
+  /** Headline value (minor USD): sold median, or trimmed listing median. */
   valueMinor: number;
   lowMinor: number | null;
   highMinor: number | null;
@@ -146,20 +147,57 @@ interface Summary {
   price?: { value?: string; currency?: string };
 }
 
-/** Lowest USD price (minor units) among listings matching `query` that pass the
- * `accept` predicate on their title. Null when none. */
-async function lowestPrice(
+/** Robust value estimate over active-listing asking prices (minor units).
+ * `lowestMinor` = the true cheapest listing (powers the "Buy from $X" CTA).
+ * `estimateMinor` = the median AFTER trimming outliers off both ends, so a
+ * single mis-titled/damaged lowball or a wildly overpriced listing can't skew
+ * the value; `lowMinor`/`highMinor` are the trimmed bounds and `count` is the
+ * full accepted sample size. This squeezes a representative value out of the
+ * Browse API (active listings) — the one we actually have — instead of trusting
+ * the single cheapest match. Pure + exported for unit tests. */
+export interface ListingEstimate {
+  estimateMinor: number;
+  lowMinor: number;
+  highMinor: number;
+  count: number;
+  lowestMinor: number;
+}
+
+export function robustListingEstimate(pricesMinor: number[]): ListingEstimate | null {
+  const vals = pricesMinor.filter((v) => Number.isFinite(v) && v > 0).sort((a, b) => a - b);
+  if (vals.length === 0) return null;
+  const lowestMinor = vals[0];
+  // Trim ~10% off each end once the sample is large enough to spare it; small
+  // samples keep every point (nothing to safely discard).
+  const trim = vals.length >= 8 ? Math.floor(vals.length * 0.1) : 0;
+  const kept = trim > 0 ? vals.slice(trim, vals.length - trim) : vals;
+  const mid = kept.length >> 1;
+  const estimateMinor =
+    kept.length % 2 === 1 ? kept[mid] : Math.round((kept[mid - 1] + kept[mid]) / 2);
+  return {
+    estimateMinor,
+    lowMinor: kept[0],
+    highMinor: kept[kept.length - 1],
+    count: vals.length,
+    lowestMinor,
+  };
+}
+
+/** Robust listing estimate for a card (minor USD) among active listings matching
+ * `query` that pass the `accept` predicate on their title. Null when none.
+ * One Browse call; up to 100 results are mined from the single response. */
+async function listingStats(
   env: Env,
   token: string,
   query: string,
   accept: (title: string) => boolean,
-): Promise<number | null> {
+): Promise<ListingEstimate | null> {
   const params = new URLSearchParams({
     q: query,
     category_ids: CCG_CATEGORY,
     filter: "buyingOptions:{FIXED_PRICE}",
     sort: "price",
-    limit: "40",
+    limit: "100",
   });
   const url = `${apiHost(env)}/buy/browse/v1/item_summary/search?${params.toString()}`;
   const res = await fetch(url, {
@@ -167,16 +205,15 @@ async function lowestPrice(
   });
   if (!res.ok) return null;
   const data: { itemSummaries?: Summary[] } = await res.json();
-  let min: number | null = null;
+  const prices: number[] = [];
   for (const it of data.itemSummaries ?? []) {
     if ((it.price?.currency ?? "USD") !== "USD") continue;
     const value = Number(it.price?.value);
     if (!Number.isFinite(value) || value <= 0) continue;
     if (!accept(it.title ?? "")) continue;
-    const minor = Math.round(value * 100);
-    if (min === null || minor < min) min = minor;
+    prices.push(Math.round(value * 100));
   }
-  return min;
+  return robustListingEstimate(prices);
 }
 
 interface Sale {
@@ -221,10 +258,12 @@ async function soldStats(
   return { medianMinor, lowMinor: vals[0], highMinor: vals[vals.length - 1], count: vals.length };
 }
 
-/** Build the exact-card search phrase (name + number[/printedTotal] + set). */
+/** Build the exact-card search phrase (name + number[/printedTotal] + set).
+ * "Pokemon" is appended so generic card names (e.g. "Bill", "Energy") don't
+ * over-match unrelated listings — same guard the affiliate query uses. */
 function cardQuery(card: EbayCardRef): string {
   const number = card.printedTotal ? `${card.number}/${card.printedTotal}` : card.number;
-  return [card.name, card.setName, number].filter(Boolean).join(" ");
+  return [card.name, card.setName, number, "Pokemon"].filter(Boolean).join(" ");
 }
 
 export interface EbayCardRef {
@@ -248,16 +287,20 @@ async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void>
   const base = cardQuery(card);
   const psa9Accept = (t: string) => /psa\s?9\b/i.test(t) && !NOISE.test(t);
   const psa10Accept = (t: string) => /psa\s?10\b/i.test(t) && !NOISE.test(t);
-  // Lowest active listings power the "Buy on eBay — from $X" CTA buttons.
-  const [rawFromMinor, psa9FromMinor, psa10FromMinor] = await Promise.all([
+  // Robust listing estimates (trimmed median + range) over active listings.
+  const [rawListing, psa9Listing, psa10Listing] = await Promise.all([
     // Raw = single card, not graded, not novelty.
-    lowestPrice(env, token, base, (t) => !NOISE.test(t) && !GRADED.test(t)),
+    listingStats(env, token, base, (t) => !NOISE.test(t) && !GRADED.test(t)),
     // PSA 9 / PSA 10 = title must actually say that grade, minus novelty items.
-    lowestPrice(env, token, `${base} PSA 9`, psa9Accept),
-    lowestPrice(env, token, `${base} PSA 10`, psa10Accept),
+    listingStats(env, token, `${base} PSA 9`, psa9Accept),
+    listingStats(env, token, `${base} PSA 10`, psa10Accept),
   ]);
+  // Lowest active listing powers the "Buy on eBay — from $X" CTA buttons.
+  const rawFromMinor = rawListing?.lowestMinor ?? null;
+  const psa9FromMinor = psa9Listing?.lowestMinor ?? null;
+  const psa10FromMinor = psa10Listing?.lowestMinor ?? null;
   // Real 90-day sold comps (median + range) are the true market value. Requires
-  // Marketplace Insights access; absent that, fall back to the lowest listing.
+  // Marketplace Insights access; absent that, fall back to the listing estimate.
   const insToken = await getInsightsToken(env, db);
   const [psa9Sold, psa10Sold] = insToken
     ? await Promise.all([
@@ -265,8 +308,8 @@ async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void>
         soldStats(env, insToken, `${base} PSA 10`, psa10Accept),
       ])
     : [null, null];
-  const psa9 = toStat(psa9Sold, psa9FromMinor);
-  const psa10 = toStat(psa10Sold, psa10FromMinor);
+  const psa9 = toStat(psa9Sold, psa9Listing);
+  const psa10 = toStat(psa10Sold, psa10Listing);
   await cacheSet(
     db,
     `ebay:prices:v3:${card.id}`,
@@ -285,10 +328,13 @@ async function refresh(env: Env, db: Database, card: EbayCardRef): Promise<void>
   await persistGraded(db, card.id, "psa10", psa10);
 }
 
-/** Combine an optional sold-comps result with the listing fallback into a stat. */
+/** Combine an optional sold-comps result with the listing estimate into a stat.
+ * Sold comps (real transactions) always win; otherwise the trimmed-median
+ * listing estimate carries a low/high range and sample size too. A range/sample
+ * is only asserted with ≥2 listings — a lone listing is reported as a bare value. */
 function toStat(
   sold: { medianMinor: number; lowMinor: number; highMinor: number; count: number } | null,
-  listingMinor: number | null,
+  listing: ListingEstimate | null,
 ): GradedStat | null {
   if (sold) {
     return {
@@ -299,8 +345,15 @@ function toStat(
       source: "sold",
     };
   }
-  if (listingMinor != null) {
-    return { valueMinor: listingMinor, lowMinor: null, highMinor: null, sampleSize: null, source: "listing" };
+  if (listing != null) {
+    const hasRange = listing.count >= 2;
+    return {
+      valueMinor: listing.estimateMinor,
+      lowMinor: hasRange ? listing.lowMinor : null,
+      highMinor: hasRange ? listing.highMinor : null,
+      sampleSize: listing.count,
+      source: "listing",
+    };
   }
   return null;
 }

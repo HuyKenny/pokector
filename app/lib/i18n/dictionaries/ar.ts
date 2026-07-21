@@ -325,7 +325,7 @@ const ar: Dict = {
     gradingWorthIt: "يتجاوز نقطة التعادل",
     gradingNotWorth: "أقل من نقطة التعادل",
     gradingSoldNote: "قيم البطاقات المُقيَّمة هي الوسيط لمبيعات eBay الحقيقية (آخر 90 يومًا). رسوم PSA والشحن تقديرية وتختلف حسب القيمة المعلنة ومدة المعالجة.",
-    gradingListingDisclaimer: "قيم البطاقات المُقيَّمة هي أرخص عرض حالي على eBay وليست مبيعات حقيقية — اعتبرها دليلًا تقريبيًا فقط.",
+    gradingListingDisclaimer: "قيم البطاقات المُقيَّمة هي وسيط أسعار العروض الحالية على eBay (بعد استبعاد القيم الشاذة) وليست مبيعات حقيقية — اعتبرها دليلًا تقريبيًا فقط.",
     gradingFeeNote: "رسوم PSA {fee} + شحن تقديري {shipping}.",
     notFoundTitle: "لم يُعثَر على البطاقة | Pokector",
     notFoundDescription: "لم يُعثَر على البطاقة.",
@@ -370,9 +370,11 @@ const ar: Dict = {
     getThisCard: "احصل على هذه البطاقة",
     buyFrom: "من {price}",
     ebayPsa9From: "PSA 9: من {price}",
-    psaFromEbay: "أسعار PSA هي أدنى عرض حالي على eBay.",
+    psaFromEbay:
+      "أسعار PSA هي وسيط أسعار العروض الحالية على eBay (الولايات المتحدة) بعد استبعاد القيم الشاذة — دليل تقريبي وليست مبيعات مكتملة.",
     psaSoldMedian: "أسعار PSA هي الوسيط لمبيعات eBay الفعلية (آخر 90 يومًا).",
     psaSampleCount: "· {count} مبيع",
+    psaSampleListings: "· {count} عرض",
     ebayFrom: "eBay: من {price}",
     ebayPsa10From: "PSA 10: من {price}",
     ebayDisclosure:

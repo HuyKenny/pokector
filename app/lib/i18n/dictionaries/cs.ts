@@ -324,7 +324,7 @@ const cs: Dict = {
     gradingWorthIt: "Nad hranicí zisku",
     gradingNotWorth: "Pod hranicí zisku",
     gradingSoldNote: "Hodnoty v gradu jsou medián reálných prodejů na eBay (posledních 90 dní). Poplatky PSA a poštovné jsou odhady a liší se dle deklarované hodnoty a doby zpracování.",
-    gradingListingDisclaimer: "Hodnoty v gradu jsou nejnižší aktuální nabídka na eBay, ne reálné prodeje – ber jen jako hrubé vodítko.",
+    gradingListingDisclaimer: "Hodnoty v gradu jsou medián aktuálních nabídkových cen na eBay (bez odlehlých hodnot), ne reálné prodeje – ber jen jako hrubé vodítko.",
     gradingFeeNote: "Poplatek PSA {fee} + odhad. poštovné {shipping}.",
     notFoundTitle: "Karta nenalezena | Pokector",
     notFoundDescription: "Karta nenalezena.",
@@ -369,9 +369,11 @@ const cs: Dict = {
     getThisCard: "Pořiď si tuhle kartu",
     buyFrom: "od {price}",
     ebayPsa9From: "PSA 9: od {price}",
-    psaFromEbay: "Ceny PSA jsou nejnižší aktuální nabídka na eBayi.",
+    psaFromEbay:
+      "Ceny PSA jsou medián aktuálních nabídkových cen na eBayi (US) bez odlehlých hodnot — orientační vodítko, ne uzavřené prodeje.",
     psaSoldMedian: "Ceny PSA jsou medián reálných prodejů na eBayi (posledních 90 dní).",
     psaSampleCount: "· {count} prodejů",
+    psaSampleListings: "· {count} nabídek",
     ebayFrom: "eBay: od {price}",
     ebayPsa10From: "PSA 10: od {price}",
     ebayDisclosure:

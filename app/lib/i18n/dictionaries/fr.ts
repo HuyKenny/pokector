@@ -326,7 +326,7 @@ const fr: Dict = {
     gradingWorthIt: "Au-dessus du seuil de rentabilité",
     gradingNotWorth: "Sous le seuil de rentabilité",
     gradingSoldNote: "Les valeurs gradées sont la médiane des ventes réelles eBay (90 derniers jours). Les frais PSA et l'expédition sont des estimations et varient selon la valeur déclarée et le délai.",
-    gradingListingDisclaimer: "Les valeurs gradées correspondent à l'annonce eBay la moins chère actuelle, pas à des ventes réelles — à titre indicatif seulement.",
+    gradingListingDisclaimer: "Les valeurs gradées sont la médiane des prix demandés actuels sur eBay (valeurs aberrantes exclues), pas des ventes réelles — à titre indicatif seulement.",
     gradingFeeNote: "Frais PSA {fee} + expédition est. {shipping}.",
     notFoundTitle: "Carte introuvable | Pokector",
     notFoundDescription: "Carte introuvable.",
@@ -371,9 +371,11 @@ const fr: Dict = {
     getThisCard: "Obtenir cette carte",
     buyFrom: "à partir de {price}",
     ebayPsa9From: "PSA 9 : à partir de {price}",
-    psaFromEbay: "Les prix PSA correspondent à l’offre eBay actuelle la plus basse.",
+    psaFromEbay:
+      "Les prix PSA sont la médiane des prix demandés actuels sur eBay (US), valeurs aberrantes exclues — une indication approximative, pas des ventes conclues.",
     psaSoldMedian: "Les prix PSA correspondent à la médiane des ventes réelles sur eBay (90 derniers jours).",
     psaSampleCount: "· {count} vendus",
+    psaSampleListings: "· {count} annonces",
     ebayFrom: "eBay : à partir de {price}",
     ebayPsa10From: "PSA 10 : à partir de {price}",
     ebayDisclosure:

@@ -326,7 +326,7 @@ const es: Dict = {
     gradingWorthIt: "Supera el punto de equilibrio",
     gradingNotWorth: "Por debajo del equilibrio",
     gradingSoldNote: "Los valores gradeados son la mediana de ventas reales de eBay (últimos 90 días). Las tarifas de PSA y el envío son estimaciones y varían según el valor declarado y el plazo.",
-    gradingListingDisclaimer: "Los valores gradeados son el anuncio de eBay más barato actual, no ventas reales; tómalo solo como una guía aproximada.",
+    gradingListingDisclaimer: "Los valores gradeados son la mediana de los precios de venta actuales en eBay (sin valores atípicos), no ventas reales; tómalo solo como una guía aproximada.",
     gradingFeeNote: "Tarifa PSA {fee} + envío est. {shipping}.",
     notFoundTitle: "Carta no encontrada | Pokector",
     notFoundDescription: "Carta no encontrada.",
@@ -371,9 +371,11 @@ const es: Dict = {
     getThisCard: "Consigue esta carta",
     buyFrom: "desde {price}",
     ebayPsa9From: "PSA 9: desde {price}",
-    psaFromEbay: "Los precios PSA son la oferta más baja actual en eBay.",
+    psaFromEbay:
+      "Los precios PSA son la mediana de los precios de venta actuales en eBay (US), sin valores atípicos — una guía aproximada, no ventas cerradas.",
     psaSoldMedian: "Los precios PSA son la mediana de ventas reales en eBay (últimos 90 días).",
     psaSampleCount: "· {count} vendidos",
+    psaSampleListings: "· {count} anuncios",
     ebayFrom: "eBay: desde {price}",
     ebayPsa10From: "PSA 10: desde {price}",
     ebayDisclosure:
