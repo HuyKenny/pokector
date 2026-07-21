@@ -74,7 +74,7 @@ export function SiteHeader({
     { to: localePath(locale, "/price-movers"), label: t.navPriceMovers },
     { to: localePath(locale, "/pokedex"), label: t.navPokedex },
     { to: localePath(locale, "/pricing"), label: t.navPricing },
-    { to: "/blog", label: t.navBlog }, // blog is English-only
+    // Blog lives in the footer (Resources) to keep the header uncluttered.
   ];
 
   const authButtons = signedIn ? null : (
