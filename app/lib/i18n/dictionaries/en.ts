@@ -58,6 +58,7 @@ export const en = {
     footerRss: "RSS",
     languageLabel: "Language",
     marketLabel: "Price market",
+    gameLabel: "Game",
     marketUs: "US region",
     marketEu: "EU region",
     disclaimer:

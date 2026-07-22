@@ -50,6 +50,7 @@ const de: Dict = {
     footerRss: "RSS",
     languageLabel: "Sprache",
     marketLabel: "Preismarkt",
+    gameLabel: "Spiel",
     marketUs: "Region US",
     marketEu: "Region EU",
     disclaimer:

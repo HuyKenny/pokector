@@ -50,6 +50,7 @@ const vi: Dict = {
     footerRss: "RSS",
     languageLabel: "Ngôn ngữ",
     marketLabel: "Thị trường giá",
+    gameLabel: "Trò chơi",
     marketUs: "Khu vực US",
     marketEu: "Khu vực EU",
     disclaimer:

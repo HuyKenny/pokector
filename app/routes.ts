@@ -9,6 +9,11 @@ export default [
     route("cards/:slug", "routes/public/cards.$slug.tsx"),
     route("sets", "routes/public/sets.tsx"),
     route("sets/:slug", "routes/public/sets.$slug.tsx"),
+    // Riftbound (second game) — read-only catalog under its own namespace.
+    route("riftbound/cards", "routes/public/riftbound.cards.tsx"),
+    route("riftbound/cards/:slug", "routes/public/riftbound.cards.$slug.tsx"),
+    route("riftbound/sets", "routes/public/riftbound.sets.tsx"),
+    route("riftbound/sets/:slug", "routes/public/riftbound.sets.$slug.tsx"),
     route("price-movers", "routes/public/price-movers.tsx"),
     route("pokedex", "routes/public/pokedex.tsx"),
     route("pokemon-card-collectors", "routes/public/collectors.tsx"),
@@ -41,6 +46,18 @@ export default [
       route("cards/:slug", "routes/public/cards.$slug.tsx", { id: "l10n/public/cards.$slug" }),
       route("sets", "routes/public/sets.tsx", { id: "l10n/public/sets" }),
       route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
+      route("riftbound/cards", "routes/public/riftbound.cards.tsx", {
+        id: "l10n/public/riftbound.cards",
+      }),
+      route("riftbound/cards/:slug", "routes/public/riftbound.cards.$slug.tsx", {
+        id: "l10n/public/riftbound.cards.$slug",
+      }),
+      route("riftbound/sets", "routes/public/riftbound.sets.tsx", {
+        id: "l10n/public/riftbound.sets",
+      }),
+      route("riftbound/sets/:slug", "routes/public/riftbound.sets.$slug.tsx", {
+        id: "l10n/public/riftbound.sets.$slug",
+      }),
       route("price-movers", "routes/public/price-movers.tsx", { id: "l10n/public/price-movers" }),
       route("pokedex", "routes/public/pokedex.tsx", { id: "l10n/public/pokedex" }),
       route("pokemon-card-collectors", "routes/public/collectors.tsx", {
@@ -65,6 +82,7 @@ export default [
   // ── Preferences ────────────────────────────────────────────────────────────
   route("market", "routes/market.ts"), // POST: switch price market (cookie)
   route("locale", "routes/locale.ts"), // POST: switch UI language (profile, signed-in)
+  route("game", "routes/game.ts"), // POST: switch trading-card game (cookie)
 
   // ── SEO / machine endpoints ────────────────────────────────────────────────
   route("health", "routes/health.ts"),
@@ -72,6 +90,7 @@ export default [
   route("sitemap.xml", "routes/seo/sitemap-index.ts"),
   route("sitemap-static.xml", "routes/seo/sitemap-static.ts"),
   route("sitemap-sets.xml", "routes/seo/sitemap-sets.ts"),
+  route("sitemap-riftbound.xml", "routes/seo/sitemap-riftbound.ts"),
   route("sitemap-blog.xml", "routes/seo/sitemap-blog.ts"),
   route("sitemap-cards/:chunk", "routes/seo/sitemap-cards.ts"),
   route("rss.xml", "routes/seo/rss.ts"),

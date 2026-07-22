@@ -2,10 +2,12 @@ import { createRequestHandler, RouterContextProvider } from "react-router";
 
 import {
   cloudflareContext,
+  gameContext,
   marketContext,
   nonceContext,
   requestIdContext,
 } from "../app/lib/context";
+import { DEFAULT_GAME, gameFromCookieHeader } from "../app/lib/game/game";
 import { marketFromCookieHeader, marketFromCountry } from "../app/lib/market/market";
 import { onQueueBatch, onScheduled } from "../app/lib/jobs/runtime.server";
 import { log } from "../app/lib/log.server";
@@ -53,6 +55,12 @@ export default {
         marketFromCookieHeader(request.headers.get("cookie")) ??
         marketFromCountry(request.cf?.country);
       routerContext.set(marketContext, market);
+      // Remembered game preference (active game is URL-derived; this is only the
+      // "where to land" hint for the logo/home link and the game switcher).
+      routerContext.set(
+        gameContext,
+        gameFromCookieHeader(request.headers.get("cookie")) ?? DEFAULT_GAME,
+      );
       const response = await requestHandler(request, routerContext);
       const secured = applySecurityHeaders(response, {
         secure: env.ENVIRONMENT !== "development",

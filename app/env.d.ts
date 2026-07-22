@@ -29,4 +29,7 @@ interface Env {
   /** Stripe webhook signing secret (whsec_…) for /api/stripe/webhook signature
    * verification. Absent → the webhook rejects everything (fail-closed). */
   STRIPE_WEBHOOK_SECRET?: string;
+  /** JustTCG API key (x-api-key) for the Riftbound catalog + prices sync. Absent
+   * → the Riftbound sync is disabled (the /riftbound catalog stays empty). */
+  JUSTTCG_API_KEY?: string;
 }

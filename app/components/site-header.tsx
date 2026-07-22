@@ -4,6 +4,7 @@ import { Form, Link, NavLink, useLocation } from "react-router";
 import { PokectorWordmark } from "~/components/brand";
 import { Flag } from "~/components/flags";
 import { HeaderSearch } from "~/components/header-search";
+import { GAME_NAME, GAMES, type Game, gameFromPathname, gamePath } from "~/lib/game/game";
 import type { Dict } from "~/lib/i18n/dictionaries.server";
 import { LOCALE_NAMES, LOCALES, type Locale, localePath } from "~/lib/i18n/locales";
 import { MARKET_CURRENCY, MARKETS, type Market } from "~/lib/market/market";
@@ -68,14 +69,24 @@ export function SiteHeader({
     setMenuOpen(false);
   }
 
-  const nav = [
-    { to: localePath(locale, "/cards"), label: t.navCards },
-    { to: localePath(locale, "/sets"), label: t.navSets },
-    { to: localePath(locale, "/price-movers"), label: t.navPriceMovers },
-    { to: localePath(locale, "/pokedex"), label: t.navPokedex },
-    { to: localePath(locale, "/pricing"), label: t.navPricing },
-    // Blog lives in the footer (Resources) to keep the header uncluttered.
-  ];
+  // Active game is URL-derived (cache-safe). Riftbound is a catalog-only MVP, so
+  // its nav is just Cards + Sets; Pokédex/price-movers stay Pokémon-only.
+  const activeGame = gameFromPathname(location.pathname);
+  const nav =
+    activeGame === "riftbound"
+      ? [
+          { to: localePath(locale, gamePath("riftbound", "/cards")), label: t.navCards },
+          { to: localePath(locale, gamePath("riftbound", "/sets")), label: t.navSets },
+          { to: localePath(locale, "/pricing"), label: t.navPricing },
+        ]
+      : [
+          { to: localePath(locale, "/cards"), label: t.navCards },
+          { to: localePath(locale, "/sets"), label: t.navSets },
+          { to: localePath(locale, "/price-movers"), label: t.navPriceMovers },
+          { to: localePath(locale, "/pokedex"), label: t.navPokedex },
+          { to: localePath(locale, "/pricing"), label: t.navPricing },
+          // Blog lives in the footer (Resources) to keep the header uncluttered.
+        ];
 
   const authButtons = signedIn ? null : (
     <>
@@ -97,7 +108,7 @@ export function SiteHeader({
   return (
     <header className="border-b border-edge bg-surface">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-        <Link to={localePath(locale, "/")} aria-label={t.homeAria}>
+        <Link to={localePath(locale, gamePath(activeGame, "/"))} aria-label={t.homeAria}>
           <PokectorWordmark className="h-8" />
         </Link>
 
@@ -136,7 +147,10 @@ export function SiteHeader({
             regionLabel={{ us: t.marketUs, eu: t.marketEu }}
           />
           {!inApp ? (
-            <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
+            <>
+              <GameSwitcher current={activeGame} locale={locale} label={t.gameLabel} />
+              <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
+            </>
           ) : null}
           {signedIn ? (
             <>
@@ -242,7 +256,10 @@ export function SiteHeader({
                 regionLabel={{ us: t.marketUs, eu: t.marketEu }}
               />
               {!inApp ? (
-                <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
+                <>
+                  <GameSwitcher current={activeGame} locale={locale} label={t.gameLabel} />
+                  <LanguageSwitcher current={locale} barePath={barePath} label={t.languageLabel} />
+                </>
               ) : null}
             </div>
 
@@ -434,6 +451,50 @@ function LanguageSwitcher({
               >
                 <Flag code={l} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
                 {LOCALE_NAMES[l]}
+              </button>
+            </form>
+          </li>
+        ))}
+      </ul>
+    </details>
+  );
+}
+
+/** Trading-card game switcher — JS-free form POST to /game (persists the pk_game
+ * cookie) that lands the visitor on the chosen game's catalog, locale preserved.
+ * Pokémon is the unprefixed default; Riftbound lives under /riftbound. */
+function GameSwitcher({
+  current,
+  locale,
+  label,
+}: {
+  current: Game;
+  locale: Locale;
+  label: string;
+}) {
+  return (
+    <details className="relative">
+      <summary
+        aria-label={label}
+        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
+      >
+        <span aria-hidden="true">🎴</span>
+        <span>{GAME_NAME[current]}</span>
+      </summary>
+      <ul className="absolute end-0 z-50 mt-1 w-44 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
+        {GAMES.map((g) => (
+          <li key={g}>
+            <form method="post" action="/game">
+              <input type="hidden" name="game" value={g} />
+              <input type="hidden" name="redirectTo" value={localePath(locale, gamePath(g, "/cards"))} />
+              <button
+                type="submit"
+                aria-current={g === current ? "true" : undefined}
+                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                  g === current ? "font-semibold text-accent" : "text-fg"
+                }`}
+              >
+                {GAME_NAME[g]}
               </button>
             </form>
           </li>

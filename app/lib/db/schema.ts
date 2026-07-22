@@ -649,6 +649,8 @@ export const SYNC_JOB_TYPES = [
   "import_apply",
   "ebay_graded_seed",
   "subscription_sync",
+  "riftbound_catalog_sets",
+  "riftbound_catalog_cards_page",
 ] as const;
 
 export const syncJobs = sqliteTable(
@@ -762,6 +764,104 @@ export const catalogCache = sqliteTable("catalog_cache", {
   value: text("value").notNull(),
   expiresAt: integer("expires_at").notNull(),
 });
+
+// ── Riftbound catalog (second game — read-only catalog + prices, MVP) ─────────
+// Parallel tables to the Pokémon catalog so the Pokémon tables + all user-data
+// FKs stay untouched. Ids are the JustTCG source ids. Same minor-units + market
+// (US/EU) price convention as the Pokémon side so the price/market code reuses.
+
+export const riftboundSets = sqliteTable(
+  "riftbound_sets",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    name: text("name").notNull(),
+    code: text("code"),
+    releaseDate: text("release_date"),
+    imageUrl: text("image_url"),
+    syncedAt: integer("synced_at", { mode: "timestamp_ms" }).notNull(),
+    active: integer("active", { mode: "boolean" }).default(true).notNull(),
+  },
+  (t) => [index("idx_rb_sets_release").on(t.releaseDate)],
+);
+
+export const riftboundCards = sqliteTable(
+  "riftbound_cards",
+  {
+    id: text("id").primaryKey(),
+    slug: text("slug").notNull().unique(),
+    setId: text("set_id")
+      .notNull()
+      .references(() => riftboundSets.id),
+    name: text("name").notNull(),
+    nameNormalized: text("name_normalized").notNull(),
+    number: text("number").notNull(),
+    numberSort: integer("number_sort").notNull(),
+    rarity: text("rarity"),
+    imageSmallUrl: text("image_small_url"),
+    imageLargeUrl: text("image_large_url"),
+    tcgplayerId: text("tcgplayer_id"),
+    /** Lower-cased searchable haystack (name + set + number + rarity). */
+    searchText: text("search_text").notNull(),
+    sourceUpdatedAt: text("source_updated_at"),
+    syncedAt: integer("synced_at", { mode: "timestamp_ms" }).notNull(),
+    active: integer("active", { mode: "boolean" }).default(true).notNull(),
+  },
+  (t) => [
+    index("idx_rb_cards_set").on(t.setId),
+    index("idx_rb_cards_set_number").on(t.setId, t.numberSort, t.number),
+    index("idx_rb_cards_source_updated").on(t.sourceUpdatedAt),
+  ],
+);
+
+export const riftboundPricesCurrent = sqliteTable(
+  "riftbound_prices_current",
+  {
+    cardId: text("card_id")
+      .notNull()
+      .references(() => riftboundCards.id),
+    source: text("source", { enum: PRICE_SOURCES }).notNull(),
+    variant: text("variant").notNull(),
+    currency: text("currency", { enum: ["USD", "EUR"] }).notNull(),
+    normalizedPriceMinor: integer("normalized_price_minor").notNull(),
+    lowMinor: integer("low_minor"),
+    midMinor: integer("mid_minor"),
+    highMinor: integer("high_minor"),
+    marketMinor: integer("market_minor"),
+    sourceUpdatedAt: text("source_updated_at"),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.cardId, t.source, t.variant, t.currency] }),
+    index("idx_rb_prices_source").on(t.source),
+  ],
+);
+
+export const riftboundPriceHistory = sqliteTable(
+  "riftbound_price_history",
+  {
+    id: integer("id").primaryKey({ autoIncrement: true }),
+    cardId: text("card_id")
+      .notNull()
+      .references(() => riftboundCards.id),
+    source: text("source", { enum: PRICE_SOURCES }).notNull(),
+    variant: text("variant").notNull(),
+    currency: text("currency", { enum: ["USD", "EUR"] }).notNull(),
+    priceMinor: integer("price_minor").notNull(),
+    recordedDate: text("recorded_date").notNull(),
+    observedAt: integer("observed_at", { mode: "timestamp_ms" }).notNull(),
+  },
+  (t) => [
+    uniqueIndex("uq_rb_history_card_source_variant_currency_date").on(
+      t.cardId,
+      t.source,
+      t.variant,
+      t.currency,
+      t.recordedDate,
+    ),
+    index("idx_rb_history_card_lookup").on(t.cardId, t.variant, t.source, t.recordedDate),
+  ],
+);
 
 export const syncRuns = sqliteTable(
   "sync_runs",

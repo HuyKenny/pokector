@@ -22,6 +22,7 @@ Never commit real secret values. Real values live only in:
 | `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                         | **not configured** → provider hidden                          |
 | `STRIPE_SECRET_KEY`                         | Stripe API (Checkout, Portal, subscription reads) | TEST in staging, LIVE in production. Absent → billing disabled (pricing page renders, checkout/portal off). **Never paste in chat/code — set via `wrangler secret put`.** |
 | `STRIPE_WEBHOOK_SECRET`                     | `/api/stripe/webhook` signature verify (`whsec_…`) | one per env (from the Stripe webhook endpoint). Absent → webhook fail-closed. |
+| `JUSTTCG_API_KEY`                           | JustTCG API (`x-api-key`) — Riftbound catalog + prices sync | Absent → Riftbound sync disabled (`/riftbound` catalog empty). Set via `wrangler secret put JUSTTCG_API_KEY --env <env>`. |
 
 ## Non-secret environment variables (wrangler.jsonc `vars`, per environment)
 

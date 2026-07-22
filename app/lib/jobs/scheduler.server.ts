@@ -24,6 +24,10 @@ import { handleImportApply } from "../csv/import.server";
 import { handleAlertsEvaluate } from "./handlers/alerts.server";
 import { handleEbayGradedSeed } from "./handlers/ebay-seed.server";
 import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
+import {
+  handleRiftboundCatalogCardsPage,
+  handleRiftboundCatalogSets,
+} from "./handlers/riftbound.server";
 import { handleSubscriptionSync } from "./handlers/subscription.server";
 import {
   claimNextJob,
@@ -57,6 +61,8 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   import_apply: handleImportApply,
   ebay_graded_seed: handleEbayGradedSeed,
   subscription_sync: handleSubscriptionSync,
+  riftbound_catalog_sets: handleRiftboundCatalogSets,
+  riftbound_catalog_cards_page: handleRiftboundCatalogCardsPage,
 };
 
 export function registerJobHandler(type: SyncJobType, handler: JobHandler): void {
@@ -131,6 +137,16 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
         runAfter: new Date(Date.now() + 3.5 * 60 * 60 * 1000),
       });
     }
+  }
+
+  // Riftbound catalog + prices (JustTCG) — small catalog, safe to refresh daily.
+  // Idempotent per day; the sets job chains its card pages via wake-ups.
+  if (env.JUSTTCG_API_KEY) {
+    await enqueueJob(db, {
+      type: "riftbound_catalog_sets",
+      idempotencyKey: `riftbound:auto:${today}`,
+      runAfter: new Date(Date.now() + 60 * 1000),
+    });
   }
 
   // Proactively seed eBay graded (PSA) prices for the most valuable cards so PSA

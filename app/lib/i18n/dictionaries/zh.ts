@@ -50,6 +50,7 @@ const zh: Dict = {
     footerRss: "RSS",
     languageLabel: "语言",
     marketLabel: "价格市场",
+    gameLabel: "游戏",
     marketUs: "美国区",
     marketEu: "欧洲区",
     disclaimer:

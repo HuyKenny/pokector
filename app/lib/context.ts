@@ -1,5 +1,6 @@
 import { createContext, type RouterContextProvider } from "react-router";
 
+import type { Game } from "./game/game";
 import type { Market } from "./market/market";
 
 /**
@@ -18,6 +19,11 @@ export const cloudflareContext = createContext<CloudflareContextValue>();
  * request from the market cookie, falling back to Cloudflare geolocation. */
 export const marketContext = createContext<Market>();
 
+/** Remembered game preference (pk_game cookie) — the last game the visitor
+ * chose. The ACTIVE game is derived from the URL namespace, not this; the cookie
+ * only feeds the logo/home link and the switcher's redirect target. */
+export const gameContext = createContext<Game>();
+
 /** Correlation ID attached to logs and error responses. */
 export const requestIdContext = createContext<string>();
 
@@ -35,4 +41,8 @@ export function getRequestId(context: Readonly<RouterContextProvider>): string {
 
 export function getMarket(context: Readonly<RouterContextProvider>): Market {
   return context.get(marketContext);
+}
+
+export function getGame(context: Readonly<RouterContextProvider>): Game {
+  return context.get(gameContext);
 }

@@ -50,6 +50,7 @@ const ja: Dict = {
     footerRss: "RSS",
     languageLabel: "言語",
     marketLabel: "価格市場",
+    gameLabel: "ゲーム",
     marketUs: "米国リージョン",
     marketEu: "EUリージョン",
     disclaimer:

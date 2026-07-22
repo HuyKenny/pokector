@@ -51,6 +51,7 @@ const ar: Dict = {
     footerRss: "RSS",
     languageLabel: "اللغة",
     marketLabel: "سوق الأسعار",
+    gameLabel: "اللعبة",
     marketUs: "منطقة الولايات المتحدة",
     marketEu: "منطقة الاتحاد الأوروبي",
     disclaimer:

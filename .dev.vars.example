@@ -21,3 +21,7 @@ GOOGLE_CLIENT_SECRET=""
 # The recurring Price IDs are NON-secret and live in wrangler.jsonc `vars`.
 STRIPE_SECRET_KEY=""
 STRIPE_WEBHOOK_SECRET=""
+
+# JustTCG API key (https://justtcg.com) for the Riftbound catalog + prices sync.
+# Empty → Riftbound sync disabled (the /riftbound catalog stays empty).
+JUSTTCG_API_KEY=""
