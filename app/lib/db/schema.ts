@@ -145,6 +145,10 @@ export const pokemonCards = sqliteTable(
     index("idx_cards_name_normalized").on(t.nameNormalized),
     index("idx_cards_rarity").on(t.rarity),
     index("idx_cards_set_number").on(t.setId, t.numberSort, t.number),
+    // Supports `sort=newest` and the home "recently updated" list (was a filesort).
+    index("idx_cards_source_updated").on(t.sourceUpdatedAt),
+    // Supports the `?supertype=` catalog filter.
+    index("idx_cards_supertype").on(t.supertype),
   ],
 );
 
@@ -175,6 +179,10 @@ export const cardPricesCurrent = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.cardId, t.source, t.variant, t.currency] }),
     index("idx_prices_source_observed").on(t.source, t.observedAt),
+    // NOTE: an (source, currency) index was tried and REVERTED (migration 0012):
+    // SQLite's planner mis-picked it for the per-card correlated price subqueries
+    // (pokédex/set-detail), turning point lookups on the PK (card_id-first) into
+    // a range scan → catastrophic N² slowdown. The PK already serves those.
   ],
 );
 
@@ -740,6 +748,16 @@ export const authKv = sqliteTable("auth_kv", {
 /** TTL cache for eBay API responses (OAuth app token + per-card Browse prices),
  * in D1 (not KV — Free-plan write cap). `expiresAt` is unix epoch seconds. */
 export const ebayCache = sqliteTable("ebay_cache", {
+  key: text("key").primaryKey(),
+  value: text("value").notNull(),
+  expiresAt: integer("expires_at").notNull(),
+});
+
+/** TTL cache for expensive, visitor-identical catalog aggregates (price movers,
+ * pokédex rollups) keyed by (kind, market). D1 (not KV — Free-plan write cap);
+ * TTL-only, no invalidation — data changes on the daily sync and short staleness
+ * is acceptable. `expiresAt` is unix epoch seconds. */
+export const catalogCache = sqliteTable("catalog_cache", {
   key: text("key").primaryKey(),
   value: text("value").notNull(),
   expiresAt: integer("expires_at").notNull(),

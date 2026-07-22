@@ -3,7 +3,7 @@ import { Link } from "react-router";
 import type { Route } from "./+types/price-movers";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
-import { getPriceMovers, type PriceMover } from "~/lib/catalog/queries.server";
+import { getPriceMoversBoth, type PriceMover } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, type Locale, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
@@ -31,17 +31,15 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
   const market = getMarket(context);
-  const [up7, down7, up30, down30] = await Promise.all([
-    getPriceMovers(db, 7, "up", 10, market),
-    getPriceMovers(db, 7, "down", 10, market),
-    getPriceMovers(db, 30, "up", 10, market),
-    getPriceMovers(db, 30, "down", 10, market),
+  const [w7, w30] = await Promise.all([
+    getPriceMoversBoth(db, 7, 10, market),
+    getPriceMoversBoth(db, 30, 10, market),
   ]);
   return {
-    up7,
-    down7,
-    up30,
-    down30,
+    up7: w7.up,
+    down7: w7.down,
+    up30: w30.up,
+    down30: w30.down,
     locale,
     currency: MARKET_CURRENCY[market],
     t: getDict(locale).priceMovers,

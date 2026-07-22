@@ -49,23 +49,31 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
           price: formatMinor(price, MARKET_CURRENCY[data.market], langTag),
         })
       : "";
-  return pageMeta({
-    title: interpolate(t.metaTitle, {
-      name: card.name,
-      setName: set.name,
-      number: card.number,
+  const lcpImage = card.imageLargeUrl ?? card.imageSmallUrl ?? undefined;
+  return [
+    ...pageMeta({
+      title: interpolate(t.metaTitle, {
+        name: card.name,
+        setName: set.name,
+        number: card.number,
+      }),
+      description: interpolate(t.metaDescription, {
+        name: card.name,
+        setName: set.name,
+        number: card.number,
+        rarityPart,
+        pricePart,
+      }),
+      canonical: data.canonical,
+      alternates: { appUrl: data.appUrl, path: `/cards/${card.slug}` },
+      image: lcpImage,
     }),
-    description: interpolate(t.metaDescription, {
-      name: card.name,
-      setName: set.name,
-      number: card.number,
-      rarityPart,
-      pricePart,
-    }),
-    canonical: data.canonical,
-    alternates: { appUrl: data.appUrl, path: `/cards/${card.slug}` },
-    image: card.imageLargeUrl ?? card.imageSmallUrl ?? undefined,
-  });
+    // Preload the LCP card image so the browser fetches it as soon as the HTML
+    // head is parsed, in parallel with the CSS/JS.
+    ...(lcpImage
+      ? [{ tagName: "link" as const, rel: "preload", as: "image", href: lcpImage, fetchPriority: "high" }]
+      : []),
+  ];
 }
 
 export function headers(_args: Route.HeadersArgs) {
@@ -88,9 +96,28 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   // Popularity signal for history tracking — off the response critical path.
   ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
 
+  // Everything below is independent of each other (only needs the card id/name),
+  // so run it as a single parallel batch instead of serial round-trips: the
+  // session lookup, the three price-history series, and the (cache-first, never-
+  // blocking) eBay prices read.
+  const [session, history, gradedHistoryPsa9, gradedHistoryPsa10, ebayPrices] = await Promise.all([
+    optionalUser(context, request),
+    getCardPriceHistory(db, detail.card.id, { source: MARKET_SOURCE[market] }),
+    getGradedPriceHistory(db, detail.card.id, "psa9"),
+    getGradedPriceHistory(db, detail.card.id, "psa10"),
+    // Live eBay "from $X" prices (raw + PSA), cached in D1; a cache miss returns
+    // null and refreshes in the background so the render never blocks on eBay.
+    getEbayCardPrices(env, db, (p) => ctx.waitUntil(p), {
+      id: detail.card.id,
+      name: detail.card.name,
+      setName: detail.set.name,
+      number: detail.card.number,
+      printedTotal: detail.set.printedTotal ?? null,
+    }),
+  ]);
+
   // Ownership/wishlist badge for signed-in users (the loader is `private`
   // cached, so this per-user state never leaks to a shared edge cache).
-  const session = await optionalUser(context, request);
   const cardState: UserCardState | null = session
     ? ((await getUserCardState(db, session.user.id, [detail.card.id]))[detail.card.id] ?? {
         ownedQuantity: 0,
@@ -98,12 +125,6 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
         onWishlist: false,
       })
     : null;
-
-  const [history, gradedHistoryPsa9, gradedHistoryPsa10] = await Promise.all([
-    getCardPriceHistory(db, detail.card.id, { source: MARKET_SOURCE[market] }),
-    getGradedPriceHistory(db, detail.card.id, "psa9"),
-    getGradedPriceHistory(db, detail.card.id, "psa10"),
-  ]);
 
   const activePrices = detail.prices.filter((p) => p.source === MARKET_SOURCE[market]);
   const headlinePriceMinor =
@@ -125,16 +146,6 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
     `${ebayCardQuery(detail.card.name, detail.set.name)} PSA 10`,
     env.EBAY_CAMPAIGN_ID,
   );
-
-  // Live eBay "from $X" prices (raw + PSA 10), cached in D1; a cache miss returns
-  // null and refreshes in the background so the render never blocks on eBay.
-  const ebayPrices = await getEbayCardPrices(env, db, (p) => ctx.waitUntil(p), {
-    id: detail.card.id,
-    name: detail.card.name,
-    setName: detail.set.name,
-    number: detail.card.number,
-    printedTotal: detail.set.printedTotal ?? null,
-  });
 
   return {
     detail,
@@ -358,7 +369,14 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             <img
               src={card.imageLargeUrl ?? card.imageSmallUrl ?? undefined}
               alt={`${card.name} card, ${set.name} #${card.number}`}
-              className="w-full rounded-xl border border-edge shadow-(--shadow-card)"
+              // LCP element: reserve the card aspect box (no CLS), decode off the
+              // main thread, and hint high priority so it fetches ahead of below-
+              // the-fold art. Paired with a rel=preload in meta().
+              width={734}
+              height={1024}
+              decoding="async"
+              fetchPriority="high"
+              className="aspect-[63/88] w-full rounded-xl border border-edge object-contain shadow-(--shadow-card)"
             />
           ) : (
             <div className="flex aspect-[63/88] items-center justify-center rounded-xl border border-edge bg-surface-raised text-fg-faint">

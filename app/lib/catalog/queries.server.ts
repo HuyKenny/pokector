@@ -5,9 +5,14 @@
 
 import { and, asc, count, desc, eq, gte, inArray, like, lt, sql, type SQL } from "drizzle-orm";
 
+import { cached } from "../cache/catalog-cache.server";
 import { schema, type Database } from "../db/index.server";
 import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { buildFtsMatch, CARD_SEARCH_BM25_WEIGHTS } from "./search.server";
+
+/** TTL (s) for the visitor-identical aggregate caches (per market). */
+const MOVERS_CACHE_TTL = 600;
+const POKEDEX_CACHE_TTL = 900;
 
 export const CATALOG_PAGE_SIZE = 24;
 export const MAX_PAGE = 400;
@@ -536,6 +541,83 @@ export async function getPriceMovers(
     }));
 }
 
+/**
+ * Both movers directions in ONE pass. The expensive part — the ROW_NUMBER window
+ * over the whole `card_price_history` — is computed once in the `moved` CTE, then
+ * the two tails (biggest gains / biggest drops) are taken over the materialized
+ * set. Semantically identical to two `getPriceMovers` calls (same filters, same
+ * `prev.price_minor >= 100` floor, same sign guard) but halves the heavy work.
+ * TTL-cached per (window, market, limit) — the result is identical for every
+ * visitor in a market and only changes on the daily sync.
+ */
+export async function getPriceMoversBoth(
+  db: Database,
+  windowDays: 7 | 30,
+  limit = 10,
+  market: Market = "us",
+): Promise<{ up: PriceMover[]; down: PriceMover[] }> {
+  return cached(db, `movers:${windowDays}:${market}:${limit}`, MOVERS_CACHE_TTL, async () => {
+    const since = new Date(Date.now() - windowDays * 24 * 60 * 60 * 1000)
+      .toISOString()
+      .slice(0, 10);
+
+    const rows = await db.all<{
+      card_id: string;
+      slug: string;
+      name: string;
+      set_name: string;
+      image_small_url: string | null;
+      variant: string;
+      current_minor: number;
+      previous_minor: number;
+      dir: "up" | "down";
+    }>(sql`
+      WITH moved AS (
+        SELECT c.card_id, k.slug, k.name, s.name AS set_name, k.image_small_url,
+               c.variant, c.normalized_price_minor AS current_minor, prev.price_minor AS previous_minor,
+               (CAST(c.normalized_price_minor - prev.price_minor AS REAL) / prev.price_minor) AS pct
+        FROM card_prices_current c
+        JOIN pokemon_cards k ON k.id = c.card_id AND k.active = 1
+        JOIN pokemon_sets s ON s.id = k.set_id
+        JOIN (
+          SELECT h.card_id, h.source, h.variant, h.currency, h.price_minor,
+                 ROW_NUMBER() OVER (
+                   PARTITION BY h.card_id, h.source, h.variant, h.currency
+                   ORDER BY h.recorded_date DESC
+                 ) AS rn
+          FROM card_price_history h
+          WHERE h.recorded_date <= ${since}
+        ) prev ON prev.card_id = c.card_id AND prev.source = c.source
+              AND prev.variant = c.variant AND prev.currency = c.currency AND prev.rn = 1
+        WHERE c.source = ${MARKET_SOURCE[market]} AND c.currency = ${MARKET_CURRENCY[market]}
+          AND prev.price_minor >= 100
+          AND c.normalized_price_minor != prev.price_minor
+      )
+      SELECT *, 'up' AS dir FROM (SELECT * FROM moved ORDER BY pct DESC LIMIT ${limit})
+      UNION ALL
+      SELECT *, 'down' AS dir FROM (SELECT * FROM moved ORDER BY pct ASC LIMIT ${limit})
+    `);
+
+    const map = (r: (typeof rows)[number]): PriceMover => ({
+      cardId: r.card_id,
+      slug: r.slug,
+      name: r.name,
+      setName: r.set_name,
+      imageSmallUrl: r.image_small_url,
+      variant: r.variant,
+      currentMinor: r.current_minor,
+      previousMinor: r.previous_minor,
+      changeMinor: r.current_minor - r.previous_minor,
+      changePercent: ((r.current_minor - r.previous_minor) / r.previous_minor) * 100,
+    });
+
+    return {
+      up: rows.filter((r) => r.dir === "up" && r.current_minor > r.previous_minor).map(map),
+      down: rows.filter((r) => r.dir === "down" && r.current_minor < r.previous_minor).map(map),
+    };
+  });
+}
+
 /** Popularity signal for tracked-card selection (fire-and-forget from card pages). */
 export async function bumpCardPopularity(db: Database, cardId: string): Promise<void> {
   await db
@@ -570,28 +652,40 @@ export async function listPokedexAggregates(
   db: Database,
   market: Market = "us",
 ): Promise<Map<number, PokedexAggregate>> {
-  const rows = await db.all<{ dex: number; card_count: number; avg_minor: number | null }>(sql`
-    SELECT je.value AS dex,
-           COUNT(*) AS card_count,
-           AVG(kc.price_minor) AS avg_minor
-    FROM (
-      SELECT k.id,
-             k.national_pokedex_numbers_json AS dexes,
-             (SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
-              WHERE p.card_id = k.id AND p.source = ${MARKET_SOURCE[market]}
-                AND p.currency = ${MARKET_CURRENCY[market]}) AS price_minor
-      FROM pokemon_cards k
-      WHERE k.active = 1 AND k.national_pokedex_numbers_json IS NOT NULL
-    ) kc
-    JOIN json_each(kc.dexes) je
-    GROUP BY je.value
-  `);
+  // Visitor-identical per market and heavy (full pokemon_cards scan + per-card
+  // price subquery) → TTL-cached. Cache a plain array (Maps don't JSON-serialize)
+  // and rebuild the Map on the way out.
+  const entries = await cached<{ dex: number; cardCount: number; avgPriceMinor: number | null }[]>(
+    db,
+    `pokedex:${market}`,
+    POKEDEX_CACHE_TTL,
+    async () => {
+      const rows = await db.all<{ dex: number; card_count: number; avg_minor: number | null }>(sql`
+        SELECT je.value AS dex,
+               COUNT(*) AS card_count,
+               AVG(kc.price_minor) AS avg_minor
+        FROM (
+          SELECT k.id,
+                 k.national_pokedex_numbers_json AS dexes,
+                 (SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
+                  WHERE p.card_id = k.id AND p.source = ${MARKET_SOURCE[market]}
+                    AND p.currency = ${MARKET_CURRENCY[market]}) AS price_minor
+          FROM pokemon_cards k
+          WHERE k.active = 1 AND k.national_pokedex_numbers_json IS NOT NULL
+        ) kc
+        JOIN json_each(kc.dexes) je
+        GROUP BY je.value
+      `);
+      return rows.map((r) => ({
+        dex: Number(r.dex),
+        cardCount: Number(r.card_count),
+        avgPriceMinor: r.avg_minor == null ? null : Math.round(Number(r.avg_minor)),
+      }));
+    },
+  );
   const map = new Map<number, PokedexAggregate>();
-  for (const r of rows) {
-    map.set(Number(r.dex), {
-      cardCount: Number(r.card_count),
-      avgPriceMinor: r.avg_minor == null ? null : Math.round(Number(r.avg_minor)),
-    });
+  for (const e of entries) {
+    map.set(e.dex, { cardCount: e.cardCount, avgPriceMinor: e.avgPriceMinor });
   }
   return map;
 }

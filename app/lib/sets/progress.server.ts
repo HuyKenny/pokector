@@ -26,11 +26,26 @@ export async function computeSetProgress(
   setId: string,
   market: Market,
 ): Promise<SetProgress> {
-  // Total active cards in the set (no parameter explosion — bound by set_id).
-  const [{ total: totalCount }] = await db
-    .select({ total: count() })
-    .from(schema.pokemonCards)
-    .where(and(eq(schema.pokemonCards.setId, setId), eq(schema.pokemonCards.active, true)));
+  // Total active cards + owned card IDs are independent — run in parallel.
+  // (JOIN on set_id, not an IN list of every card.)
+  const [totalRows, ownedRows] = await Promise.all([
+    db
+      .select({ total: count() })
+      .from(schema.pokemonCards)
+      .where(and(eq(schema.pokemonCards.setId, setId), eq(schema.pokemonCards.active, true))),
+    db
+      .selectDistinct({ cardId: schema.collectionEntries.cardId })
+      .from(schema.collectionEntries)
+      .innerJoin(schema.pokemonCards, eq(schema.collectionEntries.cardId, schema.pokemonCards.id))
+      .where(
+        and(
+          eq(schema.collectionEntries.userId, userId),
+          gt(schema.collectionEntries.quantity, 0),
+          eq(schema.pokemonCards.setId, setId),
+        ),
+      ),
+  ]);
+  const totalCount = totalRows[0].total;
   if (totalCount === 0) {
     return {
       ownedCount: 0,
@@ -43,18 +58,6 @@ export async function computeSetProgress(
     };
   }
 
-  // Owned card IDs in this set — JOIN on set_id, not an IN list of every card.
-  const ownedRows = await db
-    .selectDistinct({ cardId: schema.collectionEntries.cardId })
-    .from(schema.collectionEntries)
-    .innerJoin(schema.pokemonCards, eq(schema.collectionEntries.cardId, schema.pokemonCards.id))
-    .where(
-      and(
-        eq(schema.collectionEntries.userId, userId),
-        gt(schema.collectionEntries.quantity, 0),
-        eq(schema.pokemonCards.setId, setId),
-      ),
-    );
   const ownedSet = new Set(ownedRows.map((r) => r.cardId));
   const missingCount = totalCount - ownedSet.size;
 

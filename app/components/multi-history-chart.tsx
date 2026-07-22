@@ -1,15 +1,4 @@
-import {
-  CategoryScale,
-  Chart as ChartJS,
-  Legend,
-  LinearScale,
-  LineElement,
-  PointElement,
-  TimeScale,
-  Tooltip,
-} from "chart.js";
-import { useId, useMemo, useState, useSyncExternalStore } from "react";
-import { Line } from "react-chartjs-2";
+import { lazy, Suspense, useId, useMemo, useState, useSyncExternalStore } from "react";
 
 import { formatMinor } from "~/lib/money/decimal";
 import {
@@ -20,15 +9,8 @@ import {
   type HistoryPoint,
 } from "~/components/history-chart";
 
-ChartJS.register(
-  CategoryScale,
-  LinearScale,
-  PointElement,
-  LineElement,
-  Tooltip,
-  Legend,
-  TimeScale,
-);
+// chart.js (~170 KB) is confined to this lazily-loaded chunk (client-only).
+const MultiHistoryChartCanvas = lazy(() => import("./multi-history-chart-canvas"));
 
 export interface CompareSeries {
   label: string;
@@ -171,47 +153,19 @@ export function MultiHistoryChart({
         <>
           <div className="h-64" aria-hidden={!mounted}>
             {mounted ? (
-              <Line
-                aria-label={summary}
-                data={{
-                  labels: axis,
-                  datasets: series.map((s, i) => ({
+              <Suspense fallback={<div className="skeleton h-full w-full" aria-hidden="true" />}>
+                <MultiHistoryChartCanvas
+                  axis={axis}
+                  currency={currency}
+                  summary={summary}
+                  datasets={series.map((s, i) => ({
                     label: s.label,
                     data: aligned[i].map((v) => (v === null ? null : v / 100)),
                     borderColor: SERIES_COLORS[i % SERIES_COLORS.length],
                     backgroundColor: SERIES_COLORS[i % SERIES_COLORS.length],
-                    spanGaps: true,
-                    fill: false,
-                    pointRadius: 0,
-                    tension: 0.15,
-                  })),
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  interaction: { mode: "index", intersect: false },
-                  plugins: {
-                    legend: { display: false },
-                    tooltip: {
-                      callbacks: {
-                        label: (item) =>
-                          `${item.dataset.label}: ${formatMinor(
-                            Math.round((item.parsed.y ?? 0) * 100),
-                            currency,
-                          )}`,
-                      },
-                    },
-                  },
-                  scales: {
-                    y: {
-                      ticks: {
-                        callback: (value) => formatMinor(Math.round(Number(value) * 100), currency),
-                      },
-                    },
-                    x: { ticks: { maxTicksLimit: 8 } },
-                  },
-                }}
-              />
+                  }))}
+                />
+              </Suspense>
             ) : (
               <div className="skeleton h-full w-full" aria-hidden="true" />
             )}

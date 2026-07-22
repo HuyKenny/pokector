@@ -1,19 +1,10 @@
-import {
-  CategoryScale,
-  Chart as ChartJS,
-  Filler,
-  LinearScale,
-  LineElement,
-  PointElement,
-  TimeScale,
-  Tooltip,
-} from "chart.js";
-import { useId, useMemo, useState, useSyncExternalStore } from "react";
-import { Line } from "react-chartjs-2";
+import { lazy, Suspense, useId, useMemo, useState, useSyncExternalStore } from "react";
 
 import { formatMinor } from "~/lib/money/decimal";
 
-ChartJS.register(CategoryScale, LinearScale, PointElement, LineElement, Tooltip, Filler, TimeScale);
+// chart.js (~170 KB) lives in this lazily-loaded chunk — never in the route's
+// critical JS. It only mounts client-side after hydration (see `mounted`).
+const HistoryChartCanvas = lazy(() => import("./history-chart-canvas"));
 
 export interface HistoryPoint {
   /** "YYYY-MM-DD" */
@@ -144,46 +135,15 @@ export function HistoryChart({
         <>
           <div className="h-56" aria-hidden={!mounted}>
             {mounted ? (
-              <Line
-                aria-label={summary}
-                data={{
-                  labels: points.map((p) => p.date),
-                  datasets: [
-                    {
-                      label: title,
-                      data: points.map((p) => p.valueMinor / 100),
-                      borderColor: accentColor,
-                      // Same color with alpha — computed oklch(…) → oklch(… / 0.15).
-                      backgroundColor: accentColor.replace(/\)\s*$/, " / 0.15)"),
-                      fill: true,
-                      pointRadius: points.length === 1 ? 5 : points.length > 60 ? 0 : 2,
-                      tension: 0.15,
-                      stepped: false,
-                    },
-                  ],
-                }}
-                options={{
-                  responsive: true,
-                  maintainAspectRatio: false,
-                  interaction: { mode: "index", intersect: false },
-                  plugins: {
-                    tooltip: {
-                      callbacks: {
-                        label: (item) =>
-                          formatMinor(Math.round((item.parsed.y ?? 0) * 100), currency),
-                      },
-                    },
-                  },
-                  scales: {
-                    y: {
-                      ticks: {
-                        callback: (value) => formatMinor(Math.round(Number(value) * 100), currency),
-                      },
-                    },
-                    x: { ticks: { maxTicksLimit: 8 } },
-                  },
-                }}
-              />
+              <Suspense fallback={<div className="skeleton h-full w-full" aria-hidden="true" />}>
+                <HistoryChartCanvas
+                  points={points}
+                  title={title}
+                  currency={currency}
+                  accentColor={accentColor}
+                  summary={summary}
+                />
+              </Suspense>
             ) : (
               <div className="skeleton h-full w-full" aria-hidden="true" />
             )}

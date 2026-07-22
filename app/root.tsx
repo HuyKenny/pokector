@@ -20,6 +20,10 @@ import "./app.css";
 const GA_MEASUREMENT_ID = "G-J83PLQ5017";
 
 export const links: Route.LinksFunction = () => [
+  // Warm the TLS connection to the card-image hosts before the first <img>
+  // request — card art is the dominant above-the-fold asset on every page.
+  { rel: "preconnect", href: "https://images.pokemontcg.io", crossOrigin: "anonymous" },
+  { rel: "preconnect", href: "https://images.scrydex.com", crossOrigin: "anonymous" },
   { rel: "icon", href: "/brand/pokector-icon.svg", type: "image/svg+xml" },
   { rel: "apple-touch-icon", href: "/brand/pokector-icon-192.png" },
   { rel: "manifest", href: "/manifest.webmanifest" },
@@ -68,6 +72,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             carries the per-request nonce. */}
         {gaId ? (
           <>
+            <link rel="preconnect" href="https://www.googletagmanager.com" />
             <script async nonce={nonce} src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
             <script
               nonce={nonce}

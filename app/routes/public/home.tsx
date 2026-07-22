@@ -3,7 +3,7 @@ import { Form, Link } from "react-router";
 import type { Route } from "./+types/home";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
-import { getHomepageData, getPriceMovers } from "~/lib/catalog/queries.server";
+import { getHomepageData, getPriceMoversBoth } from "~/lib/catalog/queries.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
@@ -29,10 +29,9 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const locale = resolveLocale(params.locale);
-  const [{ popularSets, recentCards }, moversUp, moversDown] = await Promise.all([
+  const [{ popularSets, recentCards }, { up: moversUp, down: moversDown }] = await Promise.all([
     getHomepageData(db),
-    getPriceMovers(db, 7, "up", 4),
-    getPriceMovers(db, 7, "down", 4),
+    getPriceMoversBoth(db, 7, 4),
   ]);
   // Market ticker: strongest real 7-day moves in both directions. Empty when
   // there isn't enough tracked history — the strip simply doesn't render.
