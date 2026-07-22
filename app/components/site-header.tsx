@@ -11,6 +11,13 @@ import { MARKET_CURRENCY, MARKETS, type Market } from "~/lib/market/market";
 
 type LayoutDict = Dict["layout"];
 
+/** Shared look for the market / game / language dropdown triggers: a compact
+ * bordered pill with a chevron that flips when the <details> is open. Keeping
+ * them identical makes the top-right controls read as one tidy control cluster
+ * instead of loose floating text. */
+const SWITCHER_SUMMARY =
+  "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg [&::-webkit-details-marker]:hidden";
+
 /** Personal-area links (English — the /app area is English-only by design). */
 const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
   { to: "/app", label: "Dashboard", end: true },
@@ -248,7 +255,7 @@ export function SiteHeader({
               </nav>
             ) : null}
 
-            <div className="flex items-center gap-2 border-t border-edge pt-3">
+            <div className="flex flex-wrap items-center gap-2 border-t border-edge pt-3">
               <MarketSwitcher
                 current={market}
                 redirectTo={currentPath}
@@ -391,6 +398,27 @@ function AccountMenu({
   );
 }
 
+function ChevronIcon({ className = "" }: { className?: string }) {
+  return (
+    <svg
+      width="12"
+      height="12"
+      viewBox="0 0 24 24"
+      fill="none"
+      aria-hidden="true"
+      className={`shrink-0 text-fg-faint transition-transform duration-150 group-open:rotate-180 ${className}`}
+    >
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
 function MenuIcon() {
   return (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -427,13 +455,11 @@ function LanguageSwitcher({
   label: string;
 }) {
   return (
-    <details className="relative">
-      <summary
-        aria-label={label}
-        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
-      >
+    <details className="group relative">
+      <summary aria-label={label} className={SWITCHER_SUMMARY}>
         <Flag code={current} className="h-3.5 w-5 rounded-[2px] border border-edge/40" />
         <span className="uppercase">{current}</span>
+        <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 max-h-80 w-44 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
         {LOCALES.map((l) => (
@@ -473,13 +499,11 @@ function GameSwitcher({
   label: string;
 }) {
   return (
-    <details className="relative">
-      <summary
-        aria-label={label}
-        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
-      >
+    <details className="group relative">
+      <summary aria-label={label} className={SWITCHER_SUMMARY}>
         <span aria-hidden="true">🎴</span>
         <span>{GAME_NAME[current]}</span>
+        <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-44 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
         {GAMES.map((g) => (
@@ -518,13 +542,11 @@ function MarketSwitcher({
   regionLabel: Record<Market, string>;
 }) {
   return (
-    <details className="relative">
-      <summary
-        aria-label={label}
-        className="flex cursor-pointer list-none items-center gap-1 rounded-lg px-2 py-2 text-sm font-medium text-fg-muted hover:text-fg"
-      >
+    <details className="group relative">
+      <summary aria-label={label} className={SWITCHER_SUMMARY}>
         <Flag code={current} className="h-3.5 w-5 rounded-[2px] border border-edge/40" />
         <span>{MARKET_CURRENCY[current]}</span>
+        <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
         {MARKETS.map((m) => (
