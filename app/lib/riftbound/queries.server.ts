@@ -150,6 +150,8 @@ export async function listRiftboundTopValueCards(db: Database, limit = 12) {
 }
 
 export async function listRiftboundSets(db: Database) {
+  // LEFT JOIN + GROUP BY for the per-set active-card count. (A correlated
+  // subquery embedding schema.riftboundSets.id inside sql`` returned 0 here.)
   return db
     .select({
       id: schema.riftboundSets.id,
@@ -157,12 +159,18 @@ export async function listRiftboundSets(db: Database) {
       name: schema.riftboundSets.name,
       releaseDate: schema.riftboundSets.releaseDate,
       imageUrl: schema.riftboundSets.imageUrl,
-      cardCount: sql<number>`(
-        SELECT COUNT(*) FROM riftbound_cards k WHERE k.set_id = ${schema.riftboundSets.id} AND k.active = 1
-      )`,
+      cardCount: count(schema.riftboundCards.id),
     })
     .from(schema.riftboundSets)
+    .leftJoin(
+      schema.riftboundCards,
+      and(
+        eq(schema.riftboundCards.setId, schema.riftboundSets.id),
+        eq(schema.riftboundCards.active, true),
+      ),
+    )
     .where(eq(schema.riftboundSets.active, true))
+    .groupBy(schema.riftboundSets.id)
     .orderBy(desc(schema.riftboundSets.releaseDate))
     .limit(200);
 }
