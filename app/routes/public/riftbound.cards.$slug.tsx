@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "react-router";
 
 import type { Route } from "./+types/riftbound.cards.$slug";
+import { CardImage } from "~/components/card-image";
 import { carryForward, HistoryChart, rangeStartDate, type ChartRange } from "~/components/history-chart";
 import { buildEbaySearchUrl } from "~/lib/affiliate/ebay";
 import { getCloudflare } from "~/lib/context";
@@ -59,6 +60,7 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
   const { card, set, prices, related, history, headlineMinor, ebayUrl } = loaderData;
   const lp = useLocalePath();
   const [range, setRange] = useState<ChartRange>("MAX");
+  const [heroFailed, setHeroFailed] = useState(false);
   const today = new Date().toISOString().slice(0, 10);
   const sinceDate = rangeStartDate(range);
   const points = carryForward(
@@ -77,7 +79,7 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
 
       <div className="grid gap-8 md:grid-cols-[minmax(240px,320px)_1fr]">
         <div>
-          {(card.imageLargeUrl ?? card.imageSmallUrl) ? (
+          {!heroFailed && (card.imageLargeUrl ?? card.imageSmallUrl) ? (
             <img
               src={card.imageLargeUrl ?? card.imageSmallUrl ?? undefined}
               alt={`${card.name} — ${set.name} #${card.number}`}
@@ -85,6 +87,7 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
               height={1024}
               decoding="async"
               fetchPriority="high"
+              onError={() => setHeroFailed(true)}
               className="aspect-[63/88] w-full rounded-xl border border-edge object-contain shadow-(--shadow-card)"
             />
           ) : (
@@ -153,15 +156,15 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
             {related.map((r) => (
               <li key={r.id}>
                 <Link to={lp(`/riftbound/cards/${r.slug}`)} className="group flex flex-col gap-1">
-                  {r.imageSmallUrl ? (
-                    <img
-                      src={r.imageSmallUrl}
-                      alt={r.name}
-                      loading="lazy"
-                      className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-                    />
-                  ) : null}
-                  <span className="truncate text-xs text-fg-muted">{r.name}</span>
+                  <CardImage
+                    src={r.imageSmallUrl}
+                    alt={r.name}
+                    imgClassName="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+                    fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-[10px] text-fg-faint"
+                  />
+                  <span className="truncate text-xs text-fg-muted group-hover:text-accent">
+                    {r.name}
+                  </span>
                 </Link>
               </li>
             ))}

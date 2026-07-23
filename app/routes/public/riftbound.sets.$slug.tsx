@@ -1,6 +1,7 @@
 import { Link } from "react-router";
 
 import type { Route } from "./+types/riftbound.sets.$slug";
+import { CardImage } from "~/components/card-image";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { localePath, resolveLocale } from "~/lib/i18n/locales";
@@ -50,27 +51,26 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
       </nav>
       <h1 className="text-2xl font-bold text-fg">{set.name}</h1>
 
-      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+      <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {cards.map((c) => (
           <li key={c.id}>
-            <Link to={lp(`/riftbound/cards/${c.slug}`)} className="group flex flex-col gap-1">
-              {c.imageSmallUrl ? (
-                <img
-                  src={c.imageSmallUrl}
-                  alt={c.name}
-                  loading="lazy"
-                  className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-                />
-              ) : (
-                <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint">
-                  No image
-                </span>
-              )}
-              <span className="truncate text-sm font-medium text-fg">{c.name}</span>
-              <span className="text-xs text-fg-faint">#{c.number}</span>
-              <span className="text-sm font-semibold text-fg">
-                {c.priceMinor !== null ? formatMinor(c.priceMinor, "USD") : "—"}
-              </span>
+            <Link to={lp(`/riftbound/cards/${c.slug}`)} className="group flex h-full flex-col gap-2">
+              <CardImage
+                src={c.imageSmallUrl}
+                alt={`${c.name} #${c.number}`}
+                imgClassName="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+                fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint"
+              />
+              <div>
+                <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
+                  {c.name}
+                </p>
+                <p className="truncate text-xs text-fg-faint">
+                  #{c.number}
+                  {c.rarity ? ` · ${c.rarity}` : ""}
+                  {c.priceMinor !== null ? ` · ${formatMinor(c.priceMinor, "USD")}` : ""}
+                </p>
+              </div>
             </Link>
           </li>
         ))}

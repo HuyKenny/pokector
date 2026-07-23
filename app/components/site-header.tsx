@@ -76,9 +76,12 @@ export function SiteHeader({
     setMenuOpen(false);
   }
 
-  // Active game is URL-derived (cache-safe). Riftbound is a catalog-only MVP, so
-  // its nav is just Cards + Sets; Pokédex/price-movers stay Pokémon-only.
-  const activeGame = gameFromPathname(location.pathname);
+  // Active game is URL-derived (cache-safe). Use barePath (locale prefix already
+  // stripped) so localized Riftbound pages (/:locale/riftbound/…) resolve to
+  // Riftbound too — location.pathname keeps the /:locale segment and would fall
+  // back to Pokémon. Riftbound is a catalog-only MVP, so its nav is Cards/Sets/
+  // Pricing; Pokédex/price-movers stay Pokémon-only.
+  const activeGame = gameFromPathname(barePath);
   const nav =
     activeGame === "riftbound"
       ? [
@@ -114,13 +117,22 @@ export function SiteHeader({
 
   return (
     <header className="border-b border-edge bg-surface">
-      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-2 px-4 py-3">
-        <Link to={localePath(locale, gamePath(activeGame, "/"))} aria-label={t.homeAria}>
+      {/* Single stable row: logo + nav on the left, controls pinned right (ms-auto).
+          Wider than the page body (max-w-7xl) so the full Pokémon nav + controls
+          fit on ONE line without wrapping. The full desktop layout appears at xl
+          (below that the 5-item nav + controls can't fit, so we use the hamburger)
+          — this keeps the header looking the same across games and auth states. */}
+      <div className="mx-auto flex max-w-7xl items-center gap-4 px-4 py-3">
+        <Link
+          to={localePath(locale, gamePath(activeGame, "/"))}
+          aria-label={t.homeAria}
+          className="shrink-0"
+        >
           <PokectorWordmark className="h-8" />
         </Link>
 
-        {/* Desktop nav (≥ lg) */}
-        <nav aria-label={t.navMain} className="hidden gap-1 lg:flex">
+        {/* Desktop nav (≥ xl) */}
+        <nav aria-label={t.navMain} className="hidden shrink-0 gap-1 xl:flex">
           {nav.map((item) => (
             <NavLink
               key={item.to}
@@ -137,8 +149,8 @@ export function SiteHeader({
           ))}
         </nav>
 
-        {/* Desktop controls (≥ lg) */}
-        <div className="ms-auto hidden items-center gap-2 lg:flex">
+        {/* Desktop controls (≥ xl) */}
+        <div className="ms-auto hidden items-center gap-2 xl:flex">
           <HeaderSearch
             label={t.searchCards}
             placeholder={t.searchCardsPlaceholder}
@@ -175,22 +187,22 @@ export function SiteHeader({
           )}
         </div>
 
-        {/* Mobile hamburger (< lg) */}
+        {/* Mobile hamburger (< xl) */}
         <button
           type="button"
           onClick={() => setMenuOpen((v) => !v)}
           aria-expanded={menuOpen}
           aria-controls="site-mobile-menu"
           aria-label={t.menu}
-          className="ms-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted hover:bg-surface-raised hover:text-fg lg:hidden"
+          className="ms-auto inline-flex h-10 w-10 items-center justify-center rounded-lg text-fg-muted hover:bg-surface-raised hover:text-fg xl:hidden"
         >
           {menuOpen ? <CloseIcon /> : <MenuIcon />}
         </button>
       </div>
 
-      {/* Mobile menu (< lg) */}
+      {/* Mobile menu (< xl) */}
       {menuOpen ? (
-        <div id="site-mobile-menu" className="border-t border-edge px-4 py-4 lg:hidden">
+        <div id="site-mobile-menu" className="border-t border-edge px-4 py-4 xl:hidden">
           <div className="mx-auto flex max-w-6xl flex-col gap-4">
             <HeaderSearch
               block

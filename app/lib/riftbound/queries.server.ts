@@ -3,7 +3,7 @@
  * (TCGplayer aggregate); the US/EU market switch doesn't meaningfully apply yet,
  * so the headline price is the min USD across variants (a "from" figure) (mirrors getSetBySlug).
  */
-import { and, asc, count, desc, eq, like, sql } from "drizzle-orm";
+import { and, asc, count, desc, eq, like, notLike, sql } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
 
@@ -118,6 +118,35 @@ export async function getRiftboundPriceHistory(db: Database, cardId: string) {
     )
     .orderBy(asc(schema.riftboundPriceHistory.recordedDate))
     .limit(800);
+}
+
+/** Highest-value cards for the landing page — ranked by representative USD price
+ * (nulls last). Excludes promotional/OP sets: those are prize-wall cards with
+ * placeholder prices ($9999) and no TCGplayer images, which would flood the
+ * showcase with "No image" tiles and misleading values. Same row shape as
+ * listRiftboundCards for tile reuse. */
+export async function listRiftboundTopValueCards(db: Database, limit = 12) {
+  return db
+    .select({
+      id: schema.riftboundCards.id,
+      slug: schema.riftboundCards.slug,
+      name: schema.riftboundCards.name,
+      number: schema.riftboundCards.number,
+      rarity: schema.riftboundCards.rarity,
+      imageSmallUrl: schema.riftboundCards.imageSmallUrl,
+      setName: schema.riftboundSets.name,
+      priceMinor: priceExpr,
+    })
+    .from(schema.riftboundCards)
+    .innerJoin(schema.riftboundSets, eq(schema.riftboundCards.setId, schema.riftboundSets.id))
+    .where(
+      and(
+        eq(schema.riftboundCards.active, true),
+        notLike(schema.riftboundSets.name, "%Promotional%"),
+      ),
+    )
+    .orderBy(desc(priceExpr))
+    .limit(limit);
 }
 
 export async function listRiftboundSets(db: Database) {
