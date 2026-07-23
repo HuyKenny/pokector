@@ -18,7 +18,9 @@ type LayoutDict = Dict["layout"];
 const SWITCHER_SUMMARY =
   "flex cursor-pointer list-none items-center gap-1.5 rounded-lg border border-edge bg-surface px-2.5 py-1.5 text-sm font-medium text-fg-muted transition-colors hover:bg-surface-raised hover:text-fg [&::-webkit-details-marker]:hidden";
 
-/** Personal-area links (English — the /app area is English-only by design). */
+/** Personal-area links (English — the /app area is English-only by design). Used
+ * in the signed-in account dropdown on PUBLIC pages, where the header nav is the
+ * marketing nav and this is the only way into the app. */
 const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
   { to: "/app", label: "Dashboard", end: true },
   { to: "/app/collection", label: "Collection" },
@@ -28,6 +30,24 @@ const ACCOUNT_NAV: { to: string; label: string; end?: boolean }[] = [
   { to: "/app/sales", label: "Sales & P/L" },
   { to: "/app/billing", label: "Subscription" },
   { to: "/app/settings", label: "Settings" },
+];
+
+/** Primary nav shown IN the app (inApp): the app's own sections, so the header
+ * is a real app nav instead of marketing links. Settings/Subscription live in
+ * the account menu, not here. */
+const APP_PRIMARY_NAV: { to: string; label: string; end?: boolean }[] = [
+  { to: "/app", label: "Dashboard", end: true },
+  { to: "/app/collection", label: "Collection" },
+  { to: "/app/binders", label: "Binders" },
+  { to: "/app/sets", label: "Sets" },
+  { to: "/app/wishlist", label: "Wishlist" },
+  { to: "/app/sales", label: "Sales & P/L" },
+];
+
+/** Account-only menu shown IN the app (sections are already the header nav). */
+const APP_ACCOUNT_MENU: { to: string; label: string; end?: boolean }[] = [
+  { to: "/app/settings", label: "Settings" },
+  { to: "/app/billing", label: "Subscription" },
 ];
 
 interface SiteHeaderProps {
@@ -82,8 +102,11 @@ export function SiteHeader({
   // back to Pokémon. Riftbound is a catalog-only MVP, so its nav is Cards/Sets/
   // Pricing; Pokédex/price-movers stay Pokémon-only.
   const activeGame = gameFromPathname(barePath);
-  const nav =
-    activeGame === "riftbound"
+  // In the app the primary nav is the app's own sections; on public pages it's
+  // the game-aware marketing nav. Same structure, context-appropriate content.
+  const nav: { to: string; label: string; end?: boolean }[] = inApp
+    ? APP_PRIMARY_NAV
+    : activeGame === "riftbound"
       ? [
           { to: localePath(locale, gamePath("riftbound", "/cards")), label: t.navCards },
           { to: localePath(locale, gamePath("riftbound", "/sets")), label: t.navSets },
@@ -137,7 +160,7 @@ export function SiteHeader({
             <NavLink
               key={item.to}
               to={item.to}
-              end={item.to === localePath(locale, "/")}
+              end={item.end ?? item.to === localePath(locale, "/")}
               className={({ isActive }) =>
                 `whitespace-nowrap rounded-lg px-3 py-2 text-sm font-medium ${
                   isActive ? "bg-accent-soft text-accent-strong" : "text-fg-muted hover:text-fg"
@@ -175,7 +198,8 @@ export function SiteHeader({
             <>
               <NotificationsBell unread={unread} />
               <AccountMenu
-                label={t.myCollection}
+                label={inApp ? "Account" : t.myCollection}
+                inApp={inApp}
                 isAdmin={isAdmin}
                 unread={unread}
                 premium={premium}
@@ -218,7 +242,7 @@ export function SiteHeader({
                 <NavLink
                   key={item.to}
                   to={item.to}
-                  end={item.to === localePath(locale, "/")}
+                  end={item.end ?? item.to === localePath(locale, "/")}
                   className={({ isActive }) =>
                     `rounded-lg px-3 py-2.5 text-sm font-medium ${
                       isActive
@@ -234,7 +258,7 @@ export function SiteHeader({
 
             {signedIn ? (
               <nav aria-label="Your account" className="flex flex-col border-t border-edge pt-3">
-                {ACCOUNT_NAV.map((item) => (
+                {(inApp ? APP_ACCOUNT_MENU : ACCOUNT_NAV).map((item) => (
                   <NavLink
                     key={item.to}
                     to={item.to}
@@ -328,17 +352,23 @@ function NotificationsBell({ unread }: { unread: number }) {
  */
 function AccountMenu({
   label,
+  inApp,
   isAdmin,
   unread,
   premium,
   t,
 }: {
   label: string;
+  inApp: boolean;
   isAdmin: boolean;
   unread: number;
   premium: boolean;
   t: LayoutDict;
 }) {
+  // In the app the sections are already the header nav, so the menu is
+  // account-only (Settings/Subscription). On public pages it lists the full
+  // ACCOUNT_NAV — the only way into the app from there.
+  const items = inApp ? APP_ACCOUNT_MENU : ACCOUNT_NAV;
   return (
     <div className="group relative">
       <button
@@ -367,7 +397,7 @@ function AccountMenu({
             </Link>
           )}
           <nav aria-label="Your account" className="flex flex-col py-1">
-            {ACCOUNT_NAV.map((item) => (
+            {items.map((item) => (
               <NavLink
                 key={item.to}
                 to={item.to}
