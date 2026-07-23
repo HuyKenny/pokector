@@ -1,7 +1,7 @@
 /**
  * Riftbound public catalog queries (read-only MVP). Prices are USD from JustTCG
  * (TCGplayer aggregate); the US/EU market switch doesn't meaningfully apply yet,
- * so the headline price is the max USD across variants (mirrors getSetBySlug).
+ * so the headline price is the min USD across variants (a "from" figure) (mirrors getSetBySlug).
  */
 import { and, asc, count, desc, eq, like, sql } from "drizzle-orm";
 
@@ -9,9 +9,9 @@ import { schema, type Database } from "../db/index.server";
 
 export const RIFTBOUND_PAGE_SIZE = 24;
 
-/** Max USD price across a card's variants — the representative "from" value. */
+/** Min USD price across a card's variants — the representative "from" value. */
 const priceExpr = sql<number | null>`(
-  SELECT MAX(p.normalized_price_minor) FROM riftbound_prices_current p
+  SELECT MIN(p.normalized_price_minor) FROM riftbound_prices_current p
   WHERE p.card_id = ${schema.riftboundCards.id} AND p.currency = 'USD'
 )`;
 

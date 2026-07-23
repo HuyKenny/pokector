@@ -36,7 +36,7 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   if (!detail) throw new Response("Card not found", { status: 404 });
   const history = await getRiftboundPriceHistory(db, detail.card.id);
   const usd = detail.prices.filter((p) => p.currency === "USD");
-  const headlineMinor = usd.length > 0 ? Math.max(...usd.map((p) => p.normalizedPriceMinor)) : null;
+  const headlineMinor = usd.length > 0 ? Math.min(...usd.map((p) => p.normalizedPriceMinor)) : null;
   const ebayUrl = buildEbaySearchUrl(
     [detail.card.name, detail.set.name, "Riftbound"].join(" "),
     env.EBAY_CAMPAIGN_ID,

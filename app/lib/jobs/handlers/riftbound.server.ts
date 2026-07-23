@@ -41,7 +41,7 @@ export async function handleRiftboundCatalogSets(job: SyncJob, env: Env): Promis
 
   const rawSets = await client.listSets(gameId);
   const sets = rawSets
-    .map((r) => normalizeRiftboundSet(r, syncedAt))
+    .map((r) => normalizeRiftboundSet(r, syncedAt, gameId))
     .filter((s): s is NonNullable<typeof s> => s !== null);
 
   if (sets.length > 0) {
@@ -98,7 +98,7 @@ export async function handleRiftboundCatalogCardsPage(job: SyncJob, env: Env): P
   );
 
   const normalized = page.data
-    .map((r) => normalizeRiftboundCard(r, syncedAt))
+    .map((r) => normalizeRiftboundCard(r, syncedAt, gameId))
     .filter((n): n is NonNullable<typeof n> => n !== null && knownSetIds.has(n.card.setId));
 
   const statements: BatchStatement[] = [];
