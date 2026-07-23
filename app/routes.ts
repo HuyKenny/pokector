@@ -10,6 +10,7 @@ export default [
     route("sets", "routes/public/sets.tsx"),
     route("sets/:slug", "routes/public/sets.$slug.tsx"),
     // Riftbound (second game) — read-only catalog under its own namespace.
+    route("riftbound", "routes/public/riftbound.ts"),
     route("riftbound/cards", "routes/public/riftbound.cards.tsx"),
     route("riftbound/cards/:slug", "routes/public/riftbound.cards.$slug.tsx"),
     route("riftbound/sets", "routes/public/riftbound.sets.tsx"),
@@ -46,6 +47,7 @@ export default [
       route("cards/:slug", "routes/public/cards.$slug.tsx", { id: "l10n/public/cards.$slug" }),
       route("sets", "routes/public/sets.tsx", { id: "l10n/public/sets" }),
       route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
+      route("riftbound", "routes/public/riftbound.ts", { id: "l10n/public/riftbound" }),
       route("riftbound/cards", "routes/public/riftbound.cards.tsx", {
         id: "l10n/public/riftbound.cards",
       }),

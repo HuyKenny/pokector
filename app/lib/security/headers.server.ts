@@ -14,6 +14,9 @@
  * newer sets (me2pt5+) to images.scrydex.com — both hosts must be allowed or
  * the browser blocks the images (seen live on /sets/pitch-black-me5). */
 const PTCG_IMAGE_HOSTS = ["https://images.pokemontcg.io", "https://images.scrydex.com"];
+/** TCGplayer product-image CDN — Riftbound card art is built from tcgplayerId
+ * (JustTCG returns no image URLs). Same host for list + detail sizes. */
+const TCGPLAYER_IMAGE_HOSTS = ["https://tcgplayer-cdn.tcgplayer.com"];
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
 
 /** Google Analytics 4 (gtag.js). Loaded only in production (see app/root.tsx),
@@ -46,7 +49,7 @@ export function contentSecurityPolicy(options: SecurityOptions): string {
 
   return [
     "default-src 'self'",
-    `img-src 'self' ${PTCG_IMAGE_HOSTS.join(" ")} data:${gaImg}`,
+    `img-src 'self' ${PTCG_IMAGE_HOSTS.join(" ")} ${TCGPLAYER_IMAGE_HOSTS.join(" ")} data:${gaImg}`,
     scriptSrc,
     "style-src 'self' 'unsafe-inline'",
     `frame-src ${TURNSTILE_HOST}`,

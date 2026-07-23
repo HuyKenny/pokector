@@ -500,9 +500,8 @@ function GameSwitcher({
 }) {
   return (
     <details className="group relative">
-      <summary aria-label={label} className={SWITCHER_SUMMARY}>
+      <summary aria-label={`${label}: ${GAME_NAME[current]}`} className={SWITCHER_SUMMARY} title={GAME_NAME[current]}>
         <span aria-hidden="true">🎴</span>
-        <span>{GAME_NAME[current]}</span>
         <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-44 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
