@@ -257,21 +257,21 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
       </section>
 
       {related.length > 0 ? (
-        <section aria-label="More from this set" className="flex flex-col gap-3">
-          <h2 className="text-lg font-semibold text-fg">More from {set.name}</h2>
-          <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+        <section aria-labelledby="related-heading">
+          <h2 id="related-heading" className="mb-4 text-xl font-bold text-fg">
+            More from {set.name}
+          </h2>
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
             {related.map((r) => (
               <li key={r.id}>
-                <Link to={lp(`/riftbound/cards/${r.slug}`)} className="group flex flex-col gap-1">
+                <Link to={lp(`/riftbound/cards/${r.slug}`)} className="group flex flex-col gap-2">
                   <CardImage
                     src={r.imageSmallUrl}
-                    alt={r.name}
+                    alt={`${r.name} card`}
                     imgClassName="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-                    fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-[10px] text-fg-faint"
+                    fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint"
                   />
-                  <span className="truncate text-xs text-fg-muted group-hover:text-accent">
-                    {r.name}
-                  </span>
+                  <span className="truncate text-xs font-medium text-fg">{r.name}</span>
                 </Link>
               </li>
             ))}
