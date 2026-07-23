@@ -460,6 +460,7 @@ const cs: Dict = {
     badgeMissing: "Chybí",
     setCardList: "Seznam karet setu {name}",
     setCardListDescription: "Všechny karty v setu Pokémon TCG {name}.",
+    mostValuableHeading: "Nejcennější karty v sadě {name}",
   },
 
   priceMovers: {

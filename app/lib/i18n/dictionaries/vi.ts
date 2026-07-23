@@ -460,6 +460,7 @@ const vi: Dict = {
     badgeMissing: "Thiếu",
     setCardList: "Danh sách thẻ {name}",
     setCardListDescription: "Tất cả thẻ trong bộ Pokémon TCG {name}.",
+    mostValuableHeading: "Những thẻ giá trị nhất trong {name}",
   },
 
   priceMovers: {

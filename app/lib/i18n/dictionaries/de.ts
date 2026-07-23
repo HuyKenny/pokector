@@ -462,6 +462,7 @@ const de: Dict = {
     badgeMissing: "Fehlend",
     setCardList: "{name} Kartenliste",
     setCardListDescription: "Alle Karten im Pokémon-TCG-Set {name}.",
+    mostValuableHeading: "Wertvollste Karten in {name}",
   },
 
   priceMovers: {

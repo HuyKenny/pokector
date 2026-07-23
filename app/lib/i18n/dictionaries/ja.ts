@@ -457,6 +457,7 @@ const ja: Dict = {
     badgeMissing: "不足",
     setCardList: "{name} カードリスト",
     setCardListDescription: "Pokémon TCG セット {name} のすべてのカード。",
+    mostValuableHeading: "{name} で最も価値のあるカード",
   },
 
   priceMovers: {

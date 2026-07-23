@@ -462,6 +462,7 @@ const es: Dict = {
     badgeMissing: "Falta",
     setCardList: "Lista de cartas de {name}",
     setCardListDescription: "Todas las cartas del set de Pokémon TCG {name}.",
+    mostValuableHeading: "Cartas más valiosas de {name}",
   },
 
   priceMovers: {

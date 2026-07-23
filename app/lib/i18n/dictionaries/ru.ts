@@ -460,6 +460,7 @@ const ru: Dict = {
     badgeMissing: "Нет",
     setCardList: "Список карт {name}",
     setCardListDescription: "Все карты в сете Pokémon TCG {name}.",
+    mostValuableHeading: "Самые ценные карты в сете {name}",
   },
 
   priceMovers: {

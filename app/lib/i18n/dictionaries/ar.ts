@@ -458,6 +458,7 @@ const ar: Dict = {
     badgeMissing: "ناقصة",
     setCardList: "قائمة بطاقات {name}",
     setCardListDescription: "جميع البطاقات في مجموعة Pokémon TCG {name}.",
+    mostValuableHeading: "أثمن البطاقات في {name}",
   },
 
   priceMovers: {

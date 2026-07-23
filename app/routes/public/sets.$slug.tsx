@@ -142,6 +142,14 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
     return true;
   });
 
+  // "Most valuable cards" highlight — derived from the already-loaded cards
+  // (each carries its market price), so no extra query. Targets "most valuable
+  // {set} cards". Shown only with enough priced cards to be meaningful.
+  const topValueCards = [...cards]
+    .filter((card) => card.priceMinor != null)
+    .sort((a, b) => (b.priceMinor ?? 0) - (a.priceMinor ?? 0))
+    .slice(0, 8);
+
   function setFilter(key: string, value: string | null) {
     const next = new URLSearchParams(searchParams);
     if (value === null) next.delete(key);
@@ -216,6 +224,46 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
           )}
         </div>
       </div>
+
+      {/* Most valuable cards in this set (price-ranked highlight) */}
+      {topValueCards.length >= 3 ? (
+        <section aria-labelledby="topvalue-heading" className="flex flex-col gap-4">
+          <h2 id="topvalue-heading" className="text-xl font-semibold text-fg">
+            {interpolate(t.mostValuableHeading, { name: set.name })}
+          </h2>
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-8">
+            {topValueCards.map((card, i) => (
+              <li key={card.id} className="relative">
+                <Link to={lp(`/cards/${card.slug}`)} className="group flex h-full flex-col gap-2">
+                  <span className="absolute start-1 top-1 z-10 rounded bg-fg/80 px-1.5 py-0.5 text-xs font-bold text-canvas">
+                    #{i + 1}
+                  </span>
+                  {card.imageSmallUrl ? (
+                    <img
+                      src={card.imageSmallUrl}
+                      alt={`${card.name} card`}
+                      loading="lazy"
+                      className="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+                    />
+                  ) : (
+                    <span className="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint">
+                      {c.noImage}
+                    </span>
+                  )}
+                  <div>
+                    <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
+                      {card.name}
+                    </p>
+                    <p className="truncate text-xs font-semibold tabular-nums text-fg-muted">
+                      {card.priceMinor !== null ? money(card.priceMinor) : ""}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
 
       {/* Signed-in completion */}
       {progress ? (

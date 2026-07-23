@@ -469,6 +469,7 @@ export const en = {
     badgeMissing: "Missing",
     setCardList: "{name} card list",
     setCardListDescription: "All cards in the Pokémon TCG set {name}.",
+    mostValuableHeading: "Most valuable cards in {name}",
   },
 
   priceMovers: {

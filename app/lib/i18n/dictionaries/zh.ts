@@ -451,6 +451,7 @@ const zh: Dict = {
     badgeMissing: "缺失",
     setCardList: "{name} 卡牌列表",
     setCardListDescription: "Pokémon TCG 系列 {name} 中的所有卡牌。",
+    mostValuableHeading: "{name} 中最有价值的卡牌",
   },
 
   priceMovers: {
