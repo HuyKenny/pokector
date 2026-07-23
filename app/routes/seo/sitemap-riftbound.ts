@@ -3,7 +3,6 @@ import { asc, eq } from "drizzle-orm";
 import type { Route } from "./+types/sitemap-riftbound";
 import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
-import { localeAlternates } from "~/lib/i18n/locales";
 
 const escapeXml = (s: string) =>
   s.replaceAll("&", "&amp;").replaceAll("<", "&lt;").replaceAll(">", "&gt;");
@@ -29,12 +28,11 @@ export async function loader({ context }: Route.LoaderArgs) {
       .limit(40000),
   ]);
 
+  // Riftbound pages are EN-only (inline English, not translated) → no hreflang
+  // alternates; emit plain English <loc>s.
   const urlFor = (path: string, syncedAt: Date) => {
     const lastmod = syncedAt.toISOString().slice(0, 10);
-    const xhtml = localeAlternates(env.APP_URL, path)
-      .map((a) => `<xhtml:link rel="alternate" hreflang="${a.hreflang}" href="${escapeXml(a.href)}"/>`)
-      .join("");
-    return `<url><loc>${env.APP_URL}${escapeXml(path)}</loc><lastmod>${lastmod}</lastmod>${xhtml}</url>`;
+    return `<url><loc>${env.APP_URL}${escapeXml(path)}</loc><lastmod>${lastmod}</lastmod></url>`;
   };
 
   const urls = [

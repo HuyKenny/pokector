@@ -118,7 +118,9 @@ export function localeAlternates(
   origin: string,
   path: string,
 ): { hreflang: string; href: string }[] {
-  const href = (p: string) => `${origin}${p === "/" ? "" : p}`;
+  // Root keeps its trailing slash so the sitemap homepage <loc>/hreflang match
+  // the on-page canonical (canonicalUrl keeps "/" for root).
+  const href = (p: string) => `${origin}${p === "/" ? "/" : p}`;
   return [
     ...LOCALES.map((l) => ({ hreflang: LANG_TAGS[l], href: href(localePath(l, path)) })),
     { hreflang: "x-default", href: href(path) },

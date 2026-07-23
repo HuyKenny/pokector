@@ -11,12 +11,13 @@ import { getRiftboundSetBySlug } from "~/lib/riftbound/queries.server";
 import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
-  if (!data) return pageMeta({ title: "Riftbound set | Pokector", description: "" });
+  if (!data)
+    return pageMeta({ title: "Riftbound set | Pokector", description: "", noindex: true });
   return pageMeta({
     title: `Riftbound ${data.set.name} — Card List & Prices | Pokector`,
     description: `Every card in the Riftbound ${data.set.name} set (${data.cards.length} cards) with live TCGplayer market prices, updated daily.`,
     canonical: data.canonical,
-    alternates: { appUrl: data.appUrl, path: `/riftbound/sets/${data.set.slug}` },
+    // EN-only page — no hreflang (content isn't translated).
   });
 }
 
@@ -27,7 +28,7 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const locale = resolveLocale(params.locale);
+  const locale = resolveLocale(undefined); // EN-only route (no :locale param)
   const data = await getRiftboundSetBySlug(db, params.slug);
   if (!data) throw new Response("Set not found", { status: 404 });
   // Full-set value = sum of each card's cheapest priced variant (USD), matching

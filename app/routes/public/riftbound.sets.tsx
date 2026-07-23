@@ -13,7 +13,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     title: "Riftbound sets | Pokector",
     description: "Every Riftbound (League of Legends TCG) set, with card counts and prices.",
     canonical: data?.canonical,
-    alternates: data ? { appUrl: data.appUrl, path: "/riftbound/sets" } : undefined,
+    // EN-only page — no hreflang (content isn't translated).
   });
 }
 
@@ -21,10 +21,10 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=600, stale-while-revalidate=3600" };
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const locale = resolveLocale(params.locale);
+  const locale = resolveLocale(undefined); // EN-only route (no :locale param)
   return {
     sets: await listRiftboundSets(db),
     canonical: canonicalUrl(env.APP_URL, localePath(locale, "/riftbound/sets")),

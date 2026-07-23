@@ -14,13 +14,14 @@ import { getRiftboundCardBySlug, getRiftboundPriceHistory } from "~/lib/riftboun
 import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
-  if (!data) return pageMeta({ title: "Riftbound card | Pokector", description: "" });
+  if (!data)
+    return pageMeta({ title: "Riftbound card | Pokector", description: "", noindex: true });
   const { card, set } = data;
   return pageMeta({
     title: `${card.name} — Riftbound ${set.name} Card Price | Pokector`,
     description: `Riftbound ${card.name} (${set.name} #${card.number}) — live TCGplayer market price, low/mid/high estimates and full price history.`,
     canonical: data.canonical,
-    alternates: { appUrl: data.appUrl, path: `/riftbound/cards/${card.slug}` },
+    // EN-only page — no hreflang (content isn't translated).
     image: card.imageLargeUrl ?? card.imageSmallUrl ?? undefined,
   });
 }
@@ -32,7 +33,7 @@ export function headers(_args: Route.HeadersArgs) {
 export async function loader({ params, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const locale = resolveLocale(params.locale);
+  const locale = resolveLocale(undefined); // EN-only route (no :locale param)
   const detail = await getRiftboundCardBySlug(db, params.slug);
   if (!detail) throw new Response("Card not found", { status: 404 });
   const history = await getRiftboundPriceHistory(db, detail.card.id);

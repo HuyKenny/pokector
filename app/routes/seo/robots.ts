@@ -4,7 +4,10 @@ import { getCloudflare } from "~/lib/context";
 /** Staging/dev must never be indexed (SPEC §23). */
 export function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
-  const production = env.ENVIRONMENT === "production";
+  // Fail-closed (Disallow: /) on anything that isn't production, so staging/
+  // preview never get indexed. Normalize case/whitespace so a trivial env-var
+  // typo ("Production", " production ") can't accidentally de-index the live site.
+  const production = (env.ENVIRONMENT ?? "").trim().toLowerCase() === "production";
 
   const body = production
     ? [

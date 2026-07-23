@@ -18,7 +18,8 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description: data?.t.metaDescription ?? "",
     canonical: data?.canonical,
     noindex: Boolean(data?.filtered),
-    alternates: data ? { appUrl: data.appUrl, path: "/sets" } : undefined,
+    // hreflang only on page 1 — deeper pages self-canonicalize to their ?page=N.
+    alternates: data && page === 1 ? { appUrl: data.appUrl, path: "/sets" } : undefined,
   });
 }
 
@@ -44,7 +45,12 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     t: getDict(locale).sets,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
-    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/sets")),
+    // Self-referential canonical INCLUDING ?page=N for deep pages (page 1 stays
+    // param-less) so page 2+ no longer canonicalize to page 1.
+    canonical:
+      params.page > 1
+        ? `${canonicalUrl(env.APP_URL, localePath(locale, "/sets"))}?page=${params.page}`
+        : canonicalUrl(env.APP_URL, localePath(locale, "/sets")),
   };
 }
 

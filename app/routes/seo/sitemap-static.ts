@@ -8,24 +8,26 @@ const TRANSLATED_PATHS = [
   "/",
   "/cards",
   "/sets",
-  "/riftbound",
-  "/riftbound/cards",
-  "/riftbound/sets",
   "/price-movers",
   "/pokedex",
   "/pokemon-card-collectors",
   "/pokemon-card-grading-calculator",
-  "/most-valuable-pokemon-cards",
   "/pricing",
 ];
+// English-only pages: legal, contact, and the not-yet-translated hubs
+// (/riftbound*, /most-valuable-pokemon-cards) — single <loc>, no hreflang.
+// (/blog is emitted by sitemap-blog.ts, so it's intentionally NOT here.)
 const EN_ONLY_PATHS = [
   "/methodology",
   "/about",
-  "/blog",
   "/privacy",
   "/terms",
   "/disclaimer",
   "/contact",
+  "/riftbound",
+  "/riftbound/cards",
+  "/riftbound/sets",
+  "/most-valuable-pokemon-cards",
 ];
 
 export function loader({ context }: Route.LoaderArgs) {

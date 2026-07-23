@@ -48,19 +48,10 @@ export default [
       route("cards/:slug", "routes/public/cards.$slug.tsx", { id: "l10n/public/cards.$slug" }),
       route("sets", "routes/public/sets.tsx", { id: "l10n/public/sets" }),
       route("sets/:slug", "routes/public/sets.$slug.tsx", { id: "l10n/public/sets.$slug" }),
-      route("riftbound", "routes/public/riftbound.tsx", { id: "l10n/public/riftbound" }),
-      route("riftbound/cards", "routes/public/riftbound.cards.tsx", {
-        id: "l10n/public/riftbound.cards",
-      }),
-      route("riftbound/cards/:slug", "routes/public/riftbound.cards.$slug.tsx", {
-        id: "l10n/public/riftbound.cards.$slug",
-      }),
-      route("riftbound/sets", "routes/public/riftbound.sets.tsx", {
-        id: "l10n/public/riftbound.sets",
-      }),
-      route("riftbound/sets/:slug", "routes/public/riftbound.sets.$slug.tsx", {
-        id: "l10n/public/riftbound.sets.$slug",
-      }),
+      // NOTE: /riftbound/* and /most-valuable-pokemon-cards are EN-only (inline
+      // English copy, not translated) → registered ONLY in the unprefixed tree
+      // above. Localized requests (/de/riftbound…) 301 to the English URL via the
+      // catchall, so we never emit false-language hreflang for untranslated pages.
       route("price-movers", "routes/public/price-movers.tsx", { id: "l10n/public/price-movers" }),
       route("pokedex", "routes/public/pokedex.tsx", { id: "l10n/public/pokedex" }),
       route("pokemon-card-collectors", "routes/public/collectors.tsx", {
@@ -68,9 +59,6 @@ export default [
       }),
       route("pokemon-card-grading-calculator", "routes/public/grading.tsx", {
         id: "l10n/public/grading",
-      }),
-      route("most-valuable-pokemon-cards", "routes/public/most-valuable-pokemon-cards.tsx", {
-        id: "l10n/public/most-valuable-pokemon-cards",
       }),
       route("pricing", "routes/public/pricing.tsx", { id: "l10n/public/pricing" }),
       route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx", {

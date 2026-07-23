@@ -16,7 +16,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description:
       "The full Riftbound (League of Legends TCG) card list across every set — Origins, Spiritforged, Unleashed and Proving Grounds — with live TCGplayer market prices.",
     canonical: data?.canonical,
-    alternates: data ? { appUrl: data.appUrl, path: "/riftbound/cards" } : undefined,
+    // EN-only page — no hreflang (content isn't translated).
   });
 }
 
@@ -24,7 +24,7 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=1800" };
 }
 
-export async function loader({ params, request, context }: Route.LoaderArgs) {
+export async function loader({ request, context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const url = new URL(request.url);
@@ -35,8 +35,8 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   return {
     ...result,
     q: url.searchParams.get("q") ?? "",
-    locale: resolveLocale(params.locale),
-    canonical: canonicalUrl(env.APP_URL, localePath(resolveLocale(params.locale), "/riftbound/cards")),
+    locale: resolveLocale(undefined), // EN-only route (no :locale param)
+    canonical: canonicalUrl(env.APP_URL, localePath(resolveLocale(undefined), "/riftbound/cards")),
     appUrl: env.APP_URL,
   };
 }

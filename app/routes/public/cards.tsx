@@ -28,7 +28,9 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     // Search results and filter combinations must not be indexed (and get no
     // hreflang — pageMeta skips alternates when noindex).
     noindex: Boolean(data?.filtered),
-    alternates: data ? { appUrl: data.appUrl, path: "/cards" } : undefined,
+    // hreflang only on page 1 — deeper pages self-canonicalize to their own
+    // ?page=N (built in the loader) and don't need locale alternates.
+    alternates: data && page === 1 ? { appUrl: data.appUrl, path: "/cards" } : undefined,
   });
 }
 
@@ -91,7 +93,13 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
     t: getDict(locale).cards,
     c: getDict(locale).common,
     appUrl: env.APP_URL,
-    canonical: canonicalUrl(env.APP_URL, localePath(locale, "/cards")),
+    // Self-referential canonical INCLUDING ?page=N for deep pages, so page 2+
+    // no longer canonicalize to page 1 (a cross-content canonical Google
+    // ignores). Page 1 stays param-less.
+    canonical:
+      params.page > 1
+        ? `${canonicalUrl(env.APP_URL, localePath(locale, "/cards"))}?page=${params.page}`
+        : canonicalUrl(env.APP_URL, localePath(locale, "/cards")),
   };
   return session
     ? data(payload, { headers: { "Cache-Control": "private, no-cache" } })

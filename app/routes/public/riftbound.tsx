@@ -24,7 +24,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     description:
       "Riftbound (League of Legends TCG) card list with live TCGplayer prices. Browse every set — Origins, Spiritforged, Unleashed and Proving Grounds — with card values updated daily.",
     canonical: data?.canonical,
-    alternates: data ? { appUrl: data.appUrl, path: "/riftbound" } : undefined,
+    // EN-only page — no hreflang (content isn't translated).
   });
 }
 
@@ -57,10 +57,10 @@ export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" };
 }
 
-export async function loader({ params, context }: Route.LoaderArgs) {
+export async function loader({ context }: Route.LoaderArgs) {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const locale = resolveLocale(params.locale);
+  const locale = resolveLocale(undefined); // EN-only route (no :locale param)
   const [sets, topCards, firstPage] = await Promise.all([
     listRiftboundSets(db),
     listRiftboundTopValueCards(db, 12),

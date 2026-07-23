@@ -69,7 +69,10 @@ export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
     { name: "twitter:title", content: input.title },
     { name: "twitter:description", content: input.description },
   ];
-  if (input.canonical) {
+  // A noindex page must not also carry a canonical to a different URL (Google
+  // advises against combining the two conflicting signals). Emit canonical +
+  // og:url only for indexable pages.
+  if (input.canonical && !input.noindex) {
     meta.push({ tagName: "link", rel: "canonical", href: input.canonical });
     meta.push({ property: "og:url", content: input.canonical });
   }
