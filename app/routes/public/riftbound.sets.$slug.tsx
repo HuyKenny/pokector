@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useSearchParams } from "react-router";
 
 import type { Route } from "./+types/riftbound.sets.$slug";
 import { CardImage } from "~/components/card-image";
@@ -14,7 +14,7 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data) return pageMeta({ title: "Riftbound set | Pokector", description: "" });
   return pageMeta({
     title: `${data.set.name} — Riftbound set cards & prices | Pokector`,
-    description: `All ${data.set.name} Riftbound cards with live market prices.`,
+    description: `All ${data.set.name} Riftbound cards (${data.cards.length}) with live market prices.`,
     canonical: data.canonical,
     alternates: { appUrl: data.appUrl, path: `/riftbound/sets/${data.set.slug}` },
   });
@@ -30,17 +30,49 @@ export async function loader({ params, context }: Route.LoaderArgs) {
   const locale = resolveLocale(params.locale);
   const data = await getRiftboundSetBySlug(db, params.slug);
   if (!data) throw new Response("Set not found", { status: 404 });
+  // Full-set value = sum of each card's cheapest priced variant (USD), matching
+  // the Pokémon set header. Only cards with a price contribute.
+  const priced = data.cards.filter((c) => c.priceMinor !== null);
+  const estimatedValueMinor =
+    priced.length > 0 ? priced.reduce((sum, c) => sum + (c.priceMinor ?? 0), 0) : null;
   return {
     set: data.set,
     cards: data.cards,
+    estimatedValueMinor,
+    pricedCount: priced.length,
     canonical: canonicalUrl(env.APP_URL, localePath(locale, `/riftbound/sets/${data.set.slug}`)),
     appUrl: env.APP_URL,
   };
 }
 
+function money(minor: number | null | undefined): string {
+  return minor == null ? "—" : formatMinor(minor, "USD");
+}
+
 export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps) {
-  const { set, cards } = loaderData;
+  const { set, cards, estimatedValueMinor, pricedCount } = loaderData;
   const lp = useLocalePath();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const rarityFilter = searchParams.get("rarity");
+
+  const rarities = [
+    ...new Set(
+      cards
+        .map((c) => c.rarity)
+        .filter((r): r is string => !!r && r.toLowerCase() !== "none"),
+    ),
+  ].sort();
+  const visibleCards = rarityFilter
+    ? cards.filter((c) => c.rarity === rarityFilter)
+    : cards;
+
+  const setRarity = (value: string | null) => {
+    const next = new URLSearchParams(searchParams);
+    if (value === null) next.delete("rarity");
+    else next.set("rarity", value);
+    setSearchParams(next, { preventScrollReset: true });
+  };
+
   return (
     <div className="flex flex-col gap-6">
       <nav aria-label="Breadcrumb" className="text-sm text-fg-muted">
@@ -49,10 +81,53 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
         </Link>{" "}
         / <span className="text-fg">{set.name}</span>
       </nav>
-      <h1 className="text-2xl font-bold text-fg">{set.name}</h1>
+
+      {/* Header */}
+      <div className="flex flex-wrap items-center gap-6">
+        {set.imageUrl ? (
+          <img src={set.imageUrl} alt="" className="h-16 w-auto object-contain" />
+        ) : null}
+        <div>
+          <h1 className="text-3xl font-bold text-fg">{set.name}</h1>
+          <p className="text-fg-muted">
+            Riftbound
+            {set.releaseDate ? ` · Released ${set.releaseDate}` : ""} · {cards.length} cards
+          </p>
+          {estimatedValueMinor !== null ? (
+            <p className="mt-1 text-sm text-fg-muted">
+              Estimated full-set market value:{" "}
+              <strong className="text-fg">{money(estimatedValueMinor)}</strong>{" "}
+              <span className="text-fg-faint">
+                (sum of cheapest priced variant for {pricedCount} of {cards.length} cards; raw cards)
+              </span>
+            </p>
+          ) : (
+            <p className="mt-1 text-sm text-fg-faint">No price coverage for this set yet.</p>
+          )}
+        </div>
+      </div>
+
+      {/* Rarity filters */}
+      {rarities.length > 1 ? (
+        <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Rarity filter">
+          <FilterChip active={rarityFilter === null} onClick={() => setRarity(null)} label="Any rarity" />
+          {rarities.map((r) => (
+            <FilterChip
+              key={r}
+              active={rarityFilter === r}
+              onClick={() => setRarity(r)}
+              label={r}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      <p className="text-sm text-fg-muted" role="status">
+        Showing {visibleCards.length} of {cards.length} cards
+      </p>
 
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-        {cards.map((c) => (
+        {visibleCards.map((c) => (
           <li key={c.id}>
             <Link to={lp(`/riftbound/cards/${c.slug}`)} className="group flex h-full flex-col gap-2">
               <CardImage
@@ -76,5 +151,30 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
         ))}
       </ul>
     </div>
+  );
+}
+
+function FilterChip({
+  active,
+  onClick,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={`min-h-9 rounded-full px-3 text-xs font-medium ${
+        active
+          ? "bg-accent text-(color:--color-on-accent)"
+          : "border border-edge text-fg-muted hover:text-fg"
+      }`}
+    >
+      {label}
+    </button>
   );
 }
