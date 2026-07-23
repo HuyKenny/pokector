@@ -15,6 +15,7 @@ const TRANSLATED_PATHS = [
   "/pokedex",
   "/pokemon-card-collectors",
   "/pokemon-card-grading-calculator",
+  "/most-valuable-pokemon-cards",
   "/pricing",
 ];
 const EN_ONLY_PATHS = [

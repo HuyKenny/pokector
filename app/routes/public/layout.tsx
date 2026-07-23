@@ -125,6 +125,13 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               >
                 {t.footerGrading}
               </Link>
+              {/* EN-first landing (inline copy); hardcoded label until localized. */}
+              <Link
+                to={localePath(locale, "/most-valuable-pokemon-cards")}
+                className="hover:text-fg"
+              >
+                Most valuable cards
+              </Link>
               <Link to={localePath(locale, "/pricing")} className="hover:text-fg">
                 {t.navPricing}
               </Link>

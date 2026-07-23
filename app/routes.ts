@@ -19,6 +19,7 @@ export default [
     route("pokedex", "routes/public/pokedex.tsx"),
     route("pokemon-card-collectors", "routes/public/collectors.tsx"),
     route("pokemon-card-grading-calculator", "routes/public/grading.tsx"),
+    route("most-valuable-pokemon-cards", "routes/public/most-valuable-pokemon-cards.tsx"),
     route("pricing", "routes/public/pricing.tsx"),
     route("methodology", "routes/public/methodology.tsx"),
     route("about", "routes/public/about.tsx"),
@@ -67,6 +68,9 @@ export default [
       }),
       route("pokemon-card-grading-calculator", "routes/public/grading.tsx", {
         id: "l10n/public/grading",
+      }),
+      route("most-valuable-pokemon-cards", "routes/public/most-valuable-pokemon-cards.tsx", {
+        id: "l10n/public/most-valuable-pokemon-cards",
       }),
       route("pricing", "routes/public/pricing.tsx", { id: "l10n/public/pricing" }),
       route("binders/:publicSlug", "routes/public/binders.$publicSlug.tsx", {

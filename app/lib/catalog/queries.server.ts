@@ -3,7 +3,7 @@
  * Indexed pagination only; no SELECT * on hot paths.
  */
 
-import { and, asc, count, desc, eq, gte, inArray, like, lt, sql, type SQL } from "drizzle-orm";
+import { and, asc, count, desc, eq, gte, inArray, like, lt, max, sql, type SQL } from "drizzle-orm";
 
 import { cached } from "../cache/catalog-cache.server";
 import { schema, type Database } from "../db/index.server";
@@ -429,6 +429,71 @@ export async function getSetBySlug(db: Database, slug: string, market: Market = 
       : null;
 
   return { set, cards, estimatedValueMinor, pricedCount: pricedValues.length };
+}
+
+// ── Most valuable cards (value pillar + per-set module) ──────────────────────
+
+/** TTL (s) for the most-valuable aggregate (per market, per scope). */
+const TOP_VALUE_CACHE_TTL = 900;
+/** Upper sanity guard: drop rows above $1,000,000 (100M minor) — never a real
+ * live-market TCGplayer/Cardmarket figure, so almost always corrupt data. */
+const TOP_VALUE_MAX_MINOR = 100_000_000;
+
+/**
+ * Highest-value cards by CURRENT market price — powers the /most-valuable-pokemon-cards
+ * pillar (global) and the "Most valuable cards in {Set}" module (setId-scoped).
+ * The headline price is the MAX representative price across a card's variants in
+ * the active market (mirrors the per-card price on the set page). Cards with no
+ * price in the market are excluded (inner join). Visitor-identical → TTL-cached
+ * per (market, setId, limit).
+ */
+export async function listTopValueCards(
+  db: Database,
+  opts: { market?: Market; setId?: string; limit?: number } = {},
+): Promise<CardListItem[]> {
+  const market = opts.market ?? "us";
+  const limit = Math.min(Math.max(opts.limit ?? 100, 1), 250);
+  const scope = opts.setId ?? "all";
+  const key = `topvalue:${market}:${scope}:${limit}`;
+
+  return cached(db, key, TOP_VALUE_CACHE_TTL, async () => {
+    const priceMinor = max(schema.cardPricesCurrent.normalizedPriceMinor);
+    const rows = await db
+      .select({
+        id: schema.pokemonCards.id,
+        slug: schema.pokemonCards.slug,
+        name: schema.pokemonCards.name,
+        number: schema.pokemonCards.number,
+        rarity: schema.pokemonCards.rarity,
+        setId: schema.pokemonCards.setId,
+        imageSmallUrl: schema.pokemonCards.imageSmallUrl,
+        setName: schema.pokemonSets.name,
+        series: schema.pokemonSets.series,
+        priceMinor,
+      })
+      .from(schema.cardPricesCurrent)
+      .innerJoin(
+        schema.pokemonCards,
+        and(
+          eq(schema.pokemonCards.id, schema.cardPricesCurrent.cardId),
+          eq(schema.pokemonCards.active, true),
+        ),
+      )
+      .innerJoin(schema.pokemonSets, eq(schema.pokemonSets.id, schema.pokemonCards.setId))
+      .where(
+        and(
+          eq(schema.cardPricesCurrent.source, MARKET_SOURCE[market]),
+          eq(schema.cardPricesCurrent.currency, MARKET_CURRENCY[market]),
+          gte(schema.cardPricesCurrent.normalizedPriceMinor, 1),
+          lt(schema.cardPricesCurrent.normalizedPriceMinor, TOP_VALUE_MAX_MINOR),
+          opts.setId ? eq(schema.pokemonCards.setId, opts.setId) : undefined,
+        ),
+      )
+      .groupBy(schema.pokemonCards.id)
+      .orderBy(desc(priceMinor))
+      .limit(limit);
+    return rows;
+  });
 }
 
 // ── Homepage ─────────────────────────────────────────────────────────────────
