@@ -14,8 +14,9 @@ import { createDb, type Database } from "../db/index.server";
 const API_BASE = "https://api.justtcg.com/v1";
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
-/** Cards per page — kept modest for the Workers Free CPU budget per job. */
-export const RIFTBOUND_CARDS_PAGE_SIZE = 100;
+/** Cards per page. JustTCG caps `limit` at 20 on the current plan (larger 
+ * values 400); also comfortably within the Workers Free CPU budget per job. */
+export const RIFTBOUND_CARDS_PAGE_SIZE = 20;
 /** Daily request ceiling (headroom under paid-tier limits). */
 const DAILY_BUDGET = 2000;
 
