@@ -12,9 +12,9 @@ import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
-    title: "Riftbound cards — prices & catalog | Pokector",
+    title: "Riftbound Card List — All Cards & Prices | Pokector",
     description:
-      "Browse the Riftbound (League of Legends TCG) card catalog with live market prices.",
+      "The full Riftbound (League of Legends TCG) card list across every set — Origins, Spiritforged, Unleashed and Proving Grounds — with live TCGplayer market prices.",
     canonical: data?.canonical,
     alternates: data ? { appUrl: data.appUrl, path: "/riftbound/cards" } : undefined,
   });
@@ -47,10 +47,10 @@ export default function RiftboundCards({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex flex-col gap-6">
       <header className="flex flex-col gap-2">
-        <h1 className="text-2xl font-bold text-fg">Riftbound cards</h1>
+        <h1 className="text-2xl font-bold text-fg">Riftbound card list</h1>
         <p className="text-sm text-fg-muted">
-          The League of Legends TCG catalog with live market prices. {total.toLocaleString("en-US")}{" "}
-          cards.
+          The complete Riftbound (League of Legends TCG) card list with live market prices —{" "}
+          {total.toLocaleString("en-US")} cards across every set.
         </p>
       </header>
 

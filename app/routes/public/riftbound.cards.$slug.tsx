@@ -17,8 +17,8 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data) return pageMeta({ title: "Riftbound card | Pokector", description: "" });
   const { card, set } = data;
   return pageMeta({
-    title: `${card.name} — ${set.name} #${card.number} | Riftbound | Pokector`,
-    description: `Riftbound ${card.name} (${set.name} #${card.number}) — live market price and history.`,
+    title: `${card.name} — Riftbound ${set.name} Card Price | Pokector`,
+    description: `Riftbound ${card.name} (${set.name} #${card.number}) — live TCGplayer market price, low/mid/high estimates and full price history.`,
     canonical: data.canonical,
     alternates: { appUrl: data.appUrl, path: `/riftbound/cards/${card.slug}` },
     image: card.imageLargeUrl ?? card.imageSmallUrl ?? undefined,
@@ -259,7 +259,7 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
       {related.length > 0 ? (
         <section aria-labelledby="related-heading">
           <h2 id="related-heading" className="mb-4 text-xl font-bold text-fg">
-            More from {set.name}
+            More Riftbound {set.name} cards
           </h2>
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-4 lg:grid-cols-8">
             {related.map((r) => (

@@ -13,8 +13,8 @@ import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 export function meta({ loaderData: data }: Route.MetaArgs) {
   if (!data) return pageMeta({ title: "Riftbound set | Pokector", description: "" });
   return pageMeta({
-    title: `${data.set.name} — Riftbound set cards & prices | Pokector`,
-    description: `All ${data.set.name} Riftbound cards (${data.cards.length}) with live market prices.`,
+    title: `Riftbound ${data.set.name} — Card List & Prices | Pokector`,
+    description: `Every card in the Riftbound ${data.set.name} set (${data.cards.length} cards) with live TCGplayer market prices, updated daily.`,
     canonical: data.canonical,
     alternates: { appUrl: data.appUrl, path: `/riftbound/sets/${data.set.slug}` },
   });
@@ -88,9 +88,9 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
           <img src={set.imageUrl} alt="" className="h-16 w-auto object-contain" />
         ) : null}
         <div>
-          <h1 className="text-3xl font-bold text-fg">{set.name}</h1>
+          <h1 className="text-3xl font-bold text-fg">Riftbound {set.name}</h1>
           <p className="text-fg-muted">
-            Riftbound
+            League of Legends TCG
             {set.releaseDate ? ` · Released ${set.releaseDate}` : ""} · {cards.length} cards
           </p>
           {estimatedValueMinor !== null ? (
@@ -106,6 +106,12 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
           )}
         </div>
       </div>
+
+      <p className="max-w-3xl text-sm text-fg-muted">
+        The full Riftbound {set.name} card list, with a live TCGplayer market price on every
+        card. Sort by rarity to find the set's chase cards, or open any card for its price
+        history.
+      </p>
 
       {/* Rarity filters */}
       {rarities.length > 1 ? (

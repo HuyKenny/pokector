@@ -12,20 +12,46 @@ import {
   listRiftboundSets,
   listRiftboundTopValueCards,
 } from "~/lib/riftbound/queries.server";
-import { canonicalUrl, collectionPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
+import { canonicalUrl, collectionPageJsonLd, faqPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 
-/** Riftbound landing / "Riftbound card tracker" — a real, indexable page (not a
- * redirect) so /riftbound can rank for the tracker keyword. English copy, like
- * the rest of the Riftbound UI (localization deferred). */
+/** Riftbound landing — a real, indexable hub targeting the head terms
+ * "riftbound tcg" / "riftbound cards" / "riftbound card list" (all near-zero
+ * difficulty). English copy, like the rest of the Riftbound UI (localization
+ * deferred). */
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
-    title: "Riftbound Card Tracker — live prices & catalog | Pokector",
+    title: "Riftbound TCG Card List & Prices — All Sets | Pokector",
     description:
-      "Track Riftbound (League of Legends TCG) card prices. Browse the full catalog and every set with live TCGplayer market prices, updated daily.",
+      "Riftbound (League of Legends TCG) card list with live TCGplayer prices. Browse every set — Origins, Spiritforged, Unleashed and Proving Grounds — with card values updated daily.",
     canonical: data?.canonical,
     alternates: data ? { appUrl: data.appUrl, path: "/riftbound" } : undefined,
   });
 }
+
+/** On-page Q&A — captures "what is riftbound tcg", "riftbound release date"
+ * (1.7k/mo) and "riftbound sets", and earns an FAQ rich result. */
+const RIFTBOUND_FAQ = [
+  {
+    question: "What is Riftbound?",
+    answer:
+      "Riftbound is the League of Legends Trading Card Game from Riot Games, released on 31 October 2025. It launched with the Origins set, followed by Spiritforged, Unleashed and the Proving Grounds and Vendetta expansions.",
+  },
+  {
+    question: "How many Riftbound cards and sets are there?",
+    answer:
+      "Riftbound spans multiple sets — Origins, Spiritforged, Unleashed, Origins: Proving Grounds and Vendetta — plus promotional and organized-play cards. Pokector tracks the full card list with a live market price on every card.",
+  },
+  {
+    question: "Where can I check Riftbound card prices?",
+    answer:
+      "Pokector pulls Riftbound single-card prices from the TCGplayer marketplace aggregate and refreshes them daily. Each card page shows the current market estimate, low/mid/high figures and a price-history chart.",
+  },
+  {
+    question: "How do Riftbound rarities work?",
+    answer:
+      "Riftbound cards come in several rarities, and higher-rarity or foil printings usually carry the highest secondary-market values. You can sort any Riftbound set by rarity and price on Pokector to find the chase cards.",
+  },
+];
 
 export function headers(_args: Route.HeadersArgs) {
   return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" };
@@ -57,24 +83,27 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
   return (
     <div className="flex flex-col gap-14">
       <JsonLd
-        data={collectionPageJsonLd(appUrl, {
-          name: "Riftbound Card Tracker",
-          description:
-            "Riftbound (League of Legends TCG) sets and cards with live market prices.",
-          path: "/riftbound",
-          items: sets.map((s) => ({ name: s.name, path: `/riftbound/sets/${s.slug}` })),
-        })}
+        data={[
+          collectionPageJsonLd(appUrl, {
+            name: "Riftbound TCG Card List & Prices",
+            description:
+              "Riftbound (League of Legends TCG) sets and cards with live market prices.",
+            path: "/riftbound",
+            items: sets.map((s) => ({ name: s.name, path: `/riftbound/sets/${s.slug}` })),
+          }),
+          faqPageJsonLd(RIFTBOUND_FAQ),
+        ]}
       />
 
       {/* Hero */}
       <section className="flex flex-col items-center gap-5 pt-6 text-center">
         <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-fg sm:text-5xl">
-          Riftbound <span className="text-accent">Card Tracker</span>
+          Riftbound TCG <span className="text-accent">Card List & Prices</span>
         </h1>
         <p className="max-w-2xl text-lg text-fg-muted">
-          Live market prices for the Riftbound: League of Legends Trading Card Game.
+          The complete Riftbound: League of Legends Trading Card Game card list.
           Track {totalCards.toLocaleString("en-US")} cards across {sets.length} sets —
-          prices from TCGplayer, updated daily.
+          live market prices from TCGplayer, updated daily.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -157,25 +186,55 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
         </section>
       ) : null}
 
+      {/* FAQ */}
+      <section aria-labelledby="faq-heading" className="flex flex-col gap-4">
+        <h2 id="faq-heading" className="text-xl font-semibold text-fg">
+          Riftbound TCG — frequently asked questions
+        </h2>
+        <dl className="flex max-w-3xl flex-col gap-4">
+          {RIFTBOUND_FAQ.map((item) => (
+            <div key={item.question}>
+              <dt className="font-medium text-fg">{item.question}</dt>
+              <dd className="mt-1 text-sm text-fg-muted">{item.answer}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+
       {/* SEO copy */}
       <section className="flex flex-col gap-3 border-t border-edge pt-8 text-sm text-fg-muted">
-        <h2 className="text-lg font-semibold text-fg">About the Riftbound card tracker</h2>
+        <h2 className="text-lg font-semibold text-fg">
+          The complete Riftbound card list &amp; price guide
+        </h2>
         <p className="max-w-3xl">
-          Pokector's Riftbound tracker follows the live secondary-market value of every
-          card in Riot Games' Riftbound: League of Legends Trading Card Game. Prices are
-          sourced from the TCGplayer marketplace aggregate and refreshed daily, with a
-          price-history chart on each card so you can see how values move over time.
+          Pokector tracks the live secondary-market value of every card in Riot Games'
+          Riftbound: League of Legends Trading Card Game. Prices come from the TCGplayer
+          marketplace aggregate and are refreshed daily, with a price-history chart on each
+          card so you can see how values move over time. Riftbound is sold in booster boxes
+          and starter decks — Pokector follows single-card prices for every card you can
+          pull from them.
         </p>
         <p className="max-w-3xl">
-          Browse the{" "}
+          Jump straight into a set:{" "}
+          {sets
+            .filter((s) => !/promotional|judge|organized play/i.test(s.name))
+            .slice(0, 6)
+            .map((s, i, arr) => (
+              <span key={s.id}>
+                <Link
+                  to={lp(`/riftbound/sets/${s.slug}`)}
+                  className="text-accent hover:underline"
+                >
+                  Riftbound {s.name}
+                </Link>
+                {i < arr.length - 1 ? ", " : "."}
+              </span>
+            ))}{" "}
+          Or browse the{" "}
           <Link to={lp("/riftbound/cards")} className="text-accent hover:underline">
-            full card catalog
+            full Riftbound card list
           </Link>{" "}
-          or jump into a{" "}
-          <Link to={lp("/riftbound/sets")} className="text-accent hover:underline">
-            specific set
-          </Link>{" "}
-          to check current market prices.
+          across all sets.
         </p>
       </section>
     </div>
