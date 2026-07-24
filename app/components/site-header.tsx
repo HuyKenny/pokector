@@ -551,7 +551,7 @@ function GameSwitcher({
           <li key={g}>
             <form method="post" action="/game">
               <input type="hidden" name="game" value={g} />
-              <input type="hidden" name="redirectTo" value={localePath(locale, gamePath(g, "/cards"))} />
+              <input type="hidden" name="redirectTo" value={localePath(locale, gamePath(g, "/"))} />
               <button
                 type="submit"
                 aria-current={g === current ? "true" : undefined}

@@ -13,9 +13,9 @@ export async function action({ request }: Route.ActionArgs) {
     return typeof v === "string" ? v : "";
   };
   const game = resolveGame(field("game"));
-  // Land on that game's cards catalog; the switcher may pass a locale-prefixed
-  // target, else fall back to the game's default landing.
-  const redirectTo = safeRedirect(field("redirectTo") || gamePath(game, "/cards"));
+  // Land on that game's landing page (Riftbound → /riftbound, Pokémon → /); the
+  // switcher may pass a locale-prefixed target, else fall back to that landing.
+  const redirectTo = safeRedirect(field("redirectTo") || gamePath(game, "/"));
   // 1 year, Lax so it survives normal navigation; not HttpOnly (no secret).
   const cookie = `${GAME_COOKIE}=${game}; Path=/; Max-Age=31536000; SameSite=Lax`;
   return redirect(redirectTo, { headers: { "Set-Cookie": cookie } });
