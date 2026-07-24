@@ -29,6 +29,7 @@ export async function loader({ context }: Route.LoaderArgs) {
     `<sitemap><loc>${env.APP_URL}/sitemap-static.xml</loc></sitemap>`,
     `<sitemap><loc>${env.APP_URL}/sitemap-sets.xml</loc></sitemap>`,
     `<sitemap><loc>${env.APP_URL}/sitemap-riftbound.xml</loc></sitemap>`,
+    `<sitemap><loc>${env.APP_URL}/sitemap-pokemon.xml</loc></sitemap>`,
     `<sitemap><loc>${env.APP_URL}/sitemap-blog.xml</loc></sitemap>`,
     ...Array.from(
       { length: chunks },

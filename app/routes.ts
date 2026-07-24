@@ -17,6 +17,8 @@ export default [
     route("riftbound/sets/:slug", "routes/public/riftbound.sets.$slug.tsx"),
     route("price-movers", "routes/public/price-movers.tsx"),
     route("pokedex", "routes/public/pokedex.tsx"),
+    // Per-Pokémon hubs — EN-only (inline copy), unprefixed tree only.
+    route("pokemon/:name", "routes/public/pokemon.$name.tsx"),
     route("pokemon-card-collectors", "routes/public/collectors.tsx"),
     route("pokemon-card-grading-calculator", "routes/public/grading.tsx"),
     route("most-valuable-pokemon-cards", "routes/public/most-valuable-pokemon-cards.tsx"),
@@ -85,6 +87,7 @@ export default [
   route("sitemap-static.xml", "routes/seo/sitemap-static.ts"),
   route("sitemap-sets.xml", "routes/seo/sitemap-sets.ts"),
   route("sitemap-riftbound.xml", "routes/seo/sitemap-riftbound.ts"),
+  route("sitemap-pokemon.xml", "routes/seo/sitemap-pokemon.ts"),
   route("sitemap-blog.xml", "routes/seo/sitemap-blog.ts"),
   route("sitemap-cards/:chunk", "routes/seo/sitemap-cards.ts"),
   route("rss.xml", "routes/seo/rss.ts"),

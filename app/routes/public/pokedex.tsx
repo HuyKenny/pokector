@@ -13,6 +13,7 @@ import { MARKET_CURRENCY } from "~/lib/market/market";
 import { formatMinor } from "~/lib/money/decimal";
 import { generationLabel } from "~/lib/pokedex/generations";
 import { generationOf, GENERATION_MAX, SPECIES } from "~/lib/pokedex/species";
+import { speciesSlug } from "~/lib/pokedex/species-slug";
 import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
@@ -254,7 +255,11 @@ export default function Pokedex({ loaderData }: Route.ComponentProps) {
                       </button>
                     ) : null}
                     <Link
-                      to={`${lp("/cards")}?q=${encodeURIComponent(p.name)}`}
+                      to={
+                        hasCards
+                          ? lp(`/pokemon/${speciesSlug(p.name)}`)
+                          : `${lp("/cards")}?q=${encodeURIComponent(p.name)}`
+                      }
                       aria-label={`${p.name} ${number}`}
                       className="flex h-full flex-col items-center gap-1 rounded-(--radius-card) border border-edge bg-surface p-3 text-center hover:border-accent"
                     >

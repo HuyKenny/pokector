@@ -755,6 +755,61 @@ export async function listPokedexAggregates(
   return map;
 }
 
+/**
+ * Every card of one Pokémon (by national Pokédex number), across all sets, with
+ * its current market price (MAX across variants). Powers the per-Pokémon hub
+ * (/pokemon/{name}). Ordered most-valuable first (unpriced last). Visitor-
+ * identical per (dex, market) → TTL-cached.
+ */
+export async function listCardsByPokedex(
+  db: Database,
+  dex: number,
+  market: Market = "us",
+  limit = 300,
+): Promise<CardListItem[]> {
+  if (!Number.isInteger(dex) || dex < 1) return [];
+  return cached(db, `pokemoncards:${market}:${dex}:${limit}`, TOP_VALUE_CACHE_TTL, async () => {
+    const rows = await db.all<{
+      id: string;
+      slug: string;
+      name: string;
+      number: string;
+      rarity: string | null;
+      set_id: string;
+      set_name: string;
+      release_date: string | null;
+      image_small_url: string | null;
+      price_minor: number | null;
+    }>(sql`
+      SELECT k.id, k.slug, k.name, k.number, k.rarity,
+             k.set_id, s.name AS set_name, s.release_date, k.image_small_url,
+             (SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
+              WHERE p.card_id = k.id AND p.source = ${MARKET_SOURCE[market]}
+                AND p.currency = ${MARKET_CURRENCY[market]}) AS price_minor
+      FROM pokemon_cards k
+      JOIN pokemon_sets s ON s.id = k.set_id
+      WHERE k.active = 1 AND k.national_pokedex_numbers_json IS NOT NULL
+        AND EXISTS (
+          SELECT 1 FROM json_each(k.national_pokedex_numbers_json) je WHERE je.value = ${dex}
+        )
+      ORDER BY price_minor DESC, s.release_date DESC, k.number
+      LIMIT ${limit}
+    `);
+    return rows.map((r) => ({
+      id: r.id,
+      slug: r.slug,
+      name: r.name,
+      number: r.number,
+      rarity: r.rarity,
+      setId: r.set_id,
+      setName: r.set_name,
+      releaseDate: r.release_date,
+      imageSmallUrl: r.image_small_url,
+      priceMinor: r.price_minor == null ? null : Number(r.price_minor),
+    }));
+  });
+}
+
 /** Per-user Pokédex overlay: distinct owned cards per dex + favourited dex numbers.
  * Never cached at the edge (personal) — fetched client-side by the Pokédex page. */
 export async function getUserPokedexOverlay(
