@@ -1,5 +1,7 @@
 import type { Route } from "./+types/sitemap-static";
+import { RARITY_HUB_PATHS } from "~/lib/catalog/rarity-hubs";
 import { getCloudflare } from "~/lib/context";
+import { RIFTBOUND_CHAMPION_PATHS } from "~/lib/riftbound/champions";
 import { localeAlternates } from "~/lib/i18n/locales";
 
 // Translated public pages get a localized <url> per locale, each carrying the
@@ -29,6 +31,8 @@ const EN_ONLY_PATHS = [
   "/riftbound/sets",
   "/most-valuable-pokemon-cards",
   "/pokemon-sets",
+  ...RARITY_HUB_PATHS,
+  ...RIFTBOUND_CHAMPION_PATHS,
 ];
 
 export function loader({ context }: Route.LoaderArgs) {

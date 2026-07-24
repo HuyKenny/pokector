@@ -523,6 +523,52 @@ export async function listTopValueCards(
   });
 }
 
+/**
+ * Cards matching a rarity set and/or a "released before" cutoff (era), across all
+ * sets, ranked by current market value (unpriced last). Powers the rarity/attribute
+ * hubs (/pokemon-cards/{attr}). Visitor-identical → TTL-cached per (key, market).
+ */
+export async function listAttributeCards(
+  db: Database,
+  opts: { key: string; rarities?: string[]; releaseBefore?: string; market?: Market; limit?: number },
+): Promise<CardListItem[]> {
+  const market = opts.market ?? "us";
+  const limit = Math.min(Math.max(opts.limit ?? 200, 1), 300);
+  return cached(db, `attr:${market}:${opts.key}:${limit}`, TOP_VALUE_CACHE_TTL, async () => {
+    const priceMinor = sql<number | null>`(
+      SELECT MAX(p.normalized_price_minor) FROM card_prices_current p
+      WHERE p.card_id = ${schema.pokemonCards.id}
+        AND p.source = ${MARKET_SOURCE[market]} AND p.currency = ${MARKET_CURRENCY[market]}
+    )`;
+    const conditions = [eq(schema.pokemonCards.active, true)];
+    if (opts.rarities && opts.rarities.length > 0) {
+      conditions.push(inArray(schema.pokemonCards.rarity, opts.rarities));
+    }
+    if (opts.releaseBefore) {
+      conditions.push(lt(schema.pokemonSets.releaseDate, opts.releaseBefore));
+    }
+    const rows = await db
+      .select({
+        id: schema.pokemonCards.id,
+        slug: schema.pokemonCards.slug,
+        name: schema.pokemonCards.name,
+        number: schema.pokemonCards.number,
+        rarity: schema.pokemonCards.rarity,
+        setId: schema.pokemonCards.setId,
+        imageSmallUrl: schema.pokemonCards.imageSmallUrl,
+        setName: schema.pokemonSets.name,
+        releaseDate: schema.pokemonSets.releaseDate,
+        priceMinor,
+      })
+      .from(schema.pokemonCards)
+      .innerJoin(schema.pokemonSets, eq(schema.pokemonCards.setId, schema.pokemonSets.id))
+      .where(and(...conditions))
+      .orderBy(desc(priceMinor))
+      .limit(limit);
+    return rows;
+  });
+}
+
 // ── Homepage ─────────────────────────────────────────────────────────────────
 
 export async function getHomepageData(db: Database) {

@@ -7,6 +7,7 @@ import { createDb } from "~/lib/db/index.server";
 import { localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { formatMinor } from "~/lib/money/decimal";
+import { RIFTBOUND_CHAMPIONS } from "~/lib/riftbound/champions";
 import {
   listRiftboundCards,
   listRiftboundSets,
@@ -185,6 +186,23 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
           </ul>
         </section>
       ) : null}
+
+      {/* Champions */}
+      <section aria-label="Riftbound champions" className="flex flex-col gap-4">
+        <h2 className="text-xl font-semibold text-fg">Browse by champion</h2>
+        <ul className="flex flex-wrap gap-2 text-sm">
+          {Object.entries(RIFTBOUND_CHAMPIONS).map(([slug, c]) => (
+            <li key={slug}>
+              <Link
+                to={lp(`/riftbound/champions/${slug}`)}
+                className="rounded-full border border-edge px-3 py-1.5 text-fg-muted hover:border-accent hover:text-fg"
+              >
+                {c.name}
+              </Link>
+            </li>
+          ))}
+        </ul>
+      </section>
 
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="flex flex-col gap-4">

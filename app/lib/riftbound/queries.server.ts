@@ -149,6 +149,28 @@ export async function listRiftboundTopValueCards(db: Database, limit = 12) {
     .limit(limit);
 }
 
+/** All Riftbound cards for one champion (name match), ranked by representative
+ * USD price. Powers the champion hubs (/riftbound/champions/{name}). */
+export async function listRiftboundCardsByChampion(db: Database, term: string, limit = 200) {
+  const needle = `%${term.replace(/[%_]/g, "").slice(0, 40)}%`;
+  return db
+    .select({
+      id: schema.riftboundCards.id,
+      slug: schema.riftboundCards.slug,
+      name: schema.riftboundCards.name,
+      number: schema.riftboundCards.number,
+      rarity: schema.riftboundCards.rarity,
+      imageSmallUrl: schema.riftboundCards.imageSmallUrl,
+      setName: schema.riftboundSets.name,
+      priceMinor: priceExpr,
+    })
+    .from(schema.riftboundCards)
+    .innerJoin(schema.riftboundSets, eq(schema.riftboundCards.setId, schema.riftboundSets.id))
+    .where(and(eq(schema.riftboundCards.active, true), like(schema.riftboundCards.name, needle)))
+    .orderBy(desc(priceExpr))
+    .limit(limit);
+}
+
 export async function listRiftboundSets(db: Database) {
   // LEFT JOIN + GROUP BY for the per-set active-card count. (A correlated
   // subquery embedding schema.riftboundSets.id inside sql`` returned 0 here.)
