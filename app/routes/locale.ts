@@ -6,6 +6,7 @@ import { optionalUser } from "~/lib/auth/guards.server";
 import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 import { isLocale, localePath, resolveLocale } from "~/lib/i18n/locales";
+import { safeRelativePath } from "~/lib/security/redirect";
 
 /**
  * POST-only language switch. Mirrors /market (JS-free plain form post). For a
@@ -46,7 +47,7 @@ export function loader() {
  * A leading locale segment is stripped by treating the value as already bare —
  * callers pass the bare path, so we only guard the shape here. */
 function safePath(to: string): string {
-  if (!to.startsWith("/") || to.startsWith("//")) return "/";
+  to = safeRelativePath(to);
   // Defensive: if a locale prefix slipped in, drop it so we don't double-prefix.
   const first = to.split("/")[1];
   if (isLocale(first)) {

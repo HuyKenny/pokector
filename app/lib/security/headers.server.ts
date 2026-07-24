@@ -74,6 +74,12 @@ export function applySecurityHeaders(response: Response, options: SecurityOption
   // and refuse legacy Flash/PDF cross-domain policy files.
   headers.set("Cross-Origin-Opener-Policy", "same-origin");
   headers.set("X-Permitted-Cross-Domain-Policies", "none");
+  // Prevent other origins from embedding our responses as a subresource
+  // (Spectre-class side-channel hardening). This governs how OUR resources may
+  // be loaded elsewhere; it does not affect us loading Turnstile/GA, nor social
+  // scrapers fetching the page as a top-level navigation. COEP is intentionally
+  // NOT set — it can break the Turnstile iframe and GA and needs separate testing.
+  headers.set("Cross-Origin-Resource-Policy", "same-origin");
   if (options.production) {
     headers.set("Strict-Transport-Security", "max-age=31536000; includeSubDomains");
   }

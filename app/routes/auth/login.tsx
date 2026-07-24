@@ -11,6 +11,7 @@ import { getCloudflare } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
+import { safeRelativePath } from "~/lib/security/redirect";
 
 export function meta({ loaderData }: Route.MetaArgs) {
   return [
@@ -27,12 +28,6 @@ export function loader({ params, context }: Route.LoaderArgs) {
     captchaRequired: captchaEnabled(env),
     t: getDict(locale).auth,
   };
-}
-
-/** Only same-origin relative paths — prevents open redirects. */
-function safeReturnTo(raw: string | null): string {
-  if (raw && raw.startsWith("/") && !raw.startsWith("//")) return raw;
-  return "/app";
 }
 
 export default function Login({ loaderData }: Route.ComponentProps) {
@@ -66,7 +61,7 @@ export default function Login({ loaderData }: Route.ComponentProps) {
       setCaptchaToken(null);
       return;
     }
-    await navigate(safeReturnTo(searchParams.get("returnTo")), { replace: true });
+    await navigate(safeRelativePath(searchParams.get("returnTo"), "/app"), { replace: true });
   }
 
   return (

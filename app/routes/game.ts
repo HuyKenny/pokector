@@ -2,6 +2,7 @@ import { redirect } from "react-router";
 
 import type { Route } from "./+types/game";
 import { GAME_COOKIE, gamePath, resolveGame } from "~/lib/game/game";
+import { safeRelativePath } from "~/lib/security/redirect";
 
 /** POST-only game switch. Mirrors /market (JS-free plain form post): persists the
  * chosen game in the `pk_game` cookie and redirects to that game's catalog. The
@@ -15,7 +16,7 @@ export async function action({ request }: Route.ActionArgs) {
   const game = resolveGame(field("game"));
   // Land on that game's landing page (Riftbound → /riftbound, Pokémon → /); the
   // switcher may pass a locale-prefixed target, else fall back to that landing.
-  const redirectTo = safeRedirect(field("redirectTo") || gamePath(game, "/"));
+  const redirectTo = safeRelativePath(field("redirectTo") || gamePath(game, "/"));
   // 1 year, Lax so it survives normal navigation; not HttpOnly (no secret).
   const cookie = `${GAME_COOKIE}=${game}; Path=/; Max-Age=31536000; SameSite=Lax`;
   return redirect(redirectTo, { headers: { "Set-Cookie": cookie } });
@@ -23,9 +24,4 @@ export async function action({ request }: Route.ActionArgs) {
 
 export function loader() {
   return redirect("/");
-}
-
-/** Only allow a same-site path redirect (no protocol-relative or absolute URLs). */
-function safeRedirect(to: string): string {
-  return to.startsWith("/") && !to.startsWith("//") ? to : "/";
 }

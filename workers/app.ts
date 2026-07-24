@@ -12,6 +12,7 @@ import { marketFromCookieHeader, marketFromCountry } from "../app/lib/market/mar
 import { onQueueBatch, onScheduled } from "../app/lib/jobs/runtime.server";
 import { log } from "../app/lib/log.server";
 import { applySecurityHeaders } from "../app/lib/security/headers.server";
+import { isTrustedOrigin } from "../app/lib/security/origin.server";
 
 const requestHandler = createRequestHandler(
   () => import("virtual:react-router/server-build"),
@@ -46,6 +47,27 @@ export default {
         if (redirect) return redirect;
       }
       const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
+      const securityOptions = {
+        secure: env.ENVIRONMENT !== "development",
+        production: env.ENVIRONMENT === "production",
+        nonce,
+      };
+      // CSRF defense-in-depth: reject state-changing requests whose Origin header
+      // is present but not our own site (webhooks send no Origin → allowed).
+      if (!isTrustedOrigin(request, env.APP_URL)) {
+        log.warn("request.cross_origin_rejected", {
+          requestId,
+          route: url.pathname,
+          origin: request.headers.get("origin") ?? "",
+        });
+        return applySecurityHeaders(
+          new Response("Forbidden: cross-origin request rejected", {
+            status: 403,
+            headers: { "Content-Type": "text/plain; charset=utf-8" },
+          }),
+          securityOptions,
+        );
+      }
       const routerContext = new RouterContextProvider();
       routerContext.set(cloudflareContext, { env, ctx });
       routerContext.set(requestIdContext, requestId);
@@ -62,11 +84,7 @@ export default {
         gameFromCookieHeader(request.headers.get("cookie")) ?? DEFAULT_GAME,
       );
       const response = await requestHandler(request, routerContext);
-      const secured = applySecurityHeaders(response, {
-        secure: env.ENVIRONMENT !== "development",
-        production: env.ENVIRONMENT === "production",
-        nonce,
-      });
+      const secured = applySecurityHeaders(response, securityOptions);
       secured.headers.set("X-Request-Id", requestId);
       log.info("request", {
         requestId,
