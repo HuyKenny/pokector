@@ -21,7 +21,6 @@ import type { Plan } from "./billing/entitlement.server";
  * Per-plan caps — the "invest smarter" split. Pokector Pro sells depth + scale;
  * the free tier is generous but meters power-user features. Pro values are the
  * old abuse ceilings (binders/wishlist) or effectively-unlimited abuse guards.
- * `portfolioHistoryDays` = null means the full/MAX range.
  */
 export interface PlanLimits {
   maxBinders: number;
@@ -29,7 +28,6 @@ export interface PlanLimits {
   maxActiveAlerts: number;
   maxGradedEntries: number;
   maxPinnedSets: number;
-  portfolioHistoryDays: number | null;
 }
 
 export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
@@ -39,7 +37,6 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     maxActiveAlerts: 3,
     maxGradedEntries: 10,
     maxPinnedSets: 1,
-    portfolioHistoryDays: 30,
   },
   pro: {
     maxBinders: 100,
@@ -47,7 +44,6 @@ export const PLAN_LIMITS: Record<Plan, PlanLimits> = {
     maxActiveAlerts: 1_000,
     maxGradedEntries: 100_000,
     maxPinnedSets: 1_000,
-    portfolioHistoryDays: null,
   },
 };
 

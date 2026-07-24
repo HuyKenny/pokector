@@ -146,8 +146,8 @@ export default function Billing({ loaderData, actionData }: Route.ComponentProps
           ) : (
             <div className="flex flex-col gap-3">
               <p className="text-sm text-fg-muted">
-                Upgrade to unlock unlimited binders, wishlist, price alerts, graded cards, pinned
-                sets, and your full portfolio history.
+                Upgrade to unlock unlimited binders, wishlist, price alerts, graded cards, and
+                pinned sets.
               </p>
               <div className="flex flex-wrap gap-3">
                 <Form method="post">

@@ -65,7 +65,6 @@ export default function Pricing({ loaderData }: Route.ComponentProps) {
     { label: t.featAlerts, free: "3", pro: t.valUnlimited },
     { label: t.featGraded, free: "10", pro: t.valUnlimited },
     { label: t.featPinned, free: "1", pro: t.valUnlimited },
-    { label: t.featHistory, free: t.val30days, pro: t.valFullHistory },
     { label: t.featChecklists, free: true, pro: true },
     { label: t.featExport, free: true, pro: true },
     { label: t.featGrading, free: true, pro: true },

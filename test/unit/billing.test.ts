@@ -30,9 +30,6 @@ describe("limitsFor", () => {
     expect(pro.maxBinders).toBeGreaterThan(free.maxBinders);
     expect(free.maxActiveAlerts).toBe(3);
     expect(pro.maxActiveAlerts).toBeGreaterThan(free.maxActiveAlerts);
-    // Free portfolio history is windowed; Pro is the full range (null).
-    expect(free.portfolioHistoryDays).toBe(30);
-    expect(pro.portfolioHistoryDays).toBeNull();
   });
 });
 
