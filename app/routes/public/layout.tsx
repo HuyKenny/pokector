@@ -132,6 +132,9 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               >
                 Most valuable cards
               </Link>
+              <Link to={localePath(locale, "/pokemon-sets")} className="hover:text-fg">
+                All sets in order
+              </Link>
               <Link to={localePath(locale, "/pricing")} className="hover:text-fg">
                 {t.navPricing}
               </Link>

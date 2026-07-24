@@ -28,6 +28,7 @@ const EN_ONLY_PATHS = [
   "/riftbound/cards",
   "/riftbound/sets",
   "/most-valuable-pokemon-cards",
+  "/pokemon-sets",
 ];
 
 export function loader({ context }: Route.LoaderArgs) {

@@ -51,6 +51,33 @@ export interface CardListItem {
   priceMinor?: number | null;
 }
 
+export interface SetIndexItem {
+  slug: string;
+  name: string;
+  series: string;
+  releaseDate: string | null;
+  logoUrl: string | null;
+  symbolUrl: string | null;
+  total: number | null;
+}
+
+/** All active sets (newest first) for the "sets in order" index / era hubs. */
+export async function listAllSets(db: Database): Promise<SetIndexItem[]> {
+  return db
+    .select({
+      slug: schema.pokemonSets.slug,
+      name: schema.pokemonSets.name,
+      series: schema.pokemonSets.series,
+      releaseDate: schema.pokemonSets.releaseDate,
+      logoUrl: schema.pokemonSets.logoUrl,
+      symbolUrl: schema.pokemonSets.symbolUrl,
+      total: schema.pokemonSets.total,
+    })
+    .from(schema.pokemonSets)
+    .where(eq(schema.pokemonSets.active, true))
+    .orderBy(desc(schema.pokemonSets.releaseDate));
+}
+
 /** Sets for the /cards filter dropdown (newest first). */
 export async function listSetsBrief(db: Database): Promise<{ id: string; name: string }[]> {
   return db

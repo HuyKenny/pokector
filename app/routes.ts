@@ -19,6 +19,7 @@ export default [
     route("pokedex", "routes/public/pokedex.tsx"),
     // Per-Pokémon hubs — EN-only (inline copy), unprefixed tree only.
     route("pokemon/:name", "routes/public/pokemon.$name.tsx"),
+    route("pokemon-sets", "routes/public/pokemon-sets.tsx"),
     route("pokemon-card-collectors", "routes/public/collectors.tsx"),
     route("pokemon-card-grading-calculator", "routes/public/grading.tsx"),
     route("most-valuable-pokemon-cards", "routes/public/most-valuable-pokemon-cards.tsx"),
