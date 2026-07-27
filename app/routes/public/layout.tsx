@@ -15,6 +15,7 @@ import {
 } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
 import { isPremium } from "~/lib/billing/entitlement.server";
+import { RARITY_HUBS } from "~/lib/catalog/rarity-hubs";
 import { schema } from "~/lib/db/index.server";
 import { eq } from "drizzle-orm";
 
@@ -100,7 +101,7 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
 
       <footer className="border-t border-edge bg-surface">
         <div className="mx-auto flex max-w-6xl flex-col gap-8 px-4 py-8 text-sm text-fg-muted">
-          <div className="grid gap-8 sm:grid-cols-2">
+          <div className="grid gap-8 sm:grid-cols-3">
             {/* Explore: topical hub pages (localized). */}
             <nav aria-label={t.footerExplore} className="flex flex-col gap-2">
               <span className="font-semibold text-fg">{t.footerExplore}</span>
@@ -125,19 +126,30 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               >
                 {t.footerGrading}
               </Link>
-              {/* EN-first landing (inline copy); hardcoded label until localized. */}
-              <Link
-                to={localePath(locale, "/most-valuable-pokemon-cards")}
-                className="hover:text-fg"
-              >
+              {/* EN-first landings (inline copy, EN-only routes); hardcoded labels
+                  and plain paths (no locale prefix → avoid a 301 redirect hop). */}
+              <Link to="/most-valuable-pokemon-cards" className="hover:text-fg">
                 Most valuable cards
               </Link>
-              <Link to={localePath(locale, "/pokemon-sets")} className="hover:text-fg">
+              <Link to="/pokemon-sets" className="hover:text-fg">
                 All sets in order
+              </Link>
+              <Link to="/riftbound" className="hover:text-fg">
+                Riftbound TCG
               </Link>
               <Link to={localePath(locale, "/pricing")} className="hover:text-fg">
                 {t.navPricing}
               </Link>
+            </nav>
+            {/* Browse by rarity: EN-only landing hubs (crawl discovery + topical
+                internal links to the /pokemon-cards/{rarity} pages). */}
+            <nav aria-label="Browse by rarity" className="flex flex-col gap-2">
+              <span className="font-semibold text-fg">Browse by rarity</span>
+              {Object.entries(RARITY_HUBS).map(([slug, hub]) => (
+                <Link key={slug} to={`/pokemon-cards/${slug}`} className="hover:text-fg">
+                  {hub.label}
+                </Link>
+              ))}
             </nav>
             {/* Resources: About, legal, blog, RSS (English-only pages). */}
             <nav aria-label={t.footerResources} className="flex flex-col gap-2">

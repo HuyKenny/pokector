@@ -17,12 +17,17 @@ export async function loader({ context }: Route.LoaderArgs) {
   const db = createDb(env.DB);
   const agg = await listPokedexAggregates(db); // US market; hub set is market-independent
 
+  // These hubs re-rank by live prices that refresh daily, so today is an honest
+  // lastmod (mirrors the per-card + Riftbound sitemaps, which already carry one).
+  const lastmod = new Date().toISOString().slice(0, 10);
   const urls: string[] = [];
   for (const [dex, a] of agg) {
     if (a.cardCount < 3) continue;
     const name = NAME_BY_DEX.get(dex);
     if (!name) continue;
-    urls.push(`<url><loc>${env.APP_URL}/pokemon/${escapeXml(speciesSlug(name))}</loc></url>`);
+    urls.push(
+      `<url><loc>${env.APP_URL}/pokemon/${escapeXml(speciesSlug(name))}</loc><lastmod>${lastmod}</lastmod></url>`,
+    );
   }
 
   return new Response(
