@@ -117,6 +117,8 @@ export default [
   // Pokédex personal overlay (owned counts + favourites) — fetched client-side
   route("api/v1/pokedex/me", "routes/api/pokedex-me.ts"),
   route("api/v1/pokedex/favorite", "routes/api/pokedex-favorite.ts"),
+  // Autumn billing webhook — Svix-signed, idempotent via the job queue.
+  route("api/autumn/webhook", "routes/api/autumn-webhook.ts"),
   // eBay Marketplace Account Deletion compliance webhook
   route("api/ebay/marketplace-deletion", "routes/api/ebay-marketplace-deletion.ts"),
 

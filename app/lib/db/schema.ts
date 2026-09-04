@@ -650,7 +650,7 @@ export const SYNC_JOB_TYPES = [
   "progress_cache_rebuild",
   "import_apply",
   "ebay_graded_seed",
-  "subscription_sync",
+  "autumn_sync",
   "riftbound_catalog_sets",
   "riftbound_catalog_cards_page",
 ] as const;

@@ -27,6 +27,10 @@ interface Env {
    * underneath. Absent → billing is disabled: the pricing page still renders but
    * checkout/portal are unavailable (honest degraded mode). */
   AUTUMN_SECRET_KEY?: string;
+  /** Svix signing secret (whsec_…) for /api/autumn/webhook. Absent → the webhook
+   * fail-closes with 503: an unverified billing webhook is a way to grant
+   * yourself a paid plan. */
+  AUTUMN_WEBHOOK_SECRET?: string;
   /** JustTCG API key (x-api-key) for the Riftbound catalog + prices sync. Absent
    * → the Riftbound sync is disabled (the /riftbound catalog stays empty). */
   JUSTTCG_API_KEY?: string;

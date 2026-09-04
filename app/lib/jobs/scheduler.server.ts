@@ -7,6 +7,7 @@
  *     CATALOG_SYNC_INTERVAL_MS) since it's the dominant D1 write cost
  */
 
+import { handleAutumnSync } from "./handlers/autumn-sync.server";
 import { eq, sql } from "drizzle-orm";
 
 import { pruneExpiredCounters } from "../counters.server";
@@ -51,6 +52,7 @@ type JobHandler = (job: SyncJob, env: Env) => Promise<void>;
 
 /** Later phases register snapshots/alerts/import handlers here. */
 const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
+  autumn_sync: handleAutumnSync,
   catalog_sets: handleCatalogSets,
   catalog_cards_page: handleCatalogCardsPage,
   price_history_record: handlePriceHistoryRecord,
