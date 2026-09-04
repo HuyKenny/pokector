@@ -223,7 +223,14 @@ export default function Pokedex({ loaderData }: Route.ComponentProps) {
       </div>
 
       {groups.map((group) => (
-        <section key={group.key} className="flex flex-col gap-3">
+        // content-visibility:auto skips rendering/layout for off-screen generation
+        // sections (the "All" view stacks 9 of them, ~1000 tiles); contain-intrinsic-
+        // size reserves a placeholder height so the scrollbar doesn't jump, and `auto`
+        // lets the browser remember each section's real height after first render.
+        <section
+          key={group.key}
+          className="flex flex-col gap-3 [content-visibility:auto] [contain-intrinsic-size:auto_1200px]"
+        >
           {filter === "all" ? (
             <h2 className="text-lg font-semibold text-fg">{group.heading}</h2>
           ) : null}
