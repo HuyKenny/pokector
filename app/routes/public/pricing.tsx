@@ -13,6 +13,8 @@ import { canonicalUrl, faqPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 import { eq } from "drizzle-orm";
 
 // USD amounts are the same across locales — the surrounding labels are translated.
+// These strings are display only and duplicate the real prices, which live in
+// `autumn.config.ts` (Autumn is what actually charges). Change both together.
 const PRICE_MONTHLY = "$3.99";
 const PRICE_YEARLY_PER_MONTH = "$3.33";
 const PRICE_YEARLY_TOTAL = "$40";

@@ -1,14 +1,16 @@
 /**
  * Pokector Pro pricing as configuration.
  *
- * This file is the source of truth for what each tier includes. It ships with
- * `npx atmn push` and needs **no Worker deploy** — that is the whole point: a
- * limit that lives in code cannot be tuned once customers are on it.
+ * This is the **customer-facing** catalogue: plan names, prices, and the
+ * allowances we advertise. It ships with `npx atmn -p push`, so copy and pricing
+ * change without a Worker deploy.
  *
- * Enforcement reads these features through Autumn in `app/lib/billing/autumn.server.ts`.
- * `app/lib/limits.ts` keeps a copy of the FREE floor only as a local fallback
- * (Autumn outage must never lock people out); `test/unit/billing.test.ts` guards
- * that the two do not drift.
+ * It is NOT what the app enforces. Every gate (binders, wishlist, alerts, graded,
+ * pinned) reads `limitsFor(plan)` from `app/lib/limits.ts`, so **`PLAN_LIMITS`
+ * there is the authority** and the `included` numbers below must be kept equal to
+ * it by hand — pushing a different number here changes what customers are told,
+ * not what they get. Nothing automated guards that; if you tune a limit, change
+ * both files.
  */
 import { feature, item, plan, type Plan } from "atmn";
 
@@ -16,9 +18,9 @@ import { feature, item, plan, type Plan } from "atmn";
 
 /*
  * All five are `metered` + `consumable: false`: they are **concurrent
- * allowances** ("how many may exist"), not monthly quotas. Deleting a binder
- * must free its slot, so the real count lives in our D1 — from Autumn we only
- * read the ceiling.
+ * allowances** ("how many may exist"), not monthly quotas. They exist so the
+ * plan reads correctly on Autumn's side (and in any pricing UI Autumn renders);
+ * the enforced ceiling is `PLAN_LIMITS` in `app/lib/limits.ts`.
  */
 
 export const maxBinders = feature({

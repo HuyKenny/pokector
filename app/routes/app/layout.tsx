@@ -21,7 +21,7 @@ export function headers(_args: Route.HeadersArgs) {
 
 export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
-  const { env } = getCloudflare(context);
+  const { env, ctx } = getCloudflare(context);
   const db = createDb(env.DB);
   // getEntitlements reads the Autumn mirror and refreshes it once past its TTL —
   // this is the hook that lets a cancellation propagate even if a webhook is lost.
@@ -31,7 +31,9 @@ export async function loader({ request, context }: Route.LoaderArgs) {
       where: eq(schema.userProfiles.userId, session.user.id),
       columns: { locale: true },
     }),
-    getEntitlements(db, env, session.user.id, session.user.email),
+    // waitUntil → a stale mirror is refreshed in the background, so Autumn is
+    // never in the load path of an /app page.
+    getEntitlements(db, env, session.user.id, session.user.email, (p) => ctx.waitUntil(p)),
   ]);
   // Header nav follows the user's chosen language (Settings); legacy "en-US"
   // and unknown values resolve to English.

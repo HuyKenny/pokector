@@ -1,8 +1,14 @@
 import { describe, expect, it } from "vitest";
 
-import { FREE, parseEntitlements, PLANS } from "~/lib/billing/autumn.server";
+import {
+  FREE,
+  MIRROR_TTL_MS,
+  parseEntitlements,
+  PLANS,
+  premiumUntilFor,
+} from "~/lib/billing/autumn.server";
 import { isPremium, planOf } from "~/lib/billing/entitlement.server";
-import { limitsFor, PLAN_LIMITS } from "~/lib/limits";
+import { limitsFor } from "~/lib/limits";
 
 describe("entitlement", () => {
   it("is premium only while premiumUntil is in the future", () => {
@@ -33,10 +39,9 @@ describe("limitsFor", () => {
  * user is allowed to do.
  */
 describe("FREE fallback", () => {
-  it("mirrors the free tier limits and is not premium", () => {
+  it("is the free plan and not premium", () => {
     expect(FREE.planId).toBe(PLANS.free);
     expect(FREE.premium).toBe(false);
-    expect(FREE.limits).toEqual(PLAN_LIMITS.free);
     expect(FREE.periodEnd).toBeNull();
   });
 });
@@ -53,7 +58,6 @@ describe("parseEntitlements", () => {
     const ent = parseEntitlements({});
     expect(ent.planId).toBe(PLANS.free);
     expect(ent.premium).toBe(false);
-    expect(ent.limits).toEqual(PLAN_LIMITS.free);
   });
 
   it("reads a paid plan, its period end and interval", () => {
@@ -107,28 +111,43 @@ describe("parseEntitlements", () => {
   });
 
   // A broken sync must never push someone below the free tier: that would turn a
-  // billing glitch into a silent feature shutdown.
-  it("floors allowances at the free tier", () => {
-    const ent = parseEntitlements({
-      subscriptions: [paidSub],
-      balances: { max_binders: { granted: 0 } },
-    });
-    expect(ent.limits.maxBinders).toBe(PLAN_LIMITS.free.maxBinders);
+
+
+});
+
+/**
+ * The bug this guards: writing the epoch for a *premium* customer makes
+ * `isPremium` false at every gate, so someone who paid is silently locked out of
+ * what they bought. Autumn can report an active plan with no period end.
+ */
+describe("premiumUntilFor", () => {
+  const base = { planId: PLANS.pro, premium: true, cancelPending: false, interval: "month" as const, hasStripeCustomer: true };
+
+  it("mirrors the paid period end when Autumn sends one", () => {
+    expect(premiumUntilFor({ ...base, periodEnd: 1_800_000_000_000 }).getTime()).toBe(1_800_000_000_000);
   });
 
-  it("reads granted allowances above the floor", () => {
-    const ent = parseEntitlements({
-      subscriptions: [paidSub],
-      balances: { max_binders: { granted: 100 } },
-    });
-    expect(ent.limits.maxBinders).toBe(100);
+  it("keeps a premium customer with no period end in access, not at the epoch", () => {
+    const until = premiumUntilFor({ ...base, periodEnd: null });
+    expect(until.getTime()).toBeGreaterThan(Date.now());
+    // Only until the next sync can correct it — not an open-ended grant.
+    expect(until.getTime()).toBeLessThanOrEqual(Date.now() + MIRROR_TTL_MS + 1000);
   });
 
-  it("treats an unlimited balance as effectively unbounded", () => {
-    const ent = parseEntitlements({
-      subscriptions: [paidSub],
-      balances: { max_pinned_sets: { unlimited: true } },
-    });
-    expect(ent.limits.maxPinnedSets).toBe(Number.MAX_SAFE_INTEGER);
+  it("puts a non-premium customer in the past so isPremium goes false", () => {
+    expect(premiumUntilFor({ ...base, premium: false, periodEnd: null }).getTime()).toBe(0);
+    expect(premiumUntilFor({ ...base, premium: false, periodEnd: 1_800_000_000_000 }).getTime()).toBe(0);
+  });
+});
+
+describe("interval", () => {
+  const sub = (planId: string) => ({ subscriptions: [{ plan_id: planId, status: "active" }] });
+
+  // Derived from the plan: Autumn carries the interval on the product price, not
+  // on the subscription, so reading it there showed "Billing: —" for everyone.
+  it("derives the billing interval from the plan id", () => {
+    expect(parseEntitlements(sub(PLANS.pro)).interval).toBe("month");
+    expect(parseEntitlements(sub(PLANS.pro_yearly)).interval).toBe("year");
+    expect(parseEntitlements({}).interval).toBeNull();
   });
 });

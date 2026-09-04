@@ -1,10 +1,10 @@
 /**
  * Pokector Pro billing on Autumn (which drives Stripe underneath).
  *
- * Autumn is the source of truth for what a customer is entitled to; `userProfiles`
+ * Autumn is the source of truth for **which tier** a customer is on; `userProfiles`
  * keeps a mirror in D1 so a slow or failing third party never sits in the request
- * path of a page load. The tier catalogue lives in `autumn.config.ts` and ships
- * with `atmn -p push`, so allowances can be tuned without a Worker deploy.
+ * path of a page load. The tier catalogue (names, prices, advertised allowances)
+ * lives in `autumn.config.ts` and ships with `atmn -p push`.
  *
  * ## Read order
  * 1. **D1 mirror**, while it is fresher than `MIRROR_TTL_MS`.
@@ -18,6 +18,10 @@
  * never synced. Never to "no access": a billing outage must not lock a paying
  * collector out of their own collection.
  *
+ * Numeric allowances are deliberately NOT read from here: enforcement uses
+ * `limitsFor(plan)` in `app/lib/limits.ts`, which is the single source of truth
+ * for every gate. This module only decides *which tier* a customer is on.
+ *
  * Direct `fetch` against the REST API rather than `autumn-js`: the SDK is ~450 kB
  * and we need four endpoints.
  */
@@ -25,7 +29,6 @@
 import { eq } from "drizzle-orm";
 
 import { schema, type Database } from "../db/index.server";
-import { PLAN_LIMITS, type PlanLimits } from "../limits";
 import { log } from "../log.server";
 
 const API = "https://api.useautumn.com/v1";
@@ -34,7 +37,7 @@ const API = "https://api.useautumn.com/v1";
 const TIMEOUT_MS = 4000;
 
 /** How long the D1 mirror is trusted before we re-ask Autumn. */
-const MIRROR_TTL_MS = 6 * 60 * 60 * 1000;
+export const MIRROR_TTL_MS = 6 * 60 * 60 * 1000;
 
 export interface AutumnEnv {
   AUTUMN_SECRET_KEY?: string;
@@ -59,8 +62,6 @@ export interface Entitlements {
   planId: string;
   /** True while a paid plan is active (this is what gates Pro features). */
   premium: boolean;
-  /** Per-feature allowances, floored at the free tier (never below). */
-  limits: PlanLimits;
   /** End of the paid period (ms epoch), null on free. */
   periodEnd: number | null;
   /** Cancellation is scheduled but the paid period is still running. */
@@ -76,7 +77,6 @@ export interface Entitlements {
 export const FREE: Entitlements = {
   planId: PLANS.free,
   premium: false,
-  limits: PLAN_LIMITS.free,
   periodEnd: null,
   cancelPending: false,
   interval: null,
@@ -92,7 +92,6 @@ interface AutumnSubscription {
   auto_enable?: boolean;
   canceled_at?: number | null;
   current_period_end?: number | null;
-  interval?: string;
 }
 
 export interface AutumnCustomer {
@@ -120,15 +119,6 @@ function primarySubscription(subs: AutumnSubscription[]): AutumnSubscription | n
   return active.find((s) => s.auto_enable !== true) ?? active[0];
 }
 
-/** Read one allowance, floored at the free tier so a broken sync can never
- * silently reduce someone below what we give away for nothing. */
-function allowance(customer: AutumnCustomer, featureId: string, floor: number): number {
-  const b = customer.balances?.[featureId];
-  if (b?.unlimited) return Number.MAX_SAFE_INTEGER;
-  const granted = typeof b?.granted === "number" ? b.granted : null;
-  return granted === null || granted < floor ? floor : granted;
-}
-
 /**
  * Autumn's customer payload → entitlements. Pure, so it is unit-testable without
  * network or D1.
@@ -137,22 +127,17 @@ export function parseEntitlements(customer: AutumnCustomer): Entitlements {
   const sub = primarySubscription(customer.subscriptions ?? []);
   const planId = sub?.plan_id ?? PLANS.free;
   const premium = PAID_PLAN_IDS.has(planId);
-  const free = PLAN_LIMITS.free;
 
   return {
     planId,
     premium,
-    limits: {
-      maxBinders: allowance(customer, "max_binders", free.maxBinders),
-      maxWishlistItems: allowance(customer, "max_wishlist_items", free.maxWishlistItems),
-      maxActiveAlerts: allowance(customer, "max_active_alerts", free.maxActiveAlerts),
-      maxGradedEntries: allowance(customer, "max_graded_entries", free.maxGradedEntries),
-      maxPinnedSets: allowance(customer, "max_pinned_sets", free.maxPinnedSets),
-    },
     // Autumn sends `current_period_end` in milliseconds.
     periodEnd: sub?.current_period_end ?? null,
     cancelPending: Boolean(sub?.canceled_at),
-    interval: sub?.interval === "year" ? "year" : sub?.interval === "month" ? "month" : null,
+    // Derived from the plan, not the subscription: Autumn carries the interval on
+    // the product's price, never on the subscription object, so reading it there
+    // left every account showing "Billing: —".
+    interval: planId === PLANS.pro_yearly ? "year" : planId === PLANS.pro ? "month" : null,
     hasStripeCustomer: Boolean(customer.stripe_id),
   };
 }
@@ -216,14 +201,27 @@ function fromMirror(row: MirrorRow): Entitlements {
   return {
     planId: row.plan,
     premium,
-    // The mirror stores the tier, not each number: allowances come from the plan
-    // catalogue, so tuning `autumn.config.ts` does not need a re-sync of every row.
-    limits: premium ? PLAN_LIMITS.pro : PLAN_LIMITS.free,
     periodEnd: row.premiumUntil ? row.premiumUntil.getTime() : null,
     cancelPending: false,
     interval: row.planInterval,
     hasStripeCustomer: Boolean(row.stripeCustomerId),
   };
+}
+
+/**
+ * The `premium_until` value to mirror.
+ *
+ * A lapsed plan gets a past timestamp so `isPremium` goes false; user data is
+ * never touched. But a **premium** customer must never get one: Autumn can
+ * report an active subscription with no `current_period_end` (a trial, a
+ * manually granted plan, or simply an omitted field), and writing the epoch
+ * there would make `isPremium` false at all five gates — a paying customer
+ * silently locked out of what they bought. In that case we grant access to just
+ * past the mirror TTL, so the next sync is what decides.
+ */
+export function premiumUntilFor(ent: Entitlements): Date {
+  if (!ent.premium) return new Date(0);
+  return new Date(ent.periodEnd ?? Date.now() + MIRROR_TTL_MS);
 }
 
 async function writeMirror(
@@ -239,9 +237,7 @@ async function writeMirror(
       plan: ent.premium ? "pro" : "free",
       planStatus: ent.planId,
       planInterval: ent.interval,
-      // A lapsed plan gets a past timestamp so `isPremium` goes false; user data
-      // is never touched.
-      premiumUntil: ent.premium && ent.periodEnd ? new Date(ent.periodEnd) : new Date(0),
+      premiumUntil: premiumUntilFor(ent),
       billingSyncedAt: new Date(),
       ...(stripeId ? { stripeCustomerId: stripeId } : {}),
     })
@@ -275,6 +271,14 @@ export async function getEntitlements(
   env: AutumnEnv,
   userId: string,
   email?: string,
+  /**
+   * When given, a stale mirror is refreshed **off the request path**: the caller
+   * gets the last known values immediately and the sync runs in the background.
+   * Without it the refresh is awaited, which puts Autumn's 4s timeout into the
+   * load of whatever page asked. Pass it from every page loader; omit it only
+   * where the fresh answer is the point (e.g. returning from checkout).
+   */
+  waitUntil?: (promise: Promise<unknown>) => void,
 ): Promise<Entitlements> {
   const [row] = await db
     .select({
@@ -294,6 +298,21 @@ export async function getEntitlements(
   const syncedAt = row.billingSyncedAt?.getTime() ?? null;
   const fresh = syncedAt !== null && Date.now() - syncedAt < MIRROR_TTL_MS;
   if (fresh) return fromMirror(row);
+
+  if (waitUntil) {
+    // Serve the stale mirror now; correct it in the background. Worst case the
+    // visitor sees one page with the previous tier, which is the right trade for
+    // never blocking a page load on someone else's API.
+    waitUntil(
+      syncFromAutumn(db, env, userId, email).catch((error: unknown) => {
+        log.error("autumn.background_sync_failed", {
+          userId,
+          error: error instanceof Error ? error.message : "unknown",
+        });
+      }),
+    );
+    return syncedAt === null ? FREE : fromMirror(row);
+  }
 
   try {
     return await syncFromAutumn(db, env, userId, email);

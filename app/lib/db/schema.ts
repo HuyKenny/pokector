@@ -71,9 +71,12 @@ export const userProfiles = sqliteTable("user_profiles", {
   plan: text("plan", { enum: ["free", "pro"] })
     .default("free")
     .notNull(),
-  planStatus: text("plan_status"), // Stripe subscription status (active/canceled/…)
+  /** Autumn plan id, for display/debugging only — nothing gates on it. */
+  planStatus: text("plan_status"),
   planInterval: text("plan_interval", { enum: ["month", "year"] }),
   stripeCustomerId: text("stripe_customer_id").unique(),
+  /** Left over from the pre-Autumn Stripe integration: no longer written or
+   * read (Autumn owns the subscription). Kept so old rows stay readable. */
   stripeSubscriptionId: text("stripe_subscription_id"),
   premiumUntil: integer("premium_until", { mode: "timestamp_ms" }),
   /** When the Autumn entitlement mirror above was last refreshed (TTL source). */
