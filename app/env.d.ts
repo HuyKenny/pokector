@@ -23,12 +23,10 @@ interface Env {
   EBAY_CERT_ID?: string;
   /** Shared token for the eBay Marketplace Account Deletion endpoint challenge. */
   EBAY_VERIFICATION_TOKEN?: string;
-  /** Stripe secret key (test in staging, live in production). Absent → billing is
-   * disabled: the pricing page still renders but checkout/portal are unavailable. */
-  STRIPE_SECRET_KEY?: string;
-  /** Stripe webhook signing secret (whsec_…) for /api/stripe/webhook signature
-   * verification. Absent → the webhook rejects everything (fail-closed). */
-  STRIPE_WEBHOOK_SECRET?: string;
+  /** Autumn secret key (am_sk_…) — billing lives on Autumn, which drives Stripe
+   * underneath. Absent → billing is disabled: the pricing page still renders but
+   * checkout/portal are unavailable (honest degraded mode). */
+  AUTUMN_SECRET_KEY?: string;
   /** JustTCG API key (x-api-key) for the Riftbound catalog + prices sync. Absent
    * → the Riftbound sync is disabled (the /riftbound catalog stays empty). */
   JUSTTCG_API_KEY?: string;

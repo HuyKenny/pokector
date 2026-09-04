@@ -6,7 +6,8 @@
     "eslint.config.js",
     "vitest.config.ts",
     "drizzle.config.ts",
-    "better-auth.config.ts"
+    "better-auth.config.ts",
+    "autumn.config.ts"
   ],
   "compilerOptions": {
     "composite": true,

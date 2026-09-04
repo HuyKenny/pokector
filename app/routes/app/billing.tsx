@@ -6,11 +6,13 @@ import type { Route } from "./+types/billing";
 import { Alert, Button, Card } from "~/components/ui";
 import { requireUser } from "~/lib/auth/guards.server";
 import {
-  createBillingPortalSession,
-  createCheckoutSession,
-  stripeConfigured,
-} from "~/lib/billing/stripe.server";
-import { isPremium } from "~/lib/billing/entitlement.server";
+  autumnConfigured,
+  billingPortalUrl,
+  createCheckout,
+  getEntitlements,
+  PLANS,
+  syncFromAutumn,
+} from "~/lib/billing/autumn.server";
 import { getCloudflare } from "~/lib/context";
 import { createDb, schema } from "~/lib/db/index.server";
 
@@ -22,23 +24,29 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const profile = await db.query.userProfiles.findFirst({
-    where: eq(schema.userProfiles.userId, session.user.id),
-    columns: {
-      plan: true,
-      planStatus: true,
-      planInterval: true,
-      premiumUntil: true,
-      stripeCustomerId: true,
-    },
-  });
+  const justPaid = new URL(request.url).searchParams.get("checkout") === "success";
+
+  // Coming back from checkout, sync straight away: waiting for the mirror TTL
+  // would show the customer "Free" on the page they land on after paying.
+  let ent;
+  if (justPaid && autumnConfigured(env)) {
+    try {
+      ent = await syncFromAutumn(db, env, session.user.id, session.user.email);
+    } catch {
+      /* fall through to the mirror read below */
+    }
+  }
+  ent ??= await getEntitlements(db, env, session.user.id, session.user.email);
+
   return {
-    premium: isPremium(profile),
-    planStatus: profile?.planStatus ?? null,
-    planInterval: profile?.planInterval ?? null,
-    premiumUntil: profile?.premiumUntil ? profile.premiumUntil.toISOString().slice(0, 10) : null,
-    hasCustomer: Boolean(profile?.stripeCustomerId),
-    billingConfigured: stripeConfigured(env),
+    premium: ent.premium,
+    planId: ent.planId,
+    interval: ent.interval,
+    cancelPending: ent.cancelPending,
+    periodEnd: ent.periodEnd ? new Date(ent.periodEnd).toISOString().slice(0, 10) : null,
+    hasStripeCustomer: ent.hasStripeCustomer,
+    billingConfigured: autumnConfigured(env),
+    justPaid,
   };
 }
 
@@ -50,43 +58,51 @@ const ActionSchema = z.discriminatedUnion("intent", [
 export async function action({ request, context }: Route.ActionArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
-  if (!stripeConfigured(env)) return { error: "Billing is not configured yet." };
+  if (!autumnConfigured(env)) return { error: "Billing is not configured yet." };
 
   const parsed = ActionSchema.safeParse(Object.fromEntries(await request.formData()));
   if (!parsed.success) return { error: "Invalid request." };
 
   const db = createDb(env.DB);
-  const profile = await db.query.userProfiles.findFirst({
-    where: eq(schema.userProfiles.userId, session.user.id),
-    columns: { stripeCustomerId: true },
-  });
 
   if (parsed.data.intent === "portal") {
+    const [profile] = await db
+      .select({ stripeCustomerId: schema.userProfiles.stripeCustomerId })
+      .from(schema.userProfiles)
+      .where(eq(schema.userProfiles.userId, session.user.id))
+      .limit(1);
     if (!profile?.stripeCustomerId) return { error: "No subscription to manage." };
-    const { url } = await createBillingPortalSession(env, {
-      customerId: profile.stripeCustomerId,
-      returnUrl: `${env.APP_URL}/app/billing`,
-    });
+    const url = await billingPortalUrl(env, session.user.id, `${env.APP_URL}/app/billing`);
+    if (!url) return { error: "Could not open the billing portal — please try again." };
     return redirect(url);
   }
 
-  // Checkout
-  const priceId =
-    parsed.data.interval === "year" ? env.STRIPE_PRICE_YEARLY : env.STRIPE_PRICE_MONTHLY;
-  const { url } = await createCheckoutSession(env, {
-    priceId,
-    userId: session.user.id,
-    customerId: profile?.stripeCustomerId ?? undefined,
-    customerEmail: session.user.email,
-    successUrl: `${env.APP_URL}/app/billing?checkout=success`,
-    cancelUrl: `${env.APP_URL}/pricing`,
-  });
-  return redirect(url);
+  // Checkout: the yearly and monthly tiers are separate Autumn plans in the same
+  // group, so switching swaps the plan instead of stacking allowances.
+  const planId = parsed.data.interval === "year" ? PLANS.pro_yearly : PLANS.pro;
+  try {
+    const result = await createCheckout(db, env, session.user.id, planId, session.user.email);
+    if (result.checkoutUrl) return redirect(result.checkoutUrl);
+    if (result.alreadyActive) return { error: "You're already on this plan." };
+    // No link and the plan was not running: Autumn created a subscription nobody
+    // paid for. Never tell the customer the payment succeeded.
+    return { error: "Checkout could not be started — please contact support." };
+  } catch {
+    return { error: "Checkout is temporarily unavailable — please try again." };
+  }
 }
 
 export default function Billing({ loaderData, actionData }: Route.ComponentProps) {
-  const { premium, planStatus, planInterval, premiumUntil, hasCustomer, billingConfigured } =
-    loaderData;
+  const {
+    premium,
+    planId,
+    interval,
+    cancelPending,
+    periodEnd,
+    hasStripeCustomer,
+    billingConfigured,
+    justPaid,
+  } = loaderData;
 
   return (
     <div className="mx-auto flex max-w-2xl flex-col gap-6">
@@ -100,8 +116,14 @@ export default function Billing({ loaderData, actionData }: Route.ComponentProps
       </header>
 
       {actionData && "error" in actionData ? <Alert tone="error">{actionData.error}</Alert> : null}
+      {justPaid && premium ? <Alert tone="success">Payment received — Pro is active.</Alert> : null}
       {!billingConfigured ? (
         <Alert tone="warning">Billing isn't configured in this environment yet.</Alert>
+      ) : null}
+      {cancelPending && periodEnd ? (
+        <Alert tone="warning">
+          Your subscription is set to cancel; Pro stays active until {periodEnd}.
+        </Alert>
       ) : null}
 
       <Card>
@@ -118,22 +140,22 @@ export default function Billing({ loaderData, actionData }: Route.ComponentProps
           </div>
           {premium ? (
             <dl className="grid grid-cols-2 gap-2 text-sm">
-              <dt className="text-fg-muted">Status</dt>
-              <dd className="text-end text-fg">{planStatus ?? "active"}</dd>
+              <dt className="text-fg-muted">Plan</dt>
+              <dd className="text-end text-fg">{planId}</dd>
               <dt className="text-fg-muted">Billing</dt>
               <dd className="text-end text-fg">
-                {planInterval === "year" ? "Yearly" : planInterval === "month" ? "Monthly" : "—"}
+                {interval === "year" ? "Yearly" : interval === "month" ? "Monthly" : "—"}
               </dd>
-              {premiumUntil ? (
+              {periodEnd ? (
                 <>
-                  <dt className="text-fg-muted">Renews / ends</dt>
-                  <dd className="text-end text-fg">{premiumUntil}</dd>
+                  <dt className="text-fg-muted">{cancelPending ? "Ends" : "Renews"}</dt>
+                  <dd className="text-end text-fg">{periodEnd}</dd>
                 </>
               ) : null}
             </dl>
           ) : null}
 
-          {premium && hasCustomer ? (
+          {premium && hasStripeCustomer ? (
             <Form method="post">
               <input type="hidden" name="intent" value="portal" />
               <Button type="submit" disabled={!billingConfigured}>

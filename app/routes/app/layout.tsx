@@ -9,7 +9,7 @@ import { createDb, schema } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { resolveLocale, stripLocalePrefix } from "~/lib/i18n/locales";
 import { unreadCount } from "~/lib/notifications/queries.server";
-import { isPremium } from "~/lib/billing/entitlement.server";
+import { getEntitlements } from "~/lib/billing/autumn.server";
 
 export function meta(_args: Route.MetaArgs) {
   return [{ name: "robots", content: "noindex, nofollow" }];
@@ -23,12 +23,15 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   const session = await requireUser(context, request);
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
-  const [unread, profile] = await Promise.all([
+  // getEntitlements reads the Autumn mirror and refreshes it once past its TTL —
+  // this is the hook that lets a cancellation propagate even if a webhook is lost.
+  const [unread, profile, entitlements] = await Promise.all([
     unreadCount(db, session.user.id),
     db.query.userProfiles.findFirst({
       where: eq(schema.userProfiles.userId, session.user.id),
-      columns: { locale: true, premiumUntil: true },
+      columns: { locale: true },
     }),
+    getEntitlements(db, env, session.user.id, session.user.email),
   ]);
   // Header nav follows the user's chosen language (Settings); legacy "en-US"
   // and unknown values resolve to English.
@@ -36,7 +39,7 @@ export async function loader({ request, context }: Route.LoaderArgs) {
   return {
     unread,
     isAdmin: session.user.role === "admin",
-    premium: isPremium(profile),
+    premium: entitlements.premium,
     locale,
     market: getMarket(context),
     t: getDict(locale).layout,

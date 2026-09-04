@@ -28,7 +28,6 @@ import {
   handleRiftboundCatalogCardsPage,
   handleRiftboundCatalogSets,
 } from "./handlers/riftbound.server";
-import { handleSubscriptionSync } from "./handlers/subscription.server";
 import {
   claimNextJob,
   completeJob,
@@ -60,7 +59,6 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   alerts_evaluate: handleAlertsEvaluate,
   import_apply: handleImportApply,
   ebay_graded_seed: handleEbayGradedSeed,
-  subscription_sync: handleSubscriptionSync,
   riftbound_catalog_sets: handleRiftboundCatalogSets,
   riftbound_catalog_cards_page: handleRiftboundCatalogCardsPage,
 };

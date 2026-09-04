@@ -76,6 +76,8 @@ export const userProfiles = sqliteTable("user_profiles", {
   stripeCustomerId: text("stripe_customer_id").unique(),
   stripeSubscriptionId: text("stripe_subscription_id"),
   premiumUntil: integer("premium_until", { mode: "timestamp_ms" }),
+  /** When the Autumn entitlement mirror above was last refreshed (TTL source). */
+  billingSyncedAt: integer("billing_synced_at", { mode: "timestamp_ms" }),
   createdAt: createdAt(),
   updatedAt: updatedAt(),
 });

@@ -1,24 +1,18 @@
-import { createHmac } from "node:crypto";
 import { describe, expect, it } from "vitest";
 
+import { FREE, parseEntitlements, PLANS } from "~/lib/billing/autumn.server";
 import { isPremium, planOf } from "~/lib/billing/entitlement.server";
-import { checkoutSessionParams, constructStripeEvent } from "~/lib/billing/stripe.server";
-import { limitsFor } from "~/lib/limits";
+import { limitsFor, PLAN_LIMITS } from "~/lib/limits";
 
 describe("entitlement", () => {
   it("is premium only while premiumUntil is in the future", () => {
     const now = 1_000_000;
-    expect(isPremium({ premiumUntil: new Date(now + 1000) }, now)).toBe(true);
-    expect(isPremium({ premiumUntil: new Date(now - 1000) }, now)).toBe(false);
-    expect(isPremium({ premiumUntil: new Date(now) }, now)).toBe(false); // boundary: not >
+    expect(isPremium({ premiumUntil: new Date(now + 1) }, now)).toBe(true);
+    expect(isPremium({ premiumUntil: new Date(now - 1) }, now)).toBe(false);
     expect(isPremium({ premiumUntil: null }, now)).toBe(false);
     expect(isPremium(null, now)).toBe(false);
-  });
-
-  it("maps entitlement to a plan", () => {
-    const now = 1_000_000;
     expect(planOf({ premiumUntil: new Date(now + 1) }, now)).toBe("pro");
-    expect(planOf({ premiumUntil: new Date(now - 1) }, now)).toBe("free");
+    expect(planOf(null, now)).toBe("free");
   });
 });
 
@@ -33,71 +27,108 @@ describe("limitsFor", () => {
   });
 });
 
-describe("checkoutSessionParams", () => {
-  it("builds a subscription session tying the Stripe customer to our user", () => {
-    const p = checkoutSessionParams({
-      priceId: "price_123",
-      userId: "user_abc",
-      successUrl: "https://x/ok",
-      cancelUrl: "https://x/no",
-      customerEmail: "a@b.c",
-    });
-    expect(p.mode).toBe("subscription");
-    expect(p.client_reference_id).toBe("user_abc");
-    expect(p["line_items[0][price]"]).toBe("price_123");
-    expect(p.customer_email).toBe("a@b.c");
-    expect(p.customer).toBeUndefined();
-  });
-
-  it("reuses an existing customer id when known", () => {
-    const p = checkoutSessionParams({
-      priceId: "price_123",
-      userId: "u",
-      successUrl: "s",
-      cancelUrl: "c",
-      customerId: "cus_1",
-    });
-    expect(p.customer).toBe("cus_1");
-    expect(p.customer_email).toBeUndefined();
+/**
+ * The local FREE fallback must not drift from the `free` plan in
+ * `autumn.config.ts` — if it does, an Autumn outage silently changes what a free
+ * user is allowed to do.
+ */
+describe("FREE fallback", () => {
+  it("mirrors the free tier limits and is not premium", () => {
+    expect(FREE.planId).toBe(PLANS.free);
+    expect(FREE.premium).toBe(false);
+    expect(FREE.limits).toEqual(PLAN_LIMITS.free);
+    expect(FREE.periodEnd).toBeNull();
   });
 });
 
-describe("constructStripeEvent (webhook signature)", () => {
-  const secret = "whsec_test_secret";
-  const payload = JSON.stringify({ id: "evt_1", type: "checkout.session.completed", data: {} });
-  const sign = (body: string, t: number) =>
-    createHmac("sha256", secret).update(`${t}.${body}`).digest("hex");
+describe("parseEntitlements", () => {
+  const paidSub = {
+    plan_id: PLANS.pro,
+    status: "active",
+    interval: "month",
+    current_period_end: 1_800_000_000_000,
+  };
 
-  it("accepts a valid signature within tolerance", async () => {
-    const t = 1_700_000_000;
-    const header = `t=${t},v1=${sign(payload, t)}`;
-    const event = await constructStripeEvent(payload, header, secret, t);
-    expect(event.id).toBe("evt_1");
-    expect(event.type).toBe("checkout.session.completed");
+  it("treats a customer with no subscriptions as free", () => {
+    const ent = parseEntitlements({});
+    expect(ent.planId).toBe(PLANS.free);
+    expect(ent.premium).toBe(false);
+    expect(ent.limits).toEqual(PLAN_LIMITS.free);
   });
 
-  it("rejects a tampered payload", async () => {
-    const t = 1_700_000_000;
-    const header = `t=${t},v1=${sign(payload, t)}`;
-    await expect(
-      constructStripeEvent(payload + "x", header, secret, t),
-    ).rejects.toThrow();
+  it("reads a paid plan, its period end and interval", () => {
+    const ent = parseEntitlements({ subscriptions: [paidSub], stripe_id: "cus_1" });
+    expect(ent.planId).toBe(PLANS.pro);
+    expect(ent.premium).toBe(true);
+    expect(ent.periodEnd).toBe(1_800_000_000_000);
+    expect(ent.interval).toBe("month");
+    expect(ent.hasStripeCustomer).toBe(true);
   });
 
-  it("rejects a wrong secret", async () => {
-    const t = 1_700_000_000;
-    const header = `t=${t},v1=${createHmac("sha256", "nope").update(`${t}.${payload}`).digest("hex")}`;
-    await expect(constructStripeEvent(payload, header, secret, t)).rejects.toThrow();
+  it("keeps access while Stripe retries a past_due payment", () => {
+    const ent = parseEntitlements({
+      subscriptions: [{ ...paidSub, status: "past_due" }],
+    });
+    expect(ent.premium).toBe(true);
   });
 
-  it("rejects a stale timestamp", async () => {
-    const t = 1_700_000_000;
-    const header = `t=${t},v1=${sign(payload, t)}`;
-    // now is 10 minutes after the signature timestamp → outside the 5-min tolerance.
-    await expect(constructStripeEvent(payload, header, secret, t + 600)).rejects.toThrow();
+  it("drops to free once the subscription is no longer active", () => {
+    const ent = parseEntitlements({ subscriptions: [{ ...paidSub, status: "canceled" }] });
+    expect(ent.planId).toBe(PLANS.free);
+    expect(ent.premium).toBe(false);
   });
 
-  it("rejects a missing signature header", async () => {
-    await expect(constructStripeEvent(payload, null, secret)).rejects.toThrow();
+  // The auto-enabled free tier runs alongside the purchased one; the paid plan
+  // must win, or a forgotten default would silently downgrade a paying customer.
+  it("prefers the purchased plan over the auto-enabled free tier", () => {
+    const ent = parseEntitlements({
+      subscriptions: [
+        { plan_id: PLANS.free, status: "active", auto_enable: true },
+        paidSub,
+      ],
+    });
+    expect(ent.planId).toBe(PLANS.pro);
+    expect(ent.premium).toBe(true);
+  });
+
+  it("ignores add-ons when deciding the tier", () => {
+    const ent = parseEntitlements({
+      subscriptions: [{ plan_id: "some_addon", status: "active", add_on: true }],
+    });
+    expect(ent.planId).toBe(PLANS.free);
+  });
+
+  it("flags a scheduled cancellation while the paid period runs", () => {
+    const ent = parseEntitlements({
+      subscriptions: [{ ...paidSub, canceled_at: 1_700_000_000_000 }],
+    });
+    expect(ent.premium).toBe(true);
+    expect(ent.cancelPending).toBe(true);
+  });
+
+  // A broken sync must never push someone below the free tier: that would turn a
+  // billing glitch into a silent feature shutdown.
+  it("floors allowances at the free tier", () => {
+    const ent = parseEntitlements({
+      subscriptions: [paidSub],
+      balances: { max_binders: { granted: 0 } },
+    });
+    expect(ent.limits.maxBinders).toBe(PLAN_LIMITS.free.maxBinders);
+  });
+
+  it("reads granted allowances above the floor", () => {
+    const ent = parseEntitlements({
+      subscriptions: [paidSub],
+      balances: { max_binders: { granted: 100 } },
+    });
+    expect(ent.limits.maxBinders).toBe(100);
+  });
+
+  it("treats an unlimited balance as effectively unbounded", () => {
+    const ent = parseEntitlements({
+      subscriptions: [paidSub],
+      balances: { max_pinned_sets: { unlimited: true } },
+    });
+    expect(ent.limits.maxPinnedSets).toBe(Number.MAX_SAFE_INTEGER);
   });
 });

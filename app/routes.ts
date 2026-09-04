@@ -119,8 +119,6 @@ export default [
   route("api/v1/pokedex/favorite", "routes/api/pokedex-favorite.ts"),
   // eBay Marketplace Account Deletion compliance webhook
   route("api/ebay/marketplace-deletion", "routes/api/ebay-marketplace-deletion.ts"),
-  // Stripe subscription webhook (signature-verified, unauthenticated)
-  route("api/stripe/webhook", "routes/api/stripe-webhook.ts"),
 
   // ── Administration ─────────────────────────────────────────────────────────
   layout("routes/admin/layout.tsx", [
