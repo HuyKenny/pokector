@@ -18,6 +18,26 @@ const PTCG_IMAGE_HOSTS = ["https://images.pokemontcg.io", "https://images.scryde
  * (JustTCG returns no image URLs). Same host for list + detail sizes. */
 const TCGPLAYER_IMAGE_HOSTS = ["https://tcgplayer-cdn.tcgplayer.com"];
 const TURNSTILE_HOST = "https://challenges.cloudflare.com";
+/**
+ * Where a checkout/portal redirect is allowed to land.
+ *
+ * Billing runs on Autumn, which hands back a **hosted Stripe** URL that we answer
+ * with a 302 from our own form action. `'self'` alone is not enough: our Stripe
+ * custom domain `pay.pokector.com` is a different origin (`'self'` never covers
+ * subdomains), and Stripe's own hosts are used when the custom domain is not
+ * applied to a given session.
+ *
+ * Chrome and Safari do not check `form-action` against redirects, but Firefox has
+ * historically blocked exactly this shape — which would silently break "Go Pro"
+ * for those visitors while everything looked fine in the logs. Listing the
+ * destinations removes that whole class of failure.
+ */
+const PAYMENT_HOSTS = [
+  "https://pay.pokector.com",
+  "https://checkout.stripe.com",
+  "https://billing.stripe.com",
+];
+
 
 /** Google Analytics 4 (gtag.js). Loaded only in production (see app/root.tsx),
  * so these origins are added to the CSP only when `production` is set. */
@@ -57,7 +77,7 @@ export function contentSecurityPolicy(options: SecurityOptions): string {
     `connect-src 'self'${gaConnect}`,
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    `form-action 'self' ${PAYMENT_HOSTS.join(" ")}`,
     "frame-ancestors 'none'",
     "upgrade-insecure-requests",
   ].join("; ");
