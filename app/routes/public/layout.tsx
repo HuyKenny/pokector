@@ -180,7 +180,34 @@ export default function PublicLayout({ loaderData }: Route.ComponentProps) {
               </a>
             </nav>
           </div>
-          <p className="max-w-3xl text-xs text-fg-faint">{t.disclaimer}</p>
+          <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+            <p className="max-w-3xl text-xs text-fg-faint">{t.disclaimer}</p>
+            {/*
+             * PeerPush hands out a "verified" badge to a listing whose product
+             * links back from its homepage, and confirms it by fetching that
+             * page; verified products rank higher in its feeds and search.
+             *
+             * Homepage only. This footer renders on every public page, and a
+             * site-wide outbound link to a directory buys nothing beyond what
+             * the single page they actually fetch already earns. `barePath` is
+             * the locale-stripped path, so every localized homepage counts and
+             * no other page does.
+             *
+             * Untranslated, and left dofollow: their fetcher only looks for the
+             * href, but a `nofollow` on the one link a verifier reads is what
+             * makes an automated check fail with no stated reason.
+             */}
+            {barePath === "/" ? (
+              <a
+                href="https://peerpush.com/p/pokector"
+                target="_blank"
+                rel="noopener"
+                className="text-xs text-fg-faint hover:text-fg"
+              >
+                Listed on PeerPush
+              </a>
+            ) : null}
+          </div>
         </div>
       </footer>
     </div>
