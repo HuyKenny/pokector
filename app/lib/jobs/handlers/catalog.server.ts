@@ -34,6 +34,28 @@ async function batchStatements(db: Database, statements: BatchStatement[]) {
   }
 }
 
+/**
+ * Run raw D1 prepared statements in chunks.
+ *
+ * `card_search` is an FTS5 virtual table that Drizzle does not model, so its
+ * writes go through the native binding.
+ *
+ * These statements must NOT be built with `db.run()` and handed to `db.batch()`.
+ * `db.run()` returns a `SQLiteRaw`, whose `_prepare()` returns itself and which
+ * has no `stmt` property — while Drizzle's D1 `batch()` calls
+ * `preparedQuery.stmt.bind(...)` for any statement that has parameters. That
+ * threw `TypeError: Cannot read properties of undefined (reading 'bind')` on
+ * every single card page, and because the card rows are written *earlier* in the
+ * handler and the prices *later*, the failure was invisible on the site: cards
+ * kept appearing while every price silently froze.
+ */
+export async function batchD1(db: Env["DB"], statements: D1PreparedStatement[]) {
+  const CHUNK = 20;
+  for (let i = 0; i < statements.length; i += CHUNK) {
+    await db.batch(statements.slice(i, i + CHUNK));
+  }
+}
+
 // ── catalog_sets ─────────────────────────────────────────────────────────────
 
 export interface CatalogSetsPayload {
@@ -242,15 +264,15 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
       series: info?.series ?? "",
     });
     return [
-      db.run(sql`DELETE FROM card_search WHERE card_id = ${card.id}`),
-      db.run(sql`
-        INSERT INTO card_search
-          (card_id, name, set_name, series, number, rarity, artist, dex, supertype)
-        VALUES (${v[0]}, ${v[1]}, ${v[2]}, ${v[3]}, ${v[4]}, ${v[5]}, ${v[6]}, ${v[7]}, ${v[8]})
-      `),
+      env.DB.prepare("DELETE FROM card_search WHERE card_id = ?").bind(v[0]),
+      env.DB.prepare(
+        `INSERT INTO card_search
+           (card_id, name, set_name, series, number, rarity, artist, dex, supertype)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      ).bind(...v),
     ];
   });
-  await batchStatements(db, ftsStatements);
+  await batchD1(env.DB, ftsStatements);
 
   let pricesUpserted = 0;
   const priceStatements = usable.flatMap(({ card, prices }) =>
