@@ -77,10 +77,11 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers(_args: Route.HeadersArgs) {
-  // `private` (not shared/edge cache): the rendered market depends on the
-  // pk_market cookie, so a shared cache keyed only on the URL would leak one
-  // market's prices to visitors on the other. Browsers still cache per-user.
-  return { "Cache-Control": "private, max-age=300, stale-while-revalidate=3600" };
+  // Shareable since 2026-09-23: cookie-less visitors always get DEFAULT_MARKET
+  // (the geolocation default was removed in workers/app.ts) and the edge cache
+  // in workers/html-cache.ts skips any request carrying pk_market, pk_game or a
+  // session cookie — so a shared entry only ever holds the anonymous render.
+  return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" };
 }
 
 export async function loader({ params, request, context }: Route.LoaderArgs) {

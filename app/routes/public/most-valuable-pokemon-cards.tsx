@@ -34,8 +34,11 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers(_args: Route.HeadersArgs) {
-  // `private`: the ranking is denominated in the visitor's market (cookie).
-  return { "Cache-Control": "private, max-age=300, stale-while-revalidate=3600" };
+  // Shareable since 2026-09-23: cookie-less visitors always get DEFAULT_MARKET
+  // (the geolocation default was removed in workers/app.ts) and the edge cache
+  // in workers/html-cache.ts skips any request carrying pk_market, pk_game or a
+  // session cookie — so a shared entry only ever holds the anonymous render.
+  return { "Cache-Control": "public, s-maxage=300, stale-while-revalidate=3600" };
 }
 
 export async function loader({ context }: Route.LoaderArgs) {

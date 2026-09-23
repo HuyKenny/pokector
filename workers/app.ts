@@ -8,10 +8,11 @@ import {
   requestIdContext,
 } from "../app/lib/context";
 import { DEFAULT_GAME, gameFromCookieHeader } from "../app/lib/game/game";
-import { marketFromCookieHeader, marketFromCountry } from "../app/lib/market/market";
+import { DEFAULT_MARKET, marketFromCookieHeader } from "../app/lib/market/market";
 import { onQueueBatch, onScheduled } from "../app/lib/jobs/runtime.server";
 import { log } from "../app/lib/log.server";
 import { applySecurityHeaders } from "../app/lib/security/headers.server";
+import { isCacheable, isStorable, readCache, writeCache } from "./html-cache";
 import { isTrustedOrigin } from "../app/lib/security/origin.server";
 
 const requestHandler = createRequestHandler(
@@ -46,6 +47,18 @@ export default {
         const redirect = canonicalRedirect(url, env);
         if (redirect) return redirect;
       }
+      // Public HTML is served from the Cache API when we have it. A Cache Rule
+      // cannot do this for us — see the header of workers/html-cache.ts. The
+      // same predicate gates reading and writing, so a request we declined to
+      // read is never stored either.
+      const cacheable = isCacheable(request, url);
+      if (cacheable) {
+        const hit = await readCache(request);
+        if (hit) {
+          hit.headers.set("X-Request-Id", requestId);
+          return hit;
+        }
+      }
       const nonce = btoa(String.fromCharCode(...crypto.getRandomValues(new Uint8Array(16))));
       const securityOptions = {
         secure: env.ENVIRONMENT !== "development",
@@ -72,10 +85,14 @@ export default {
       routerContext.set(cloudflareContext, { env, ctx });
       routerContext.set(requestIdContext, requestId);
       routerContext.set(nonceContext, nonce);
-      // Market = explicit cookie choice, else Cloudflare geolocation default.
-      const market =
-        marketFromCookieHeader(request.headers.get("cookie")) ??
-        marketFromCountry(request.cf?.country);
+      // Market = explicit cookie choice, else the default (US).
+      //
+      // The geolocation default was REMOVED on 2026-09-23 so this HTML can be
+      // edge-cached — see workers/html-cache.ts. While it came from cf.country,
+      // a German and an American visitor with no cookie shared one cache entry
+      // and one of them got the wrong currency. Visitors who pick a market
+      // still get theirs from the cookie, which the cache deliberately skips.
+      const market = marketFromCookieHeader(request.headers.get("cookie")) ?? DEFAULT_MARKET;
       routerContext.set(marketContext, market);
       // Remembered game preference (active game is URL-derived; this is only the
       // "where to land" hint for the logo/home link and the game switcher).
@@ -86,6 +103,14 @@ export default {
       const response = await requestHandler(request, routerContext);
       const secured = applySecurityHeaders(response, securityOptions);
       secured.headers.set("X-Request-Id", requestId);
+      if (cacheable) {
+        if (isStorable(secured)) {
+          secured.headers.set("X-Cache", "MISS");
+          ctx.waitUntil(writeCache(request, secured.clone()));
+        } else {
+          secured.headers.set("X-Cache", "BYPASS");
+        }
+      }
       log.info("request", {
         requestId,
         environment: env.ENVIRONMENT,

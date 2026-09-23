@@ -45,11 +45,13 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers({ loaderHeaders }: Route.HeadersArgs) {
-  // Personalized (signed-in) responses must never be publicly cached; the
-  // loader sets the right policy via data() headers.
+  // The loader owns the policy and returns `private, no-store` whenever the
+  // response carries a signed-in visitor's set progress. The fallback below is
+  // the anonymous case, which is shareable since 2026-09-23 — see the note in
+  // workers/html-cache.ts for why a URL-keyed cache is safe there.
   return {
     "Cache-Control":
-      loaderHeaders.get("Cache-Control") ?? "private, max-age=300, stale-while-revalidate=3600",
+      loaderHeaders.get("Cache-Control") ?? "public, s-maxage=300, stale-while-revalidate=3600",
   };
 }
 
@@ -103,10 +105,11 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
   return dataResponse(payload, {
     headers: {
-      // `private` even when anonymous: the priced values depend on the market cookie.
+      // Signed-in progress is per-user and must never be shared; the anonymous
+      // branch is shareable (see headers() above).
       "Cache-Control": progress
         ? "private, no-store"
-        : "private, max-age=300, stale-while-revalidate=3600",
+        : "public, s-maxage=300, stale-while-revalidate=3600",
     },
   });
 }

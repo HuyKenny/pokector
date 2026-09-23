@@ -26,10 +26,11 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
 }
 
 export function headers(_args: Route.HeadersArgs) {
-  // Global data only; personal overlay (owned/favourites) is fetched client-side
-  // from /api/v1/pokedex/me so this stays edge-cacheable for everyone.
-  // `private`: the average prices depend on the market cookie (USD vs EUR).
-  return { "Cache-Control": "private, max-age=1800, stale-while-revalidate=86400" };
+  // Shareable since 2026-09-23: cookie-less visitors always get DEFAULT_MARKET
+  // (the geolocation default was removed in workers/app.ts) and the edge cache
+  // in workers/html-cache.ts skips any request carrying pk_market, pk_game or a
+  // session cookie — so a shared entry only ever holds the anonymous render.
+  return { "Cache-Control": "public, s-maxage=1800, stale-while-revalidate=3600" };
 }
 
 export async function loader({ params, context }: Route.LoaderArgs) {

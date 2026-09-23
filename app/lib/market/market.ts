@@ -10,8 +10,16 @@
  * Unlike locale (which is URL-based because Google indexes languages
  * separately), the market is a personalization preference stored in a COOKIE:
  * canonical URLs strip query strings and hreflang is a locale×path matrix, so a
- * market URL dimension would only bloat the SEO surface with no benefit. The
- * default for a first-time visitor comes from Cloudflare geolocation.
+ * market URL dimension would only bloat the SEO surface with no benefit.
+ *
+ * ⚠️ The default for a first-time visitor is `DEFAULT_MARKET`, NOT geolocation.
+ * It used to fall back to `marketFromCountry(request.cf.country)`; that was
+ * removed on 2026-09-23 because it made the HTML uncacheable — Cloudflare's
+ * cache key is effectively just the URL (country and cookie components are
+ * Enterprise-only), so a German and an American visitor with no cookie shared
+ * one entry and one of them saw the wrong currency. Do not reintroduce a
+ * per-visitor default without removing the edge cache in workers/html-cache.ts.
+ * A `Vary` header does NOT help: Cloudflare does not key the cache on it.
  */
 
 export const MARKETS = ["us", "eu"] as const;
@@ -63,7 +71,13 @@ export const EU_COUNTRIES: ReadonlySet<string> = new Set([
   "GB", "CH",
 ]);
 
-/** Geolocation default: EU/EEA/UK/CH → "eu", otherwise "us". */
+/**
+ * Geolocation default: EU/EEA/UK/CH → "eu", otherwise "us".
+ *
+ * No longer used for the request default — see the module comment above. Kept
+ * as a correct pure helper (the browser would want the same mapping if we ever
+ * resolve the market client-side); nothing in the request path should call it.
+ */
 export function marketFromCountry(country: string | null | undefined): Market {
   return country && EU_COUNTRIES.has(country.toUpperCase()) ? "eu" : "us";
 }
