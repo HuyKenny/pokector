@@ -88,6 +88,8 @@ const de: Dict = {
     feature4Body:
       "Ordne deine Karten in visuelle 9er-Ordnerseiten, halte Ordner privat oder teile sie per Link.",
     latestSetsHeading: "Neueste Sets",
+    popularPokemonHeading: "Beliebte Pokémon",
+    fullPokedex: "Kompletter Pokédex",
     allSets: "Alle Sets →",
     cardsCount: "{count} Karten",
     noImage: "Kein Bild",
@@ -384,6 +386,7 @@ const de: Dict = {
     historyStartNote:
       "Tracking seit {date}. Werte zwischen Beobachtungen führen den zuletzt bekannten Preis fort.",
     relatedHeading: "Mehr aus {setName}",
+    allSpeciesCards: "Alle {name}-Karten",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

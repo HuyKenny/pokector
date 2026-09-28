@@ -2,7 +2,7 @@ import { drizzle } from "drizzle-orm/d1";
 import { sql } from "drizzle-orm";
 import { describe, expect, it, vi } from "vitest";
 
-import { batchD1 } from "~/lib/jobs/handlers/catalog.server";
+import { batchD1, dedupeSlugs } from "~/lib/jobs/handlers/catalog.server";
 
 /**
  * A stand-in for the D1 binding: `prepare()` returns a statement that records
@@ -80,5 +80,34 @@ describe("drizzle db.run() cannot be batched (documents the bug)", () => {
       ] as never),
     ).rejects.toThrow(/bind/);
     spy.mockRestore();
+  });
+});
+
+describe("dedupeSlugs", () => {
+  /** Minimal stand-in for `db.select().from().where()` returning fixed owners. */
+  const dbWith = (rows: { id: string; slug: string }[]) =>
+    ({
+      select: () => ({ from: () => ({ where: () => Promise.resolve(rows) }) }),
+    }) as unknown as Parameters<typeof dedupeSlugs>[0];
+
+  it("suffixes a card whose slug is held by a different card", async () => {
+    const cards = [{ id: "ex10-?", slug: "ex10--unown" }];
+    await dedupeSlugs(dbWith([{ id: "ex10-!", slug: "ex10--unown" }]), cards);
+    expect(cards[0].slug).toBe("ex10--unown-ex10");
+  });
+
+  it("keeps the slug when the card already owns it", async () => {
+    const cards = [{ id: "a-1", slug: "a-1-foo" }];
+    await dedupeSlugs(dbWith([{ id: "a-1", slug: "a-1-foo" }]), cards);
+    expect(cards[0].slug).toBe("a-1-foo");
+  });
+
+  it("resolves collisions inside one page", async () => {
+    const cards = [
+      { id: "a-1", slug: "dup" },
+      { id: "a-2", slug: "dup" },
+    ];
+    await dedupeSlugs(dbWith([]), cards);
+    expect(cards.map((c) => c.slug)).toEqual(["dup", "dup-a-2"]);
   });
 });

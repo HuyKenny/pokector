@@ -27,6 +27,7 @@ import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { MARKET_CURRENCY, MARKET_SOURCE } from "~/lib/market/market";
+import { speciesHubsForCard } from "~/lib/pokedex/species-slug";
 import { formatMinor } from "~/lib/money/decimal";
 import { breadcrumbJsonLd, canonicalUrl, JsonLd, pageMeta, productJsonLd } from "~/lib/seo/meta";
 
@@ -71,7 +72,15 @@ export function meta({ loaderData: data }: Route.MetaArgs) {
     // Preload the LCP card image so the browser fetches it as soon as the HTML
     // head is parsed, in parallel with the CSS/JS.
     ...(lcpImage
-      ? [{ tagName: "link" as const, rel: "preload", as: "image", href: lcpImage, fetchPriority: "high" }]
+      ? [
+          {
+            tagName: "link" as const,
+            rel: "preload",
+            as: "image",
+            href: lcpImage,
+            fetchPriority: "high",
+          },
+        ]
       : []),
   ];
 }
@@ -129,9 +138,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
   const activePrices = detail.prices.filter((p) => p.source === MARKET_SOURCE[market]);
   const headlinePriceMinor =
-    activePrices.length > 0
-      ? Math.max(...activePrices.map((p) => p.normalizedPriceMinor))
-      : null;
+    activePrices.length > 0 ? Math.max(...activePrices.map((p) => p.normalizedPriceMinor)) : null;
 
   // eBay Partner Network affiliate search link (US marketplace). Null when the
   // campaign id isn't configured → the button is hidden.
@@ -150,6 +157,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 
   return {
     detail,
+    speciesHubs: speciesHubsForCard(detail.card.nationalPokedexNumbersJson),
     history,
     gradedHistoryPsa9,
     gradedHistoryPsa10,
@@ -174,12 +182,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
  * Decorative here; the link carries the localized label. */
 function EbayLogo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 1000 400.75098"
-      className={className}
-      aria-hidden="true"
-      focusable="false"
-    >
+    <svg viewBox="0 0 1000 400.75098" className={className} aria-hidden="true" focusable="false">
       <path
         fill="#ffbc13"
         d="m 633.07803,212.53323 c -45.43873,1.48929 -73.6715,9.689 -73.6715,39.61897 0,19.37591 15.44713,40.38162 54.66334,40.38162 52.57698,0 80.64259,-28.65902 80.64259,-75.66331 l 0.003,-5.16994 c -18.43302,0 -41.16414,0.16089 -61.63704,0.83266 z m 111.75103,62.10248 c 0,14.58313 0.42155,28.9782 1.69406,41.94092 h -46.61408 c -1.24325,-10.67368 -1.6972,-21.27945 -1.6972,-31.56656 -25.20195,30.97941 -55.17735,39.88537 -96.76149,39.88537 -61.67674,0 -94.70072,-32.59982 -94.70072,-70.30689 0,-54.61215 44.91583,-73.86739 122.89013,-75.65391 21.32332,-0.48686 45.27419,-0.55894 65.07531,-0.55894 l -0.003,-5.33606 c 0,-36.56098 -23.44364,-51.59335 -64.06765,-51.59335 -30.15876,0 -52.38579,12.48057 -54.6764,34.0468 h -52.65168 c 5.57217,-53.77165 62.06643,-67.37115 111.74005,-67.37115 59.50837,0 109.77228,21.17288 109.77228,84.11481 z"
@@ -212,6 +215,7 @@ const VARIANT_KEYS: Record<string, keyof ReturnType<typeof getDict>["cardDetail"
 export default function CardDetail({ loaderData }: Route.ComponentProps) {
   const {
     detail,
+    speciesHubs,
     history,
     gradedHistoryPsa9,
     gradedHistoryPsa10,
@@ -397,6 +401,20 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
               · #{card.number}
               {card.rarity ? ` · ${card.rarity}` : ""}
             </p>
+            {speciesHubs.length > 0 ? (
+              // Per-Pokémon hubs are EN-only routes, so no locale prefix here.
+              <p className="mt-1 flex flex-wrap gap-x-4 text-sm">
+                {speciesHubs.map((h) => (
+                  <Link
+                    key={h.slug}
+                    to={`/pokemon/${h.slug}`}
+                    className="text-accent hover:underline"
+                  >
+                    {interpolate(t.allSpeciesCards, { name: h.name })} →
+                  </Link>
+                ))}
+              </p>
+            ) : null}
           </div>
 
           <dl className="grid grid-cols-2 gap-x-6 gap-y-2 text-sm sm:grid-cols-3">
@@ -516,7 +534,9 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
                           <td className="py-2 pe-4 text-end font-semibold tabular-nums text-fg">
                             {money(stat.valueMinor)}
                           </td>
-                          <td className="py-2 pe-4 text-end tabular-nums">{money(stat.lowMinor)}</td>
+                          <td className="py-2 pe-4 text-end tabular-nums">
+                            {money(stat.lowMinor)}
+                          </td>
                           <td className="py-2 pe-4 text-end tabular-nums">{money(null)}</td>
                           <td className="py-2 text-end tabular-nums">{money(stat.highMinor)}</td>
                         </tr>
@@ -615,8 +635,7 @@ export default function CardDetail({ loaderData }: Route.ComponentProps) {
             <div className="flex flex-wrap items-center gap-2" role="status">
               {cardState.ownedQuantity > 0 ? (
                 <span className="inline-flex items-center gap-1 rounded-full bg-positive/15 px-3 py-1 text-sm font-medium text-positive">
-                  ✓{" "}
-                  {interpolate(t.ownedBadge, { count: cardState.ownedQuantity })}
+                  ✓ {interpolate(t.ownedBadge, { count: cardState.ownedQuantity })}
                   {cardState.variants.length
                     ? interpolate(t.ownedVariants, {
                         variants: cardState.variants.map(variantLabel).join(", "),

@@ -88,6 +88,8 @@ const ru: Dict = {
     feature4Body:
       "Размещайте карты на визуальных страницах альбома с 9 ячейками, держите альбомы приватными или делитесь ими по ссылке.",
     latestSetsHeading: "Последние сеты",
+    popularPokemonHeading: "Популярные покемоны",
+    fullPokedex: "Весь Покедекс",
     allSets: "Все сеты →",
     cardsCount: "{count} карт",
     noImage: "Нет изображения",
@@ -383,6 +385,7 @@ const ru: Dict = {
     historyStartNote:
       "Отслеживается с {date}. Значения между наблюдениями переносят последнюю известную цену.",
     relatedHeading: "Ещё из {setName}",
+    allSpeciesCards: "Все карты {name}",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

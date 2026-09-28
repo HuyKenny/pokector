@@ -12,6 +12,7 @@ import { ftsRowValues } from "../../catalog/search.server";
 import { createDb, schema, type Database } from "../../db/index.server";
 import { log } from "../../log.server";
 import { CARDS_PAGE_SIZE, PtcgClient, SETS_PAGE_SIZE } from "../../ptcg/client.server";
+import { slugify } from "../../seo/slug";
 import {
   addJobLog,
   enqueueJob,
@@ -53,6 +54,31 @@ export async function batchD1(db: Env["DB"], statements: D1PreparedStatement[]) 
   const CHUNK = 20;
   for (let i = 0; i < statements.length; i += CHUNK) {
     await db.batch(statements.slice(i, i + CHUNK));
+  }
+}
+
+/**
+ * Mutates `cards` so no slug collides with a different card already in the DB
+ * or with an earlier card of the same page. Exported for tests.
+ */
+export async function dedupeSlugs(db: Database, cards: { id: string; slug: string }[]) {
+  if (cards.length === 0) return;
+  const owners = new Map<string, string>();
+  for (const r of await db
+    .select({ id: schema.pokemonCards.id, slug: schema.pokemonCards.slug })
+    .from(schema.pokemonCards)
+    .where(inArray(schema.pokemonCards.slug, [...new Set(cards.map((c) => c.slug))]))) {
+    owners.set(r.slug, r.id);
+  }
+  const claimed = new Set<string>();
+  for (const card of cards) {
+    const owner = owners.get(card.slug);
+    if ((owner !== undefined && owner !== card.id) || claimed.has(card.slug)) {
+      const next = `${card.slug}-${slugify(card.id)}`;
+      log.warn("catalog.slug_collision", { cardId: card.id, slug: card.slug, owner, next });
+      card.slug = next;
+    }
+    claimed.add(card.slug);
   }
 }
 
@@ -212,6 +238,15 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
     }
     return true;
   });
+
+  // Slugs are UNIQUE but the upsert only resolves conflicts on `id`, so one card
+  // whose computed slug is already held by a different card aborts the whole
+  // 50-card batch — and the run then never completes. Give the late-comer a
+  // stable id suffix instead (the owner keeps its URL, so this is idempotent).
+  await dedupeSlugs(
+    db,
+    usable.map((n) => n.card),
+  );
 
   const cardStatements = usable.map(({ card }) =>
     db

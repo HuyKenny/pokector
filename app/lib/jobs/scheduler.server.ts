@@ -3,8 +3,8 @@
  *   - every 5 minutes → process ONE due job (fresh CPU budget per invocation;
  *     continuation is chained through queue wake-ups)
  *   - "17 5 * * *" → daily orchestrator: price history, snapshots, alerts,
- *     retention every day; the full catalog sync only ~weekly (see
- *     CATALOG_SYNC_INTERVAL_MS) since it's the dominant D1 write cost
+ *     retention and the full catalog sync every day (see
+ *     CATALOG_SYNC_INTERVAL_MS — the catalog is the dominant D1 write cost)
  */
 
 import { handleAutumnSync } from "./handlers/autumn-sync.server";
@@ -44,9 +44,10 @@ import { PtcgApiError } from "../ptcg/client.server";
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
 
 /** Minimum age of the last full catalog sync before a new one is enqueued.
- * ~6.5 days so the daily orchestrator triggers it about weekly (owner: weekly
- * is enough, 2026-07-17) without drifting to an 8-day gap. */
-const CATALOG_SYNC_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
+ * 20 h so the daily 05:17 orchestrator syncs every day (owner, 2026-09-28: weekly
+ * made the price charts and movers step in 7-day jumps). A run is ~120k D1 row
+ * writes (cards + FTS + prices), ~3.6M/month — well inside the paid plan's 50M. */
+const CATALOG_SYNC_INTERVAL_MS = 20 * 60 * 60 * 1000;
 
 type JobHandler = (job: SyncJob, env: Env) => Promise<void>;
 

@@ -96,6 +96,8 @@ export const en = {
     feature4Body:
       "Arrange your cards into visual 9-pocket binder pages, keep binders private, or share them with a link.",
     latestSetsHeading: "Latest sets",
+    popularPokemonHeading: "Popular Pokémon",
+    fullPokedex: "Full Pokédex",
     allSets: "All sets →",
     cardsCount: "{count} cards",
     noImage: "No image",
@@ -375,6 +377,7 @@ export const en = {
     historyStartNote:
       "Tracking since {date}. Values between observations carry the last known price forward.",
     relatedHeading: "More from {setName}",
+    allSpeciesCards: "All {name} cards",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

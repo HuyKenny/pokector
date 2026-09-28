@@ -88,6 +88,8 @@ const cs: Dict = {
     feature4Body:
       "Uspořádejte své karty do vizuálních stran alba po 9 kapsách, mějte alba soukromá nebo je sdílejte odkazem.",
     latestSetsHeading: "Nejnovější sety",
+    popularPokemonHeading: "Oblíbení Pokémoni",
+    fullPokedex: "Celý Pokédex",
     allSets: "Všechny sety →",
     cardsCount: "{count} karet",
     noImage: "Bez obrázku",
@@ -383,6 +385,7 @@ const cs: Dict = {
     historyStartNote:
       "Sledováno od {date}. Hodnoty mezi pozorováními přenášejí poslední známou cenu.",
     relatedHeading: "Více ze setu {setName}",
+    allSpeciesCards: "Všechny karty {name}",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

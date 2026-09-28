@@ -88,6 +88,8 @@ const fr: Dict = {
     feature4Body:
       "Rangez vos cartes dans des pages de classeur visuelles à 9 emplacements, gardez les classeurs privés ou partagez-les par un lien.",
     latestSetsHeading: "Derniers sets",
+    popularPokemonHeading: "Pokémon populaires",
+    fullPokedex: "Pokédex complet",
     allSets: "Tous les sets →",
     cardsCount: "{count} cartes",
     noImage: "Pas d’image",
@@ -385,6 +387,7 @@ const fr: Dict = {
     historyStartNote:
       "Suivi depuis le {date}. Les valeurs entre les observations reportent le dernier prix connu.",
     relatedHeading: "Plus de {setName}",
+    allSpeciesCards: "Toutes les cartes {name}",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

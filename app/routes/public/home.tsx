@@ -9,7 +9,28 @@ import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
 import { formatMinor, formatPercent } from "~/lib/money/decimal";
+import { speciesSlug } from "~/lib/pokedex/species-slug";
 import { canonicalUrl, JsonLd, organizationJsonLd, pageMeta } from "~/lib/seo/meta";
+
+/**
+ * Per-Pokémon hubs linked from the homepage. Without this they were reachable
+ * only through the Pokédex, and Google had not discovered a single one
+ * (URL Inspection, 2026-09-28: /pokemon/charizard "URL is unknown to Google").
+ */
+const POPULAR_POKEMON: { dex: number; name: string }[] = [
+  { dex: 6, name: "Charizard" },
+  { dex: 25, name: "Pikachu" },
+  { dex: 197, name: "Umbreon" },
+  { dex: 151, name: "Mew" },
+  { dex: 150, name: "Mewtwo" },
+  { dex: 94, name: "Gengar" },
+  { dex: 133, name: "Eevee" },
+  { dex: 249, name: "Lugia" },
+  { dex: 384, name: "Rayquaza" },
+  { dex: 700, name: "Sylveon" },
+  { dex: 658, name: "Greninja" },
+  { dex: 282, name: "Gardevoir" },
+];
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
@@ -248,6 +269,38 @@ export default function Home({ loaderData }: Route.ComponentProps) {
             ))}
           </ul>
         )}
+      </section>
+
+      {/* Popular Pokémon → per-Pokémon hubs (EN-only routes, no locale prefix) */}
+      <section aria-labelledby="pokemon-heading">
+        <div className="mb-6 flex items-baseline justify-between">
+          <h2 id="pokemon-heading" className="text-2xl font-bold text-fg">
+            {t.popularPokemonHeading}
+          </h2>
+          <Link to={lp("/pokedex")} className="text-sm font-medium text-accent hover:underline">
+            {t.fullPokedex}
+          </Link>
+        </div>
+        <ul className="grid grid-cols-3 gap-3 sm:grid-cols-4 lg:grid-cols-6">
+          {POPULAR_POKEMON.map((p) => (
+            <li key={p.dex}>
+              <Link
+                to={`/pokemon/${speciesSlug(p.name)}`}
+                className="flex h-full flex-col items-center gap-1 rounded-(--radius-card) border border-edge bg-surface p-3 text-center hover:border-accent"
+              >
+                <img
+                  src={`/sprites/${p.dex}.png`}
+                  alt=""
+                  width={96}
+                  height={96}
+                  loading="lazy"
+                  className="h-14 w-14 object-contain"
+                />
+                <span className="text-sm font-semibold text-fg">{p.name}</span>
+              </Link>
+            </li>
+          ))}
+        </ul>
       </section>
 
       {/* Recently updated cards */}
