@@ -19,7 +19,7 @@
   // Local dev triggers (staging/production override below). Test locally via:
   // curl "http://localhost:8787/cdn-cgi/handler/scheduled?cron=*/5+*+*+*+*"
   "triggers": {
-    "crons": ["*/5 * * * *", "17 5 * * *"],
+    "crons": ["*/15 * * * *", "17 5 * * *"],
   },
   "vars": {
     "APP_NAME": "Pokector",
@@ -123,7 +123,7 @@
       "name": "pokector-production",
       "workers_dev": true,
       "triggers": {
-        "crons": ["*/5 * * * *", "17 5 * * *"],
+        "crons": ["*/15 * * * *", "17 5 * * *"],
       },
       // Custom domains (parking DNS replaced 2026-07-17). Both apex and www hit
       // the worker; www→apex 301 is handled in workers/app.ts (canonicalRedirect).

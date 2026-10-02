@@ -11,8 +11,11 @@ import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { buildFtsMatch, CARD_SEARCH_BM25_WEIGHTS } from "./search.server";
 
 /** TTL (s) for the visitor-identical aggregate caches (per market). */
-const MOVERS_CACHE_TTL = 600;
-const POKEDEX_CACHE_TTL = 900;
+// Prices change once per catalog/price run (at most daily), so lists are cached for a day.
+// 10–15 min TTLs let crawlers re-run full-catalog scans thousands of times a day (2026-10-02:
+// ~400 M D1 rows read/day from these three lists alone).
+const MOVERS_CACHE_TTL = 86_400;
+const POKEDEX_CACHE_TTL = 86_400;
 
 export const CATALOG_PAGE_SIZE = 24;
 export const MAX_PAGE = 400;
@@ -505,7 +508,7 @@ export async function getSetBySlug(db: Database, slug: string, market: Market = 
 // ── Most valuable cards (value pillar + per-set module) ──────────────────────
 
 /** TTL (s) for the most-valuable aggregate (per market, per scope). */
-const TOP_VALUE_CACHE_TTL = 900;
+const TOP_VALUE_CACHE_TTL = 86_400;
 /** Upper sanity guard: drop rows above $1,000,000 (100M minor) — never a real
  * live-market TCGplayer/Cardmarket figure, so almost always corrupt data. */
 const TOP_VALUE_MAX_MINOR = 100_000_000;

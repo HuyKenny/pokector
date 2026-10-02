@@ -44,10 +44,10 @@ import { PtcgApiError } from "../ptcg/client.server";
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
 
 /** Minimum age of the last full catalog sync before a new one is enqueued.
- * 20 h so the daily 05:17 orchestrator syncs every day (owner, 2026-09-28: weekly
- * made the price charts and movers step in 7-day jumps). A run is ~120k D1 row
- * writes (cards + FTS + prices), ~3.6M/month — well inside the paid plan's 50M. */
-const CATALOG_SYNC_INTERVAL_MS = 20 * 60 * 60 * 1000;
+ * Back to weekly (owner, 2026-10-02: Pokector does not need frequent refreshes;
+ * the account should fit the D1 free limits). A run is ~120k row writes — above the
+ * free 100k/day — so it must not run daily. 6.5 days so the daily 05:17 tick catches it. */
+const CATALOG_SYNC_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
 
 type JobHandler = (job: SyncJob, env: Env) => Promise<void>;
 
