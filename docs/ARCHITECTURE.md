@@ -12,7 +12,7 @@ Browser
   ▼
 Cloudflare Worker (pokector-production / pokector-staging)
   ├─ fetch      → React Router v8 SSR (public site, /app, /admin, /api/v1, /api/auth, /health)
-  ├─ scheduled  → cron: job runner (*/5) + daily orchestrator (enqueues sync/snapshots/retention/alerts)
+  ├─ scheduled  → cron: daily orchestrator (chains jobs via queue wake-ups) (enqueues sync/snapshots/retention/alerts)
   └─ queue      → optional wake-up consumer (Queues available on Free plan; jobs remain D1-backed)
   │
   ├─ D1  (pokector-production)        — relational source of truth
@@ -78,7 +78,7 @@ workers/app.ts       Worker entry: fetch + scheduled + queue
 
 Verified 2026-07-17: the account's other 4 workers use 0 crons.
 
-- `pokector-production`: `*/5 * * * *` (job runner) + `17 5 * * *` (daily orchestrator) → 2 slots
+- `pokector-production`: `17 5 * * *` (daily orchestrator; was also `*/5` until 2026-10-22) → 1 slot
 - `pokector-staging`: 0 crons (jobs triggered manually via admin API); staging env overrides `triggers.crons` to `[]` because crons are inherited by default
 - 3 slots left free for the owner's other projects
 
