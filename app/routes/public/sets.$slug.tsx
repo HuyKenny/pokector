@@ -4,7 +4,7 @@ import type { Route } from "./+types/sets.$slug";
 import { optionalUser } from "~/lib/auth/guards.server";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
-import { getSetBySlug } from "~/lib/catalog/queries.server";
+import { getAdjacentSets, getSetBySlug } from "~/lib/catalog/queries.server";
 import { MARKET_CURRENCY } from "~/lib/market/market";
 import { computeSetProgress } from "~/lib/sets/progress.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";
@@ -63,7 +63,10 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   const data = await getSetBySlug(db, params.slug, market);
   if (!data) throw new Response("Set not found", { status: 404 });
 
-  const session = await optionalUser(context, request);
+  const [session, adjacent] = await Promise.all([
+    optionalUser(context, request),
+    getAdjacentSets(db, data.set),
+  ]);
   const progress = session
     ? await computeSetProgress(db, session.user.id, data.set.id, market)
     : null;
@@ -86,6 +89,7 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
       sourceUpdatedAt: data.set.sourceUpdatedAt,
     },
     cards: data.cards,
+    adjacent,
     estimatedValueMinor: data.estimatedValueMinor,
     pricedCount: data.pricedCount,
     progress: progress
@@ -117,8 +121,19 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
 const RARITY_GROUPS = ["Common", "Uncommon", "Rare"];
 
 export default function SetDetail({ loaderData }: Route.ComponentProps) {
-  const { set, cards, estimatedValueMinor, pricedCount, progress, appUrl, locale, currency, t, c } =
-    loaderData;
+  const {
+    set,
+    cards,
+    adjacent,
+    estimatedValueMinor,
+    pricedCount,
+    progress,
+    appUrl,
+    locale,
+    currency,
+    t,
+    c,
+  } = loaderData;
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
   const money = (minor: number, cur: "USD" | "EUR" = currency) => formatMinor(minor, cur, langTag);
@@ -437,6 +452,30 @@ export default function SetDetail({ loaderData }: Route.ComponentProps) {
           );
         })}
       </ul>
+
+      {/* Older / newer set — every set page links onward through the catalog. */}
+      {adjacent.older || adjacent.newer ? (
+        <nav
+          aria-label={t.breadcrumbSets}
+          className="flex justify-between gap-4 border-t border-edge pt-4 text-sm"
+        >
+          {adjacent.older ? (
+            <Link to={lp(`/sets/${adjacent.older.slug}`)} className="text-accent hover:underline">
+              ← {adjacent.older.name}
+            </Link>
+          ) : (
+            <span />
+          )}
+          {adjacent.newer ? (
+            <Link
+              to={lp(`/sets/${adjacent.newer.slug}`)}
+              className="text-end text-accent hover:underline"
+            >
+              {adjacent.newer.name} →
+            </Link>
+          ) : null}
+        </nav>
+      ) : null}
     </div>
   );
 }

@@ -61,3 +61,19 @@ describe("numberSortKey", () => {
     expect(numberSortKey("XY")).toBe(0);
   });
 });
+
+describe("cardSlug with punctuation-only numbers", () => {
+  it("spells out ? and ! so Unseen Forces' two Unown don't collide", () => {
+    expect(cardSlug("ex10", "?", "Unown")).toBe("ex10-question-unown");
+    expect(cardSlug("ex10", "!", "Unown")).toBe("ex10-exclamation-unown");
+  });
+
+  it("never emits an empty number segment", () => {
+    expect(cardSlug("x", "#", "Foo")).not.toContain("--");
+  });
+
+  it("leaves ordinary numbers unchanged", () => {
+    expect(cardSlug("ex10", "A", "Unown")).toBe("ex10-a-unown");
+    expect(cardSlug("sv3pt5", "199", "Charizard ex")).toBe("sv3pt5-199-charizard-ex");
+  });
+});

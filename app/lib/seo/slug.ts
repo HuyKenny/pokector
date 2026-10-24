@@ -22,8 +22,23 @@ export function slugify(input: string): string {
     .replace(/-{2,}/g, "-");
 }
 
+/**
+ * Card numbers that are pure punctuation (Unseen Forces has Unown "?" and "!")
+ * slugify to "" — and then both collide on "ex10--unown". Spell the symbols out.
+ */
+const NUMBER_SYMBOLS: Record<string, string> = { "?": "question", "!": "exclamation" };
+
+function numberSlug(number: string): string {
+  const plain = slugify(number);
+  if (plain.length > 0) return plain;
+  const spelled = slugify(
+    [...number].map((ch) => NUMBER_SYMBOLS[ch] ?? `u${ch.codePointAt(0)?.toString(16)}`).join(" "),
+  );
+  return spelled.length > 0 ? spelled : "x";
+}
+
 export function cardSlug(setId: string, number: string, name: string): string {
-  return `${slugify(setId)}-${slugify(number)}-${slugify(name)}`;
+  return `${slugify(setId)}-${numberSlug(number)}-${slugify(name)}`;
 }
 
 export function setSlug(setId: string, name: string): string {

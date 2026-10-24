@@ -24,3 +24,29 @@ for (const s of SPECIES) {
 export function speciesBySlug(slug: string): Species | undefined {
   return BY_SLUG.get(slug.toLowerCase());
 }
+
+const BY_DEX = new Map<number, Species>(SPECIES.map((s) => [s.dex, s]));
+
+/**
+ * Per-Pokémon hub links for a card, from its `national_pokedex_numbers_json`.
+ * Tag-team cards list several species, so this can return more than one.
+ * Malformed or unknown numbers are dropped.
+ */
+export function speciesHubsForCard(dexJson: string | null): { name: string; slug: string }[] {
+  if (!dexJson) return [];
+  let dexes: unknown;
+  try {
+    dexes = JSON.parse(dexJson);
+  } catch {
+    return [];
+  }
+  if (!Array.isArray(dexes)) return [];
+  const out: { name: string; slug: string }[] = [];
+  for (const d of dexes) {
+    const s = typeof d === "number" ? BY_DEX.get(d) : undefined;
+    if (s && !out.some((o) => o.name === s.name)) {
+      out.push({ name: s.name, slug: speciesSlug(s.name) });
+    }
+  }
+  return out;
+}

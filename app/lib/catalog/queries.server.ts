@@ -11,8 +11,11 @@ import { MARKET_CURRENCY, MARKET_SOURCE, type Market } from "../market/market";
 import { buildFtsMatch, CARD_SEARCH_BM25_WEIGHTS } from "./search.server";
 
 /** TTL (s) for the visitor-identical aggregate caches (per market). */
-const MOVERS_CACHE_TTL = 600;
-const POKEDEX_CACHE_TTL = 900;
+// Prices change once per catalog/price run (at most daily), so lists are cached for a day.
+// 10–15 min TTLs let crawlers re-run full-catalog scans thousands of times a day (2026-10-02:
+// ~400 M D1 rows read/day from these three lists alone).
+const MOVERS_CACHE_TTL = 86_400;
+const POKEDEX_CACHE_TTL = 86_400;
 
 export const CATALOG_PAGE_SIZE = 24;
 export const MAX_PAGE = 400;
@@ -429,6 +432,50 @@ export async function listSets(db: Database, params: SetListParams) {
   };
 }
 
+export interface AdjacentSet {
+  slug: string;
+  name: string;
+}
+
+/**
+ * The previous (older) and next (newer) set by release date — a chain of links
+ * through every set page so crawlers can walk the whole catalog from any set.
+ * Ties on release date fall back to id so the chain has no gaps or loops.
+ */
+export async function getAdjacentSets(
+  db: Database,
+  set: { id: string; releaseDate: string | null },
+): Promise<{ older: AdjacentSet | null; newer: AdjacentSet | null }> {
+  if (!set.releaseDate) return { older: null, newer: null };
+  const cols = { slug: schema.pokemonSets.slug, name: schema.pokemonSets.name };
+  const { releaseDate: rd, id } = schema.pokemonSets;
+  const [older, newer] = await Promise.all([
+    db
+      .select(cols)
+      .from(schema.pokemonSets)
+      .where(
+        and(
+          eq(schema.pokemonSets.active, true),
+          sql`(${rd} < ${set.releaseDate} OR (${rd} = ${set.releaseDate} AND ${id} < ${set.id}))`,
+        ),
+      )
+      .orderBy(desc(rd), desc(id))
+      .limit(1),
+    db
+      .select(cols)
+      .from(schema.pokemonSets)
+      .where(
+        and(
+          eq(schema.pokemonSets.active, true),
+          sql`(${rd} > ${set.releaseDate} OR (${rd} = ${set.releaseDate} AND ${id} > ${set.id}))`,
+        ),
+      )
+      .orderBy(asc(rd), asc(id))
+      .limit(1),
+  ]);
+  return { older: older[0] ?? null, newer: newer[0] ?? null };
+}
+
 export async function getSetBySlug(db: Database, slug: string, market: Market = "us") {
   const set = await db.query.pokemonSets.findFirst({ where: eq(schema.pokemonSets.slug, slug) });
   if (!set) return null;
@@ -461,7 +508,7 @@ export async function getSetBySlug(db: Database, slug: string, market: Market = 
 // ── Most valuable cards (value pillar + per-set module) ──────────────────────
 
 /** TTL (s) for the most-valuable aggregate (per market, per scope). */
-const TOP_VALUE_CACHE_TTL = 900;
+const TOP_VALUE_CACHE_TTL = 86_400;
 /** Upper sanity guard: drop rows above $1,000,000 (100M minor) — never a real
  * live-market TCGplayer/Cardmarket figure, so almost always corrupt data. */
 const TOP_VALUE_MAX_MINOR = 100_000_000;
@@ -530,7 +577,13 @@ export async function listTopValueCards(
  */
 export async function listAttributeCards(
   db: Database,
-  opts: { key: string; rarities?: string[]; releaseBefore?: string; market?: Market; limit?: number },
+  opts: {
+    key: string;
+    rarities?: string[];
+    releaseBefore?: string;
+    market?: Market;
+    limit?: number;
+  },
 ): Promise<CardListItem[]> {
   const market = opts.market ?? "us";
   const limit = Math.min(Math.max(opts.limit ?? 200, 1), 300);
@@ -601,6 +654,16 @@ export async function getHomepageData(db: Database) {
 
 // ── Price movers ─────────────────────────────────────────────────────────────
 
+/**
+ * Noise guards. Illiquid listings (mostly vintage reverse holos) swing from $65
+ * to $599 between two syncs; left in, they owned the whole "gainers" list. A
+ * move only counts when it starts from a real price ($5 / €5) and stays within
+ * +300 % / −75 % — anything wider is treated as a data error, not a market move.
+ */
+const MOVERS_MIN_PREVIOUS_MINOR = 500;
+const MOVERS_MAX_GAIN = 3;
+const MOVERS_MAX_DROP = -0.75;
+
 export interface PriceMover {
   cardId: string;
   slug: string;
@@ -654,8 +717,10 @@ export async function getPriceMovers(
     ) prev ON prev.card_id = c.card_id AND prev.source = c.source
           AND prev.variant = c.variant AND prev.currency = c.currency AND prev.rn = 1
     WHERE c.source = ${MARKET_SOURCE[market]} AND c.currency = ${MARKET_CURRENCY[market]}
-      AND prev.price_minor >= 100
+      AND prev.price_minor >= ${MOVERS_MIN_PREVIOUS_MINOR}
       AND c.normalized_price_minor != prev.price_minor
+      AND (CAST(c.normalized_price_minor - prev.price_minor AS REAL) / prev.price_minor)
+          BETWEEN ${MOVERS_MAX_DROP} AND ${MOVERS_MAX_GAIN}
     ORDER BY (CAST(c.normalized_price_minor - prev.price_minor AS REAL) / prev.price_minor)
       ${direction === "up" ? sql`DESC` : sql`ASC`}
     LIMIT ${limit}
@@ -684,7 +749,7 @@ export async function getPriceMovers(
  * over the whole `card_price_history` — is computed once in the `moved` CTE, then
  * the two tails (biggest gains / biggest drops) are taken over the materialized
  * set. Semantically identical to two `getPriceMovers` calls (same filters, same
- * `prev.price_minor >= 100` floor, same sign guard) but halves the heavy work.
+ * noise guards, same sign guard) but halves the heavy work.
  * TTL-cached per (window, market, limit) — the result is identical for every
  * visitor in a market and only changes on the daily sync.
  */
@@ -728,8 +793,10 @@ export async function getPriceMoversBoth(
         ) prev ON prev.card_id = c.card_id AND prev.source = c.source
               AND prev.variant = c.variant AND prev.currency = c.currency AND prev.rn = 1
         WHERE c.source = ${MARKET_SOURCE[market]} AND c.currency = ${MARKET_CURRENCY[market]}
-          AND prev.price_minor >= 100
+          AND prev.price_minor >= ${MOVERS_MIN_PREVIOUS_MINOR}
           AND c.normalized_price_minor != prev.price_minor
+          AND (CAST(c.normalized_price_minor - prev.price_minor AS REAL) / prev.price_minor)
+              BETWEEN ${MOVERS_MAX_DROP} AND ${MOVERS_MAX_GAIN}
       )
       SELECT *, 'up' AS dir FROM (SELECT * FROM moved ORDER BY pct DESC LIMIT ${limit})
       UNION ALL

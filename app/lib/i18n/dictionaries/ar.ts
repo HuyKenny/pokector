@@ -89,6 +89,8 @@ const ar: Dict = {
     feature4Body:
       "رتّب بطاقاتك في صفحات ألبوم مرئية بتسع جيوب، واحتفظ بالألبومات خاصة أو شاركها عبر رابط.",
     latestSetsHeading: "أحدث المجموعات",
+    popularPokemonHeading: "بوكيمونات شائعة",
+    fullPokedex: "البوكيديكس الكامل",
     allSets: "كل المجموعات ←",
     cardsCount: "{count} بطاقة",
     noImage: "لا توجد صورة",
@@ -383,6 +385,7 @@ const ar: Dict = {
       "لا يوجد تاريخ أسعار بعد. يسجّل Pokector الملاحظات الحقيقية فقط — يبدأ التتبّع بمجرد وجود هذه البطاقة في مجموعة أو قائمة رغبات أو مشاهدتها بانتظام.",
     historyStartNote: "التتبّع منذ {date}. تحمل القيم بين الملاحظات آخر سعر معروف.",
     relatedHeading: "المزيد من {setName}",
+    allSpeciesCards: "كل بطاقات {name}",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

@@ -19,7 +19,7 @@
   // Local dev triggers (staging/production override below). Test locally via:
   // curl "http://localhost:8787/cdn-cgi/handler/scheduled?cron=*/5+*+*+*+*"
   "triggers": {
-    "crons": ["*/5 * * * *", "17 5 * * *"],
+    "crons": ["*/15 * * * *", "17 5 * * *"],
   },
   "vars": {
     "APP_NAME": "Pokector",

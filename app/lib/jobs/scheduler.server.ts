@@ -3,8 +3,8 @@
  *   - every 5 minutes → process ONE due job (fresh CPU budget per invocation;
  *     continuation is chained through queue wake-ups)
  *   - "17 5 * * *" → daily orchestrator: price history, snapshots, alerts,
- *     retention every day; the full catalog sync only ~weekly (see
- *     CATALOG_SYNC_INTERVAL_MS) since it's the dominant D1 write cost
+ *     retention and the full catalog sync every day (see
+ *     CATALOG_SYNC_INTERVAL_MS — the catalog is the dominant D1 write cost)
  */
 
 import { handleAutumnSync } from "./handlers/autumn-sync.server";
@@ -44,8 +44,9 @@ import { PtcgApiError } from "../ptcg/client.server";
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
 
 /** Minimum age of the last full catalog sync before a new one is enqueued.
- * ~6.5 days so the daily orchestrator triggers it about weekly (owner: weekly
- * is enough, 2026-07-17) without drifting to an 8-day gap. */
+ * Back to weekly (owner, 2026-10-02: Pokector does not need frequent refreshes;
+ * the account should fit the D1 free limits). A run is ~120k row writes — above the
+ * free 100k/day — so it must not run daily. 6.5 days so the daily 05:17 tick catches it. */
 const CATALOG_SYNC_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
 
 type JobHandler = (job: SyncJob, env: Env) => Promise<void>;

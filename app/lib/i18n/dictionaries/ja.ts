@@ -88,6 +88,8 @@ const ja: Dict = {
     feature4Body:
       "カードを 9 ポケットのビジュアルなバインダーページに並べ、非公開にしたり、リンクで共有したりできます。",
     latestSetsHeading: "最新セット",
+    popularPokemonHeading: "人気のポケモン",
+    fullPokedex: "ポケモン図鑑をすべて見る",
     allSets: "すべてのセット →",
     cardsCount: "{count} 枚",
     noImage: "画像なし",
@@ -382,6 +384,7 @@ const ja: Dict = {
       "まだ価格履歴はありません。Pokector は本物の観測のみを記録します——このカードがコレクションやウィッシュリストに入るか、定期的に閲覧されると追跡が始まります。",
     historyStartNote: "{date} から追跡。観測間の値は最後に判明した価格を引き継ぎます。",
     relatedHeading: "{setName} の他のカード",
+    allSpeciesCards: "{name} のすべてのカード",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",

@@ -88,6 +88,8 @@ const vi: Dict = {
     feature4Body:
       "Sắp xếp thẻ bài của bạn vào các trang album trực quan 9 ô, giữ album riêng tư hoặc chia sẻ bằng liên kết.",
     latestSetsHeading: "Bộ thẻ mới nhất",
+    popularPokemonHeading: "Pokémon phổ biến",
+    fullPokedex: "Pokédex đầy đủ",
     allSets: "Tất cả bộ thẻ →",
     cardsCount: "{count} thẻ",
     noImage: "Không có ảnh",
@@ -383,6 +385,7 @@ const vi: Dict = {
     historyStartNote:
       "Theo dõi từ {date}. Các giá trị giữa những lần quan sát giữ nguyên mức giá gần nhất đã biết.",
     relatedHeading: "Thêm từ {setName}",
+    allSpeciesCards: "Tất cả thẻ {name}",
     variantNormal: "Normal",
     variantHolofoil: "Holofoil",
     variantReverseHolofoil: "Reverse Holofoil",
