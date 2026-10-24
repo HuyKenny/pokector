@@ -35,6 +35,7 @@ import {
   enqueueJob,
   failJob,
   hasDueJobs,
+  nextJobDueAt,
   wakeUp,
   type SyncJob,
   type SyncJobType,
@@ -191,5 +192,11 @@ export async function runJobBatch(env: Env): Promise<void> {
 
   if (await hasDueJobs(db)) {
     await wakeUp(env, "more_jobs_due");
+    return;
+  }
+  const dueAt = await nextJobDueAt(db);
+  if (dueAt) {
+    // +5 s so the delivery lands after runAfter, not a hair before it.
+    await wakeUp(env, "next_job_scheduled", (dueAt.getTime() - Date.now()) / 1000 + 5);
   }
 }

@@ -5,7 +5,7 @@
  * expiry. Every handler must be idempotent.
  */
 
-import { and, asc, eq, inArray, isNull, lte, or, sql } from "drizzle-orm";
+import { and, asc, eq, gt, inArray, isNull, lte, or, sql } from "drizzle-orm";
 
 import { createDb, schema, type Database } from "../db/index.server";
 import { log } from "../log.server";
@@ -117,6 +117,34 @@ export async function hasDueJobs(db: Database): Promise<boolean> {
   return rows.length > 0;
 }
 
+/** Queues reject a `delaySeconds` above 12 hours. */
+const MAX_WAKEUP_DELAY_SEC = 12 * 60 * 60;
+
+/**
+ * When the next not-yet-due job becomes runnable: the earliest future `runAfter`
+ * of a pending job, or the lease expiry of a running one. Null when nothing is
+ * waiting. Production has only the daily cron (2026-10-22), so without a delayed
+ * wake-up for this moment a job scheduled for later — a retry, the +3 h history
+ * snapshot — would sit until the next day's tick.
+ */
+export async function nextJobDueAt(db: Database): Promise<Date | null> {
+  const now = new Date();
+  const [row] = await db
+    .select({
+      at: sql<number | null>`MIN(CASE
+        WHEN ${schema.syncJobs.status} = 'pending' THEN ${schema.syncJobs.runAfter}
+        ELSE ${schema.syncJobs.lockedUntil} END)`,
+    })
+    .from(schema.syncJobs)
+    .where(
+      or(
+        and(eq(schema.syncJobs.status, "pending"), gt(schema.syncJobs.runAfter, now)),
+        and(eq(schema.syncJobs.status, "running"), gt(schema.syncJobs.lockedUntil, now)),
+      ),
+    );
+  return row?.at != null ? new Date(row.at) : null;
+}
+
 export async function completeJob(db: Database, jobId: string): Promise<void> {
   await db
     .update(schema.syncJobs)
@@ -184,12 +212,18 @@ export async function addJobLog(
   });
 }
 
-/** Fire a queue wake-up so the next invocation continues promptly (best effort). */
-export async function wakeUp(env: Env, reason: string): Promise<void> {
+/** Fire a queue wake-up so the next invocation continues promptly (best effort).
+ * `delaySeconds` defers delivery (Queues cap it at 12 h). */
+export async function wakeUp(env: Env, reason: string, delaySeconds?: number): Promise<void> {
   try {
-    await env.JOBS_QUEUE.send({ kind: "wakeup", reason });
+    await env.JOBS_QUEUE.send(
+      { kind: "wakeup", reason },
+      delaySeconds
+        ? { delaySeconds: Math.min(Math.ceil(delaySeconds), MAX_WAKEUP_DELAY_SEC) }
+        : undefined,
+    );
   } catch (error) {
-    // Queue unavailable — cron picks the job up within 5 minutes instead.
+    // Queue unavailable — the daily cron tick picks the job up instead.
     log.warn("jobs.wakeup_failed", {
       reason,
       errorCode: error instanceof Error ? error.name : "UnknownError",
