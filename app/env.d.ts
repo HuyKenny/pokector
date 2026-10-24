@@ -35,3 +35,12 @@ interface Env {
    * → the Riftbound sync is disabled (the /riftbound catalog stays empty). */
   JUSTTCG_API_KEY?: string;
 }
+
+// Newer `wrangler types` no longer derives the global Env from Cloudflare.Env, so
+// `env` from "cloudflare:test" / "cloudflare:workers" (typed Cloudflare.Env) would
+// miss the secrets above. Fold them in so both names describe the same bindings.
+type AppEnv = Env;
+declare namespace Cloudflare {
+  // eslint-disable-next-line @typescript-eslint/no-empty-object-type -- merge-only
+  interface Env extends AppEnv {}
+}

@@ -25,6 +25,10 @@ jobs:
       - name: Install (frozen lockfile)
         run: pnpm install --frozen-lockfile
 
+      # Typed lint rules need the generated route + worker types (gitignored).
+      - name: Generate types
+        run: pnpm exec react-router typegen
+
       - name: Lint
         run: pnpm lint
 
