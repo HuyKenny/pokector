@@ -24,6 +24,7 @@ import {
 } from "./handlers/catalog.server";
 import { handleImportApply } from "../csv/import.server";
 import { handleAlertsEvaluate } from "./handlers/alerts.server";
+import { handleTcgdexPricesBatch } from "./handlers/tcgdex.server";
 import { handleTcgcsvPricesSet, handleTcgcsvPricesSets } from "./handlers/tcgcsv.server";
 import { handleEbayGradedSeed } from "./handlers/ebay-seed.server";
 import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
@@ -46,6 +47,7 @@ import {
 } from "./queue.server";
 import { PtcgApiError } from "../ptcg/client.server";
 import { TcgcsvError } from "../tcgcsv/client.server";
+import { TcgdexError } from "../tcgdex/client.server";
 
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
 
@@ -68,6 +70,7 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   alerts_evaluate: handleAlertsEvaluate,
   import_apply: handleImportApply,
   ebay_graded_seed: handleEbayGradedSeed,
+  tcgdex_prices_batch: handleTcgdexPricesBatch,
   riftbound_catalog_sets: handleRiftboundCatalogSets,
   riftbound_catalog_cards_page: handleRiftboundCatalogCardsPage,
   riftbound_tcgcsv_sets: handleRiftboundTcgcsvSets,
@@ -137,6 +140,15 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
     runAfter: new Date(Date.now() + 2 * 60 * 1000),
   });
 
+  // Cardmarket EUR prices (TCGdex, rolling ~1,200 cards/day). Starts after the
+  // TCGplayer chain; each batch enqueues the next one.
+  await enqueueJob(db, {
+    type: "tcgdex_prices_batch",
+    payload: { day: today, n: 0 },
+    idempotencyKey: `tcgdex:${today}:0`,
+    runAfter: new Date(Date.now() + 5 * 60 * 1000),
+  });
+
   await enqueueJob(db, {
     type: "price_history_record",
     idempotencyKey: `history:auto:${today}`,
@@ -202,7 +214,9 @@ export async function runJobBatch(env: Env): Promise<void> {
     });
   } catch (error) {
     const retryable =
-      error instanceof PtcgApiError || error instanceof TcgcsvError ? error.retryable : true;
+      error instanceof PtcgApiError || error instanceof TcgcsvError || error instanceof TcgdexError
+        ? error.retryable
+        : true;
     await failJob(db, job, error, retryable);
   }
 

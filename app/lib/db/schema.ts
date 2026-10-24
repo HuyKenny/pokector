@@ -654,6 +654,7 @@ export const SYNC_JOB_TYPES = [
   "import_apply",
   "ebay_graded_seed",
   "autumn_sync",
+  "tcgdex_prices_batch",
   "riftbound_catalog_sets",
   "riftbound_catalog_cards_page",
   "riftbound_tcgcsv_sets",

@@ -584,3 +584,25 @@ daily Riftbound run since then ended in HTTP 429, so prices froze and the new se
   mid → low, dated with the build; history replaces today's point.
 - The JustTCG handlers remain registered for manual runs; the daily schedule no longer queues
   them.
+
+### D31. Cardmarket (EUR) prices from TCGdex, rolling refresh (2026-10-24)
+
+**Why.** The Pokémon TCG API froze its Cardmarket blocks (last update 2025-11-18), so every EUR
+price on the site was a year old. TCGdex (community REST API, no key) serves fresh Cardmarket
+data (`pricing.cardmarket`: trend/avg/low, updated daily) — including the 2026 sets the PTCG
+API never priced — but only per card (no bulk endpoint).
+
+**What.** `tcgdex_prices_batch` jobs, chained 30 per day × 40 cards (≈ 1,200 requests/day,
+4 in parallel, identifiable User-Agent):
+
+- Picks active cards whose stored Cardmarket date is oldest (empty first), most valuable
+  TCGplayer price as tie-break → the catalog cycles in ≈ 2 weeks, valuable cards first.
+- Sets: our id → TCGdex id by equal id, else unique normalized name (sv1 → sv01, sm35 →
+  sm3.5, pgo → swsh10.5, mcd11 → 2011bw …); cards by normalized number from the set's own
+  card list (TCGdex pads numbers per set), both cached 14 days in `catalog_cache`. Unmapped
+  sets (EX Trainer Kits, Futsal, Classic Collections) are skipped.
+- Rows keep the existing shape: one EUR row per variant the card already has a price for
+  (else `normal`), trend → avg → low, dated by TCGdex's `updated`; never overwrites a newer
+  date. History replaces today's point.
+- `tcgdex:seen:{cardId}` markers in `catalog_cache` (20 h after a price, 7 days after a miss)
+  keep unpriceable cards from blocking the queue.
