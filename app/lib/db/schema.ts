@@ -656,6 +656,8 @@ export const SYNC_JOB_TYPES = [
   "autumn_sync",
   "riftbound_catalog_sets",
   "riftbound_catalog_cards_page",
+  "tcgcsv_prices_sets",
+  "tcgcsv_prices_set",
 ] as const;
 
 export const syncJobs = sqliteTable(

@@ -8,8 +8,13 @@ truthful — no fabricated data, ever.
 - **Catalog**: Pokémon TCG API (`https://api.pokemontcg.io/v2`), English-language cards
   and sets. Pokector stores a synchronized copy in its own database; visitor searches
   never hit the external API.
-- **Prices — primary (USD)**: TCGplayer price blocks as provided by the Pokémon TCG API.
-- **Prices — secondary (EUR)**: Cardmarket price blocks as provided by the same API.
+- **Prices — primary (USD)**: TCGplayer prices from TCGCSV (`https://tcgcsv.com`, a daily
+  mirror of TCGplayer's price files), refreshed daily since 2026-10-24 — see DECISIONS D29.
+  Cards are matched to TCGplayer products by set → group and card number; uncertain matches
+  stay unpriced. The Pokémon TCG API's TCGplayer blocks remain a fallback and never
+  overwrite a newer price.
+- **Prices — secondary (EUR)**: Cardmarket price blocks as provided by the Pokémon TCG API
+  (frozen at the API's side since 2025-11-18).
   Never merged with USD without explicit conversion (not implemented — displayed
   separately).
 

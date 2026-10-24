@@ -337,6 +337,10 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
             sourceUpdatedAt: price.sourceUpdatedAt,
             observedAt: syncedAt,
           },
+          // TCGCSV (handlers/tcgcsv.server.ts) refreshes TCGplayer prices daily;
+          // the PTCG API's are stale, so never let them overwrite a newer row.
+          setWhere: sql`${schema.cardPricesCurrent.sourceUpdatedAt} IS NULL
+            OR ${schema.cardPricesCurrent.sourceUpdatedAt} <= excluded.source_updated_at`,
         });
     }),
   );
@@ -410,13 +414,17 @@ async function finalizeCatalogRun(db: Database, runId: string): Promise<void> {
 
 // ── price_history_record (daily, all active cards) ──────────────────────────
 
-async function recordHistoryForCards(
+export async function recordHistoryForCards(
   db: Database,
   cardIds: string[] | null,
   now: Date,
+  options: { replaceToday?: boolean } = {},
 ): Promise<void> {
   const today = todayUtc();
   const idFilter = cardIds ? sql`AND c.card_id IN ${cardIds}` : sql``;
+  // replaceToday: a fresher price that lands later the same day (TCGCSV after the
+  // weekly PTCG pages) replaces today's point instead of being ignored.
+  const verb = options.replaceToday ? sql`INSERT OR REPLACE` : sql`INSERT OR IGNORE`;
   // Record a daily observation for EVERY card that has a current price, not just
   // tracked ones — every card's detail page shows a price chart, so the whole
   // catalog needs history (owner request 2026-07-17; see docs/DECISIONS.md D15).
@@ -425,7 +433,7 @@ async function recordHistoryForCards(
   // steady-state writes are delta-only. The per-page sync spreads the initial
   // full population across the chained catalog jobs (fresh CPU budget each).
   await db.run(sql`
-    INSERT OR IGNORE INTO card_price_history
+    ${verb} INTO card_price_history
       (card_id, source, variant, currency, price_minor, recorded_date, observed_at, source_updated_at, granularity)
     SELECT c.card_id, c.source, c.variant, c.currency, c.normalized_price_minor,
            ${today}, ${now.getTime()}, c.source_updated_at, 'daily'

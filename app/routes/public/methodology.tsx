@@ -37,13 +37,18 @@ export default function Methodology() {
         <p>
           The card catalog (cards, sets, images, rarities) comes from the public Pokémon TCG API and
           covers English-language cards. Pokector keeps its own synchronized copy — searches and
-          card pages are served from our database, refreshed daily.
+          card pages are served from our database; the catalog is refreshed weekly.
         </p>
         <p>
-          Prices come from two sources exposed by the same API: <strong>TCGplayer</strong> (USD, the
-          primary valuation source, per printing variant) and <strong>Cardmarket</strong> (EUR,
-          shown as a secondary reference). The two sources are never mixed into a single number and
-          no currency conversion is applied.
+          Prices come from two sources: <strong>TCGplayer</strong> (USD, the primary valuation
+          source, per printing variant), refreshed daily from the TCGplayer price files mirrored by{" "}
+          <a href="https://tcgcsv.com" rel="noopener" className="underline">
+            TCGCSV
+          </a>{" "}
+          — thank you — and <strong>Cardmarket</strong> (EUR, shown as a secondary reference) from
+          the Pokémon TCG API. The two sources are never mixed into a single number and no currency
+          conversion is applied. A card is matched to its TCGplayer product by set and card number;
+          when that match is not certain, the card stays unpriced rather than showing a guess.
         </p>
       </Section>
 

@@ -534,3 +534,36 @@ to **staging** (billing degraded there w/o test keys; pricing/gating verified li
 production yet** — pending owner Stripe setup (roll key, create Pro product + monthly/yearly
 prices, set secrets + price-ID vars, add webhook endpoint), because activating the free-tier caps
 before Pro is purchasable would limit existing users with no upgrade path.
+
+### D29. TCGplayer prices from TCGCSV + delayed queue wake-ups (2026-10-24)
+
+**Why.** The Pokémon TCG API stopped refreshing prices: its last TCGplayer update is
+2026-10-15, its Cardmarket blocks are frozen since 2025-11-18, and it has never priced the
+2026 sets (Ascended Heroes → 30th Celebration, ~850 cards). Our weekly sync was healthy — it
+faithfully copied stale data. JustTCG (already used for Riftbound) was the first idea, but the
+Free plan's 1,000 requests/month is already exhausted by Riftbound (HTTP 429 since 2026-10-16)
+and could never cover ~20k cards.
+
+**What.** New daily jobs pull TCGplayer prices from TCGCSV (free daily mirror of TCGplayer's
+catalog/prices, Pokémon = category 3):
+
+- `tcgcsv_prices_sets` — once per TCGCSV build (`last-updated.txt`): match sets → TCGplayer
+  groups (normalized name, plus the reviewed `SET_GROUP_OVERRIDES` in
+  `app/lib/tcgcsv/match.ts`), enqueue one job per set.
+- `tcgcsv_prices_set` — cards ↔ products by card number (tie-break: card name, then the
+  unqualified print, then non-[Staff]; otherwise skipped), upsert `source = "tcgplayer"` rows
+  dated with the TCGCSV build, record history (replacing today's point).
+- Coverage checked offline 2026-10-24: 171/176 sets, 20,379/20,670 cards (98.6 %). Not mapped:
+  the four EX Trainer Kit halves (shared group + numbers) and the Futsal promos.
+- Politeness (tcgcsv.com/docs): identifiable User-Agent, one sync per build, ~350 requests/day
+  (their cap 10k). Product lists (~80 % of bytes) are cached as card→product maps in
+  `catalog_cache` for 7 days (1 day for sets < 45 days old) instead of refetched daily.
+- D1 writes: unchanged prices are rewritten only when the stored date is ≥ 3 days old. The
+  PTCG card-page upsert now only writes a price that is not older than the stored one
+  (`setWhere`), which also removes most of its ~62k price writes per weekly run.
+
+**Delayed wake-ups.** Since 2026-10-22 production runs only the daily cron, but jobs with a
+future `runAfter` (retries, the +3 h history snapshot) had no one to wake them and waited for
+the next day. `runJobBatch` now sends a delayed queue message (≤ 12 h) for the earliest
+not-yet-due job when nothing is due right now (`nextJobDueAt`).
+

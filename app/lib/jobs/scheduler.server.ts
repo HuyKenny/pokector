@@ -1,10 +1,11 @@
 /**
- * Cron tick router + job dispatcher. Production crons (see wrangler.jsonc):
- *   - every 5 minutes → process ONE due job (fresh CPU budget per invocation;
- *     continuation is chained through queue wake-ups)
- *   - "17 5 * * *" → daily orchestrator: price history, snapshots, alerts,
- *     retention and the full catalog sync every day (see
+ * Cron tick router + job dispatcher. Production has ONE cron (see wrangler.jsonc,
+ * daily only since 2026-10-22):
+ *   - "17 5 * * *" → daily orchestrator: TCGplayer prices (TCGCSV), price
+ *     history, snapshots, alerts, retention; the full catalog sync ~weekly (see
  *     CATALOG_SYNC_INTERVAL_MS — the catalog is the dominant D1 write cost)
+ * Each invocation processes ONE job; the rest chain through queue wake-ups, and
+ * jobs scheduled for later get a delayed wake-up (see nextJobDueAt).
  */
 
 import { handleAutumnSync } from "./handlers/autumn-sync.server";
@@ -23,6 +24,7 @@ import {
 } from "./handlers/catalog.server";
 import { handleImportApply } from "../csv/import.server";
 import { handleAlertsEvaluate } from "./handlers/alerts.server";
+import { handleTcgcsvPricesSet, handleTcgcsvPricesSets } from "./handlers/tcgcsv.server";
 import { handleEbayGradedSeed } from "./handlers/ebay-seed.server";
 import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
 import {
@@ -41,6 +43,7 @@ import {
   type SyncJobType,
 } from "./queue.server";
 import { PtcgApiError } from "../ptcg/client.server";
+import { TcgcsvError } from "../tcgcsv/client.server";
 
 const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
 
@@ -65,6 +68,8 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   ebay_graded_seed: handleEbayGradedSeed,
   riftbound_catalog_sets: handleRiftboundCatalogSets,
   riftbound_catalog_cards_page: handleRiftboundCatalogCardsPage,
+  tcgcsv_prices_sets: handleTcgcsvPricesSets,
+  tcgcsv_prices_set: handleTcgcsvPricesSet,
 };
 
 export function registerJobHandler(type: SyncJobType, handler: JobHandler): void {
@@ -119,6 +124,14 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
   } else {
     log.warn("jobs.daily.sync_disabled_no_key", { environment: env.ENVIRONMENT });
   }
+
+  // Daily TCGplayer prices (TCGCSV, no key). Ahead of the history snapshot (+3 h);
+  // each set job also records its own history, so a late chain loses nothing.
+  await enqueueJob(db, {
+    type: "tcgcsv_prices_sets",
+    idempotencyKey: `tcgcsv:auto:${today}`,
+    runAfter: new Date(Date.now() + 2 * 60 * 1000),
+  });
 
   await enqueueJob(db, {
     type: "price_history_record",
@@ -186,7 +199,8 @@ export async function runJobBatch(env: Env): Promise<void> {
       durationMs: Date.now() - startedAt,
     });
   } catch (error) {
-    const retryable = error instanceof PtcgApiError ? error.retryable : true;
+    const retryable =
+      error instanceof PtcgApiError || error instanceof TcgcsvError ? error.retryable : true;
     await failJob(db, job, error, retryable);
   }
 
