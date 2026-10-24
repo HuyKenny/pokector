@@ -59,7 +59,10 @@ jobs:
 
       - name: Smoke test — production
         id: smoke-production
-        run: pnpm smoke https://pokector.com
+        # Same build via its workers.dev URL: Cloudflare Bot Fight Mode on the
+        # pokector.com zone returns 403 to GitHub's datacenter IPs, which made
+        # this check fail (and roll back) a healthy deploy.
+        run: pnpm smoke https://pokector-production.huy-kenny.workers.dev
         env:
           CHROME_PATH: /usr/bin/chromium
 
