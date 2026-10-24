@@ -55,7 +55,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     dex: species.dex,
     cards,
     currency: MARKET_CURRENCY[market],
-    canonical: canonicalUrl(env.APP_URL, localePath(locale, `/pokemon/${speciesSlug(species.name)}`)),
+    canonical: canonicalUrl(
+      env.APP_URL,
+      localePath(locale, `/pokemon/${speciesSlug(species.name)}`),
+    ),
     appUrl: env.APP_URL,
   };
 }
@@ -135,13 +138,15 @@ export default function PokemonHub({ loaderData }: Route.ComponentProps) {
             <h1 className="text-4xl font-bold tracking-tight text-fg sm:text-5xl">
               {name} <span className="text-accent">Cards</span>
             </h1>
-            <p className="text-sm text-fg-muted">National Pokédex #{String(dex).padStart(4, "0")}</p>
+            <p className="text-sm text-fg-muted">
+              National Pokédex #{String(dex).padStart(4, "0")}
+            </p>
           </div>
         </div>
         <p className="max-w-3xl text-lg text-fg-muted">
-          Every {name} Pokémon card, ranked by current market value. Prices are from the
-          TCGplayer and Cardmarket aggregates, updated daily — so you always see what {name}{" "}
-          cards are worth today. Values are for raw (ungraded) singles.
+          Every {name} Pokémon card, ranked by current market value. Prices are from the TCGplayer
+          and Cardmarket aggregates, updated daily — so you always see what {name} cards are worth
+          today. Values are for raw (ungraded) singles.
         </p>
       </section>
 
@@ -158,7 +163,10 @@ export default function PokemonHub({ loaderData }: Route.ComponentProps) {
               label="Most valuable"
               value={mostValuable ? money(mostValuable.priceMinor, currency) : "—"}
             />
-            <Stat label="Cheapest priced" value={cheapest ? money(cheapest.priceMinor, currency) : "—"} />
+            <Stat
+              label="Cheapest priced"
+              value={cheapest ? money(cheapest.priceMinor, currency) : "—"}
+            />
             <Stat label="Priced cards" value={String(priced.length)} />
           </dl>
 

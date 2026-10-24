@@ -170,7 +170,9 @@ export function StandaloneGradingCalculator({
                   <td className="py-2 text-end">
                     <span
                       className={`inline-flex items-center rounded-full px-2 py-0.5 text-xs font-semibold ${
-                        roi.worthIt ? "bg-positive/15 text-positive" : "bg-negative/15 text-negative"
+                        roi.worthIt
+                          ? "bg-positive/15 text-positive"
+                          : "bg-negative/15 text-negative"
                       }`}
                     >
                       {roi.roiPercent !== null

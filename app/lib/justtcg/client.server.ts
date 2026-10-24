@@ -14,7 +14,7 @@ import { createDb, type Database } from "../db/index.server";
 const API_BASE = "https://api.justtcg.com/v1";
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
-/** Cards per page. JustTCG caps `limit` at 20 on the current plan (larger 
+/** Cards per page. JustTCG caps `limit` at 20 on the current plan (larger
  * values 400); also comfortably within the Workers Free CPU budget per job. */
 export const RIFTBOUND_CARDS_PAGE_SIZE = 20;
 /** Daily request ceiling (headroom under paid-tier limits). */
@@ -101,7 +101,12 @@ export class JustTcgClient {
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const used = await incrementCounter(this.db, budgetKey, 60 * 60 * 48);
       if (used !== null && used > DAILY_BUDGET) {
-        throw new JustTcgError("budget_exhausted", "Daily JustTCG budget exhausted", undefined, false);
+        throw new JustTcgError(
+          "budget_exhausted",
+          "Daily JustTCG budget exhausted",
+          undefined,
+          false,
+        );
       }
       let res: Response;
       try {
@@ -110,7 +115,12 @@ export class JustTcgClient {
           signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
         });
       } catch {
-        lastError = new JustTcgError("network", "JustTCG request failed (network/timeout)", 0, true);
+        lastError = new JustTcgError(
+          "network",
+          "JustTCG request failed (network/timeout)",
+          0,
+          true,
+        );
         await sleep(1000 * 2 ** attempt);
         continue;
       }
@@ -133,7 +143,9 @@ function normalizeEnvelope(body: unknown): JustTcgPage {
   if (Array.isArray(body)) return { data: body as JustTcgRow[], hasMore: false };
   if (body && typeof body === "object") {
     const obj = body as Record<string, unknown>;
-    const data = (Array.isArray(obj.data) ? obj.data : Array.isArray(obj.results) ? obj.results : []) as JustTcgRow[];
+    const data = (
+      Array.isArray(obj.data) ? obj.data : Array.isArray(obj.results) ? obj.results : []
+    ) as JustTcgRow[];
     const meta = (obj.meta ?? obj._metadata ?? {}) as Record<string, unknown>;
     const hasMore =
       typeof meta.hasMore === "boolean"

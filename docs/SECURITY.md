@@ -100,7 +100,7 @@ front of the Worker and are defense-in-depth over the in-app protections above.
 
 - `pnpm audit`: 1 moderate — `esbuild ≤0.24.2` (GHSA-67mh-4wv8-2f99) via
   `drizzle-kit > @esbuild-kit/*`. **Dev-only, not exploitable here**: it affects a running
-  esbuild *dev server*, which drizzle-kit never starts, and esbuild is not in the deployed Worker
+  esbuild _dev server_, which drizzle-kit never starts, and esbuild is not in the deployed Worker
   bundle. Not force-overridden (esbuild is shared with Vite; a forced bump risks the build for a
   non-exploitable dev dep). Re-evaluate when drizzle-kit drops the deprecated `@esbuild-kit` chain.
 - **eBay Cert ID** (`EBAY_CERT_ID`, a Worker secret) transited chat historically — rotate it in the

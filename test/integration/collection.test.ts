@@ -67,16 +67,21 @@ describe("collection CRUD + portfolio", () => {
   beforeAll(seed);
 
   it("adds, lists, updates, deletes with ownership isolation", async () => {
-    const entryId = await addEntry(db, USER_A, {
-      cardId: "colset-1",
-      quantity: 2,
-      variant: "holofoil",
-      condition: "Near Mint",
-      language: "English",
-      purchasePriceMinor: 400,
-      purchaseDate: "2026-01-15",
-      notes: "trade with Mia",
-    }, "us");
+    const entryId = await addEntry(
+      db,
+      USER_A,
+      {
+        cardId: "colset-1",
+        quantity: 2,
+        variant: "holofoil",
+        condition: "Near Mint",
+        language: "English",
+        purchasePriceMinor: 400,
+        purchaseDate: "2026-01-15",
+        notes: "trade with Mia",
+      },
+      "us",
+    );
 
     const listA = await listCollection(db, USER_A, {}, "us");
     expect(listA.total).toBe(1);
@@ -104,27 +109,37 @@ describe("collection CRUD + portfolio", () => {
 
   it("portfolio: variant must match exactly; unpriced never becomes zero silently", async () => {
     // Same card but "normal" variant — no price row for normal → unpriced.
-    await addEntry(db, USER_A, {
-      cardId: "colset-1",
-      quantity: 1,
-      variant: "normal",
-      condition: "Near Mint",
-      language: "English",
-      purchasePriceMinor: null,
-      purchaseDate: null,
-      notes: null,
-    }, "us");
+    await addEntry(
+      db,
+      USER_A,
+      {
+        cardId: "colset-1",
+        quantity: 1,
+        variant: "normal",
+        condition: "Near Mint",
+        language: "English",
+        purchasePriceMinor: null,
+        purchaseDate: null,
+        notes: null,
+      },
+      "us",
+    );
     // Unpriced card entirely.
-    await addEntry(db, USER_A, {
-      cardId: "colset-2",
-      quantity: 5,
-      variant: "normal",
-      condition: "Lightly Played",
-      language: "English",
-      purchasePriceMinor: 100,
-      purchaseDate: null,
-      notes: null,
-    }, "us");
+    await addEntry(
+      db,
+      USER_A,
+      {
+        cardId: "colset-2",
+        quantity: 5,
+        variant: "normal",
+        condition: "Lightly Played",
+        language: "English",
+        purchasePriceMinor: 100,
+        purchaseDate: null,
+        notes: null,
+      },
+      "us",
+    );
 
     const summary = await computeUserPortfolio(db, USER_A, "us");
     // Only the holofoil entry (3 × $10) is priced.

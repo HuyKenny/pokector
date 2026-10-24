@@ -3,12 +3,7 @@ import { eq } from "drizzle-orm";
 import { describe, expect, it } from "vitest";
 
 import { createDb, schema } from "~/lib/db/index.server";
-import {
-  authKvDelete,
-  authKvGet,
-  authKvSet,
-  pruneExpiredAuthKv,
-} from "~/lib/auth/kv-store.server";
+import { authKvDelete, authKvGet, authKvSet, pruneExpiredAuthKv } from "~/lib/auth/kv-store.server";
 
 describe("Better Auth D1 secondary storage", () => {
   it("sets and gets a value; missing keys are null", async () => {

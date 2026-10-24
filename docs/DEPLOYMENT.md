@@ -10,7 +10,7 @@ Last updated: 2026-07-17 (Phase 0 — plan; statuses updated in Phase 10)
 | D1       | `pokector-staging`       | `pokector-production`       |
 | KV       | `pokector-cache-staging` | `pokector-cache-production` |
 | URL      | workers.dev (noindex)    | `https://pokector.com`      |
-| Crons    | none (manual triggers)   | `17 5 * * *` |
+| Crons    | none (manual triggers)   | `17 5 * * *`                |
 
 Account: huy.kenny@gmail.com (`7dcd021a0f64e56889505c60c878f3ab`), zone
 `pokector.com` (`37a0953c5759fbbff63b2da27250b099`, Free plan).

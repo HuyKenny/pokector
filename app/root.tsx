@@ -73,7 +73,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
         {gaId ? (
           <>
             <link rel="preconnect" href="https://www.googletagmanager.com" />
-            <script async nonce={nonce} src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`} />
+            <script
+              async
+              nonce={nonce}
+              src={`https://www.googletagmanager.com/gtag/js?id=${gaId}`}
+            />
             <script
               nonce={nonce}
               dangerouslySetInnerHTML={{

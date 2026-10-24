@@ -264,11 +264,14 @@ const cs: Dict = {
       "Žádnou funkci, kterou dnes máte, vám nebereme. Ceny vždy ukazují zdroj a datum — neoceněné karty říkají „bez ceny“, ne „0 $“.",
     faqHeading: "FAQ k ceníku",
     faq1Q: "Stačí opravdu plán zdarma?",
-    faq1A: "Ano. Zdarma můžete sledovat celou sbírku, dokončovat sety, vidět hodnoty a P/L a používat kalkulačku gradingu. Pro přidává rozsah (neomezená alba, alerty, gradované karty…) a plnou historii portfolia.",
+    faq1A:
+      "Ano. Zdarma můžete sledovat celou sbírku, dokončovat sety, vidět hodnoty a P/L a používat kalkulačku gradingu. Pro přidává rozsah (neomezená alba, alerty, gradované karty…) a plnou historii portfolia.",
     faq2Q: "Můžu kdykoli zrušit?",
-    faq2A: "Ano. Spravujte nebo zrušte jedním kliknutím přes zabezpečený zákaznický portál Stripe. Pro vám zůstane do konce zaplaceného období.",
+    faq2A:
+      "Ano. Spravujte nebo zrušte jedním kliknutím přes zabezpečený zákaznický portál Stripe. Pro vám zůstane do konce zaplaceného období.",
     faq3Q: "Co se stane s daty při přechodu na nižší plán?",
-    faq3A: "Nic se nikdy nemaže. Když překročíte limit zdarma, jen nemůžete přidávat další položky daného typu, dokud nejste zpět pod limitem — vše, co už máte, zůstává viditelné.",
+    faq3A:
+      "Nic se nikdy nemaže. Když překročíte limit zdarma, jen nemůžete přidávat další položky daného typu, dokud nejste zpět pod limitem — vše, co už máte, zůstává viditelné.",
   },
 
   cards: {
@@ -323,8 +326,10 @@ const cs: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Nad hranicí zisku",
     gradingNotWorth: "Pod hranicí zisku",
-    gradingSoldNote: "Hodnoty v gradu jsou medián reálných prodejů na eBay (posledních 90 dní). Poplatky PSA a poštovné jsou odhady a liší se dle deklarované hodnoty a doby zpracování.",
-    gradingListingDisclaimer: "Hodnoty v gradu jsou medián aktuálních nabídkových cen na eBay (bez odlehlých hodnot), ne reálné prodeje – ber jen jako hrubé vodítko.",
+    gradingSoldNote:
+      "Hodnoty v gradu jsou medián reálných prodejů na eBay (posledních 90 dní). Poplatky PSA a poštovné jsou odhady a liší se dle deklarované hodnoty a doby zpracování.",
+    gradingListingDisclaimer:
+      "Hodnoty v gradu jsou medián aktuálních nabídkových cen na eBay (bez odlehlých hodnot), ne reálné prodeje – ber jen jako hrubé vodítko.",
     gradingFeeNote: "Poplatek PSA {fee} + odhad. poštovné {shipping}.",
     notFoundTitle: "Karta nenalezena | Pokector",
     notFoundDescription: "Karta nenalezena.",
@@ -486,10 +491,12 @@ const cs: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — každý Pokémon podle počtu karet a průměrné ceny | Pokector",
-    metaDescription: "Procházejte kompletní Národní Pokédex: každý Pokémon s číslem, počtem karet a průměrnou tržní cenou.",
+    metaDescription:
+      "Procházejte kompletní Národní Pokédex: každý Pokémon s číslem, počtem karet a průměrnou tržní cenou.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Každý Pokémon v Národním Pokédexu s počtem karet a průměrnou tržní cenou karty. Klepnutím na Pokémona zobrazíš jeho karty.",
+    intro:
+      "Každý Pokémon v Národním Pokédexu s počtem karet a průměrnou tržní cenou karty. Klepnutím na Pokémona zobrazíš jeho karty.",
     generationLabel: "Generace {n}",
     colNumber: "Č.",
     colCards: "Karty",

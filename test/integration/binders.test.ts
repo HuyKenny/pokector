@@ -60,16 +60,21 @@ describe("binders: ownership, slots, privacy", () => {
       .onConflictDoNothing();
 
     binderId = await createBinder(db, OWNER, "Trade binder", "with secrets");
-    entryId = await addEntry(db, OWNER, {
-      cardId: "bset-1",
-      quantity: 1,
-      variant: "normal",
-      condition: "Near Mint",
-      language: "English",
-      purchasePriceMinor: 99999, // private!
-      purchaseDate: "2026-01-01",
-      notes: "super secret note", // private!
-    }, "us");
+    entryId = await addEntry(
+      db,
+      OWNER,
+      {
+        cardId: "bset-1",
+        quantity: 1,
+        variant: "normal",
+        condition: "Near Mint",
+        language: "English",
+        purchasePriceMinor: 99999, // private!
+        purchaseDate: "2026-01-01",
+        notes: "super secret note", // private!
+      },
+      "us",
+    );
   });
 
   it("places, moves, and clears slots; entry survives slot clearing", async () => {

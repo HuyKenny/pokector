@@ -131,7 +131,7 @@ signed-in app (/app, /admin), blog articles, and legal pages stay English.
 
 ### D15. Price history recorded for every card, not just tracked ones (owner request 2026-07-17)
 
-SPEC §17 originally gated `card_price_history` to *tracked* cards (in a collection/
+SPEC §17 originally gated `card_price_history` to _tracked_ cards (in a collection/
 wishlist/popular) to limit write volume. On a fresh site this left almost every card's
 price chart empty. Owner requested all cards accumulate history so every detail page's
 chart has data.
@@ -141,7 +141,7 @@ chart has data.
   only when the value changed vs. the last observation) and capped at one row per
   card/source/variant/currency/day by the unique constraint.
 - **No backfill of the past**: the PTCG API (TCGplayer/Cardmarket via it) returns only
-  the *current* price — there is no historical time series to import. History can only
+  the _current_ price — there is no historical time series to import. History can only
   accumulate forward from the first recorded day; charts start today and grow.
 - **Write budget (Free plan, 100k D1 rows/day)**: the initial full population is ~62k
   rows (one per current-price row), spread across the chained per-page catalog jobs.
@@ -164,8 +164,8 @@ search for the card, so visitors can buy a copy and qualifying sales earn commis
   US (ebay.com), matching our English cards + USD pricing; `EBAY_DE` is ready for a switch.
 - **SEO/compliance**: link carries `rel="sponsored noopener"` (Google's paid-link
   requirement) and a visible affiliate disclosure (EPN network agreement); the disclosure
-  + button label are localized in all 11 dictionaries.
-- **Not eBay Developer API**: the eBay *Browse* API (live lowest listing + price on the
+  - button label are localized in all 11 dictionaries.
+- **Not eBay Developer API**: the eBay _Browse_ API (live lowest listing + price on the
   page) needs real developer creds (App ID + OAuth) and rate-limit handling — deferred.
   NB: the "Account SID / Auth Token" the owner first supplied are Twilio-style, not eBay,
   and are unused (stored in workspace credentials with a note; recommend rotation).
@@ -227,7 +227,7 @@ current eBay listing for the raw card and for a PSA 10 graded copy.
 
 - **Browse API** (OAuth client-credentials app token). Env auto-detected from the App ID
   (`-SBX-` → sandbox, else production). PSA 10 sold/market price would need the restricted
-  Marketplace Insights API (eBay approval) — deferred; we show PSA 10 *asking* price.
+  Marketplace Insights API (eBay approval) — deferred; we show PSA 10 _asking_ price.
 - **Noise handling**: naive "cheapest match" is junk (stickers, magnets, fan-art,
   keychains, code cards, lots). We query the exact card (name + number/printedTotal + set),
   restrict to the CCG single-cards category, drop novelty/graded titles for the raw price,
@@ -289,7 +289,7 @@ wrong-grade outlier (e.g. Shining Charizard PSA 10 showing a $30,000 listing). T
 "precise" number is the **median of real sold transactions**.
 
 - **Chosen path (owner picked B)**: eBay **Marketplace Insights API** (`buy/marketplace_insights/
-  v1_beta/item_sales/search`) → median + low/high + sample size of USD sales over the last 90
+v1_beta/item_sales/search`) → median + low/high + sample size of USD sales over the last 90
   days. This is a **limited-release** scope (`…/oauth/api_scope/buy.marketplace.insights`) that
   needs eBay to grant the app access. Built now, dormant until approved.
 - **eBay client** (`ebay-api.server.ts`): refactored token fetch into `requestAppToken(scope)`;
@@ -366,10 +366,10 @@ full-scanned every query, and there was no typeahead (and no search at all on mo
   with column weights (name 10 > number 6 > set 3 > …). `searchCards` branches: text query
   → FTS path, browse (filters only) → the plain indexed path.
 - **Typeahead**: public `GET /api/v1/cards/suggest` (rate-limited by IP, min 2 chars, top 8)
-  + `HeaderSearch` client component (`components/header-search.tsx`) — debounced 250ms,
-  card-thumbnail dropdown (name + set · #number), keyboard nav (↑/↓/Enter/Esc), Enter →
-  full `/cards` results. Reuses the debounce pattern from the collection AddCardPanel. Now
-  visible on mobile (was `hidden md:block`).
+  - `HeaderSearch` client component (`components/header-search.tsx`) — debounced 250ms,
+    card-thumbnail dropdown (name + set · #number), keyboard nav (↑/↓/Enter/Esc), Enter →
+    full `/cards` results. Reuses the debounce pattern from the collection AddCardPanel. Now
+    visible on mobile (was `hidden md:block`).
 - **/cards page**: added the Set filter (query already supported it), result tiles show
   set year for cross-set disambiguation, and the empty state renders relaxed suggestions.
 - Number reality: card `number` is "4" (the "/102" is the set's printedTotal) — so the FTS
@@ -426,7 +426,7 @@ Three reported bugs.
   `lp("/app/collection")` → `/cs/app/collection`; `/app/*` is not in the localized
   route tree, so client-side navigation flashed the catchall 404 (the server-side
   301 only helps on a hard load). Fixed to a plain `/app/collection`. A sweep
-  (`grep 'lp("/…'`) confirmed it was the *only* `lp()` pointing at a non-localized
+  (`grep 'lp("/…'`) confirmed it was the _only_ `lp()` pointing at a non-localized
   route — all other lp() targets (cards/sets/login/register) are localized.
 - **Wishlist was USD-only.** Added a "Region & language" section to Settings
   (`preferences` intent → `userProfiles.defaultCurrency` + `locale`). New users
@@ -437,7 +437,7 @@ Three reported bugs.
   toggle. **Critical join fix**: the wishlist loader AND the alert-evaluation job
   joined `card_prices_current` on `source='tcgplayer'` unconditionally, so EUR items
   were always "unpriced" and never triggered alerts — now `source = CASE WHEN
-  currency='EUR' THEN 'cardmarket' ELSE 'tcgplayer' END` (cardmarket is stored
+currency='EUR' THEN 'cardmarket' ELSE 'tcgplayer' END` (cardmarket is stored
   per-variant, so the PK join still matches one row).
 - **Unified header** — new shared `app/components/site-header.tsx` used by BOTH the
   public and app layouts (moved MarketSwitcher/LanguageSwitcher + hamburger + account
@@ -481,7 +481,7 @@ tracker (800), collection tracker (400), **price tracker (TP 93k)**, tracker app
   sets/grading/compare/binders, FAQPage. `/pokemon-card-grading-calculator`
   (`grading.tsx`, `gradingLanding` dict) — a **fully interactive** standalone calc
   (`standalone-grading-calculator.tsx`, all numbers user-entered — no fabricated data)
-  + explainer + FAQ, targeting "psa pokemon cards" / "is grading worth it".
+  - explainer + FAQ, targeting "psa pokemon cards" / "is grading worth it".
 - **Blog**: 3 new English posts (how to start a collection [KD 0], are cards a good
   investment, is grading worth it) interlinked to the pillar + tools. **Deferred**: the
   blog-localization refactor (locale-aware routing + EN fallback) — higher risk/lower
@@ -503,7 +503,7 @@ set in Stripe); Phase-1 MVP; no Discord.
   10→∞, pinned sets 1→∞, portfolio history 30d→full, plus the Pro badge. Kept **free**
   (deliberately not paywalled, unlike the competitor): grading calculator, price movers,
   cost-to-completion, CSV/JSON export, realized+unrealized P/L. **Nothing existing users have
-  is clawed back** — over-cap data is grandfathered (reads stay; only new *adds* are blocked
+  is clawed back** — over-cap data is grandfathered (reads stay; only new _adds_ are blocked
   with an `upgrade` hint on the existing `{code:"limit"}` 422).
 - **Architecture** — no `stripe-node` SDK. Raw-`fetch` Stripe client
   (`app/lib/billing/stripe.server.ts`, form-encoded like the eBay token call) + **hosted**
@@ -514,7 +514,7 @@ set in Stripe); Phase-1 MVP; no Discord.
   (`jobs/handlers/subscription.server.ts`) fetches the authoritative subscription and writes the
   entitlement cache onto `userProfiles`.
 - **Entitlement** — migration `0009` adds `plan / planStatus / planInterval / stripeCustomerId /
-  stripeSubscriptionId / premiumUntil` to `userProfiles`. `isPremium` = `premiumUntil > now`
+stripeSubscriptionId / premiumUntil` to `userProfiles`. `isPremium` = `premiumUntil > now`
   (access kept through the paid period after cancel). `limitsFor(plan)` in `app/lib/limits.ts`
   (LIMITS kept for non-tiered abuse caps); gating threaded into the existing count-check choke
   points via `getUserPlan(db, userId)`.
@@ -566,4 +566,3 @@ catalog/prices, Pokémon = category 3):
 future `runAfter` (retries, the +3 h history snapshot) had no one to wake them and waited for
 the next day. `runJobBatch` now sends a delayed queue message (≤ 12 h) for the earliest
 not-yet-due job when nothing is due right now (`nextJobDueAt`).
-

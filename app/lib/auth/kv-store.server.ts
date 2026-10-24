@@ -60,5 +60,7 @@ export async function authKvDelete(db: Database, key: string): Promise<void> {
 export async function pruneExpiredAuthKv(db: Database): Promise<void> {
   await db
     .delete(schema.authKv)
-    .where(sql`${schema.authKv.expiresAt} IS NOT NULL AND ${schema.authKv.expiresAt} < ${nowSeconds()}`);
+    .where(
+      sql`${schema.authKv.expiresAt} IS NOT NULL AND ${schema.authKv.expiresAt} < ${nowSeconds()}`,
+    );
 }

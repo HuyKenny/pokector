@@ -115,7 +115,9 @@ export default function RarityHub({ loaderData }: Route.ComponentProps) {
           </Link>{" "}
           / <span className="text-fg">{hub.h1}</span>
         </nav>
-        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-fg sm:text-5xl">{hub.h1}</h1>
+        <h1 className="max-w-3xl text-4xl font-bold tracking-tight text-fg sm:text-5xl">
+          {hub.h1}
+        </h1>
         <p className="max-w-3xl text-lg text-fg-muted">{hub.blurb}</p>
       </section>
 
@@ -127,7 +129,9 @@ export default function RarityHub({ loaderData }: Route.ComponentProps) {
         <>
           {/* Showcase */}
           <section aria-label="Top cards" className="flex flex-col gap-4">
-            <h2 className="text-xl font-semibold text-fg">Most valuable {hub.label.toLowerCase()} cards</h2>
+            <h2 className="text-xl font-semibold text-fg">
+              Most valuable {hub.label.toLowerCase()} cards
+            </h2>
             <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
               {top.map((c, i) => (
                 <li key={c.id}>
@@ -165,10 +169,18 @@ export default function RarityHub({ loaderData }: Route.ComponentProps) {
               <table className="w-full text-sm">
                 <thead>
                   <tr className="border-b border-edge text-fg-muted">
-                    <th scope="col" className="py-2 pe-4 text-start font-medium">Card</th>
-                    <th scope="col" className="py-2 pe-4 text-start font-medium">Set</th>
-                    <th scope="col" className="py-2 pe-4 text-start font-medium">Rarity</th>
-                    <th scope="col" className="py-2 text-end font-medium">Market value</th>
+                    <th scope="col" className="py-2 pe-4 text-start font-medium">
+                      Card
+                    </th>
+                    <th scope="col" className="py-2 pe-4 text-start font-medium">
+                      Set
+                    </th>
+                    <th scope="col" className="py-2 pe-4 text-start font-medium">
+                      Rarity
+                    </th>
+                    <th scope="col" className="py-2 text-end font-medium">
+                      Market value
+                    </th>
                   </tr>
                 </thead>
                 <tbody>
@@ -189,14 +201,18 @@ export default function RarityHub({ loaderData }: Route.ComponentProps) {
                 </tbody>
               </table>
             </div>
-            <p className="text-xs text-fg-faint">Prices in {currency}, raw singles, updated daily.</p>
+            <p className="text-xs text-fg-faint">
+              Prices in {currency}, raw singles, updated daily.
+            </p>
           </section>
         </>
       )}
 
       {/* FAQ */}
       <section aria-labelledby="faq-heading" className="flex flex-col gap-4">
-        <h2 id="faq-heading" className="text-xl font-semibold text-fg">FAQ</h2>
+        <h2 id="faq-heading" className="text-xl font-semibold text-fg">
+          FAQ
+        </h2>
         <dl className="flex max-w-3xl flex-col gap-4">
           {faq.map((item) => (
             <div key={item.question}>
@@ -208,7 +224,10 @@ export default function RarityHub({ loaderData }: Route.ComponentProps) {
       </section>
 
       {/* Sibling hubs — interlinking */}
-      <section aria-label="Browse by card type" className="flex flex-col gap-3 border-t border-edge pt-8">
+      <section
+        aria-label="Browse by card type"
+        className="flex flex-col gap-3 border-t border-edge pt-8"
+      >
         <h2 className="text-lg font-semibold text-fg">Browse by card type</h2>
         <ul className="flex flex-wrap gap-2 text-sm">
           {siblings.map(([slug, s]) => (

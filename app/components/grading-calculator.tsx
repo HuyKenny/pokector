@@ -38,7 +38,10 @@ export interface GradingLabels {
   feeNote: string; // "PSA fee {fee} + shipping {shipping} (estimate)"
 }
 
-const TIER_LABEL_KEY: Record<GradingTierId, keyof Pick<GradingLabels, "tierValue" | "tierRegular" | "tierExpress">> = {
+const TIER_LABEL_KEY: Record<
+  GradingTierId,
+  keyof Pick<GradingLabels, "tierValue" | "tierRegular" | "tierExpress">
+> = {
   value: "tierValue",
   regular: "tierRegular",
   express: "tierExpress",

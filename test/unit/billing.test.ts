@@ -86,10 +86,7 @@ describe("parseEntitlements", () => {
   // must win, or a forgotten default would silently downgrade a paying customer.
   it("prefers the purchased plan over the auto-enabled free tier", () => {
     const ent = parseEntitlements({
-      subscriptions: [
-        { plan_id: PLANS.free, status: "active", auto_enable: true },
-        paidSub,
-      ],
+      subscriptions: [{ plan_id: PLANS.free, status: "active", auto_enable: true }, paidSub],
     });
     expect(ent.planId).toBe(PLANS.pro);
     expect(ent.premium).toBe(true);
@@ -111,8 +108,6 @@ describe("parseEntitlements", () => {
   });
 
   // A broken sync must never push someone below the free tier: that would turn a
-
-
 });
 
 /**
@@ -121,10 +116,18 @@ describe("parseEntitlements", () => {
  * what they bought. Autumn can report an active plan with no period end.
  */
 describe("premiumUntilFor", () => {
-  const base = { planId: PLANS.pro, premium: true, cancelPending: false, interval: "month" as const, hasStripeCustomer: true };
+  const base = {
+    planId: PLANS.pro,
+    premium: true,
+    cancelPending: false,
+    interval: "month" as const,
+    hasStripeCustomer: true,
+  };
 
   it("mirrors the paid period end when Autumn sends one", () => {
-    expect(premiumUntilFor({ ...base, periodEnd: 1_800_000_000_000 }).getTime()).toBe(1_800_000_000_000);
+    expect(premiumUntilFor({ ...base, periodEnd: 1_800_000_000_000 }).getTime()).toBe(
+      1_800_000_000_000,
+    );
   });
 
   it("keeps a premium customer with no period end in access, not at the epoch", () => {
@@ -136,7 +139,9 @@ describe("premiumUntilFor", () => {
 
   it("puts a non-premium customer in the past so isPremium goes false", () => {
     expect(premiumUntilFor({ ...base, premium: false, periodEnd: null }).getTime()).toBe(0);
-    expect(premiumUntilFor({ ...base, premium: false, periodEnd: 1_800_000_000_000 }).getTime()).toBe(0);
+    expect(
+      premiumUntilFor({ ...base, premium: false, periodEnd: 1_800_000_000_000 }).getTime(),
+    ).toBe(0);
   });
 });
 

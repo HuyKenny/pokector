@@ -63,12 +63,40 @@ export function resolveMarket(value: string | null | undefined): Market {
  */
 export const EU_COUNTRIES: ReadonlySet<string> = new Set([
   // EU 27
-  "AT", "BE", "BG", "HR", "CY", "CZ", "DK", "EE", "FI", "FR", "DE", "GR", "HU",
-  "IE", "IT", "LV", "LT", "LU", "MT", "NL", "PL", "PT", "RO", "SK", "SI", "ES", "SE",
+  "AT",
+  "BE",
+  "BG",
+  "HR",
+  "CY",
+  "CZ",
+  "DK",
+  "EE",
+  "FI",
+  "FR",
+  "DE",
+  "GR",
+  "HU",
+  "IE",
+  "IT",
+  "LV",
+  "LT",
+  "LU",
+  "MT",
+  "NL",
+  "PL",
+  "PT",
+  "RO",
+  "SK",
+  "SI",
+  "ES",
+  "SE",
   // EEA
-  "IS", "LI", "NO",
+  "IS",
+  "LI",
+  "NO",
   // UK + Switzerland
-  "GB", "CH",
+  "GB",
+  "CH",
 ]);
 
 /**

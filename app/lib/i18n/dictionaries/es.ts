@@ -115,7 +115,8 @@ const es: Dict = {
   },
 
   collectorsLanding: {
-    metaTitle: "Coleccionistas de cartas Pokémon — rastreador de colección y precios gratis | Pokector",
+    metaTitle:
+      "Coleccionistas de cartas Pokémon — rastreador de colección y precios gratis | Pokector",
     metaDescription:
       "El kit gratuito para coleccionistas de cartas Pokémon: rastrea tu colección, sigue precios de TCGplayer y Cardmarket, completa listas de sets, calcula el ROI de gradeo y ve ganancias y pérdidas reales.",
     breadcrumb: "Para coleccionistas",
@@ -187,7 +188,8 @@ const es: Dict = {
     colAllIn: "Coste total",
     colNet: "Neto",
     colRoi: "ROI",
-    feeNote: "Tarifa PSA {fee} + envío {shipping} (estimación — comprueba los precios actuales de PSA).",
+    feeNote:
+      "Tarifa PSA {fee} + envío {shipping} (estimación — comprueba los precios actuales de PSA).",
     disclaimer:
       "Solo una estimación. No toda carta obtiene un PSA 10, y las tarifas cambian: introduce las cifras que realmente pagarás.",
     howHeading: "Cómo funciona el ROI de gradeo",
@@ -265,11 +267,14 @@ const es: Dict = {
       "No se quita ninguna función que ya tengas. Los precios siempre muestran su fuente y fecha: las cartas sin precio dicen «sin precio», nunca «0 $».",
     faqHeading: "FAQ de precios",
     faq1Q: "¿De verdad basta el plan gratis?",
-    faq1A: "Sí. Puedes rastrear toda tu colección, completar sets, ver valores y P/L, y usar la calculadora de gradeo gratis. Pro añade escala (álbumes, alertas, cartas gradeadas ilimitadas…) y tu historial completo de portafolio.",
+    faq1A:
+      "Sí. Puedes rastrear toda tu colección, completar sets, ver valores y P/L, y usar la calculadora de gradeo gratis. Pro añade escala (álbumes, alertas, cartas gradeadas ilimitadas…) y tu historial completo de portafolio.",
     faq2Q: "¿Puedo cancelar cuando quiera?",
-    faq2A: "Sí. Gestiona o cancela con un clic desde el portal seguro de clientes de Stripe. Conservas Pro hasta el final del periodo que ya pagaste.",
+    faq2A:
+      "Sí. Gestiona o cancela con un clic desde el portal seguro de clientes de Stripe. Conservas Pro hasta el final del periodo que ya pagaste.",
     faq3Q: "¿Qué pasa con mis datos si bajo de plan?",
-    faq3A: "Nunca se borra nada. Si superas un límite gratis, simplemente no puedes añadir más de ese elemento hasta volver por debajo; todo lo que ya tienes sigue visible.",
+    faq3A:
+      "Nunca se borra nada. Si superas un límite gratis, simplemente no puedes añadir más de ese elemento hasta volver por debajo; todo lo que ya tienes sigue visible.",
   },
 
   cards: {
@@ -325,8 +330,10 @@ const es: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Supera el punto de equilibrio",
     gradingNotWorth: "Por debajo del equilibrio",
-    gradingSoldNote: "Los valores gradeados son la mediana de ventas reales de eBay (últimos 90 días). Las tarifas de PSA y el envío son estimaciones y varían según el valor declarado y el plazo.",
-    gradingListingDisclaimer: "Los valores gradeados son la mediana de los precios de venta actuales en eBay (sin valores atípicos), no ventas reales; tómalo solo como una guía aproximada.",
+    gradingSoldNote:
+      "Los valores gradeados son la mediana de ventas reales de eBay (últimos 90 días). Las tarifas de PSA y el envío son estimaciones y varían según el valor declarado y el plazo.",
+    gradingListingDisclaimer:
+      "Los valores gradeados son la mediana de los precios de venta actuales en eBay (sin valores atípicos), no ventas reales; tómalo solo como una guía aproximada.",
     gradingFeeNote: "Tarifa PSA {fee} + envío est. {shipping}.",
     notFoundTitle: "Carta no encontrada | Pokector",
     notFoundDescription: "Carta no encontrada.",
@@ -348,7 +355,8 @@ const es: Dict = {
     colAvgSell: "Venta media",
     sourceCardmarket: "Fuente: datos de precios de Cardmarket",
     tcgplayerPrice: "TCGplayer (USD): {price}",
-    psaGlobalUsdNote: "Los precios PSA son del mercado global de cartas graduadas (eBay US), en USD.",
+    psaGlobalUsdNote:
+      "Los precios PSA son del mercado global de cartas graduadas (eBay US), en USD.",
     pricesEmpty:
       "Actualmente no hay ningún precio de mercado disponible para esta carta. Permanece sin precio: Pokector nunca sustituye por una suposición.",
     colVariant: "Variante",
@@ -488,10 +496,12 @@ const es: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — cada Pokémon por número de cartas y precio medio | Pokector",
-    metaDescription: "Explora la Pokédex Nacional completa: cada Pokémon con su número, cuántas cartas existen y el precio medio de mercado.",
+    metaDescription:
+      "Explora la Pokédex Nacional completa: cada Pokémon con su número, cuántas cartas existen y el precio medio de mercado.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Cada Pokémon de la Pokédex Nacional con su número de cartas y el precio medio de mercado. Toca un Pokémon para ver sus cartas.",
+    intro:
+      "Cada Pokémon de la Pokédex Nacional con su número de cartas y el precio medio de mercado. Toca un Pokémon para ver sus cartas.",
     generationLabel: "Generación {n}",
     colNumber: "N.º",
     colCards: "Cartas",

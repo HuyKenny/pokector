@@ -10,10 +10,27 @@ export function loader({ context }: Route.LoaderArgs) {
   const production = (env.ENVIRONMENT ?? "").trim().toLowerCase() === "production";
 
   // Crawlers that bring no visitors but cost Worker requests/CPU (Workers Paid bill, Oct 2026).
-  const blocked = ["SemrushBot", "DataForSeoBot", "MJ12bot", "AhrefsBot", "Reflectionbot", "ExaSearchBot", "Applebot", "Amazonbot", "Amzn-SearchBot", "YouBot"]
-    .flatMap((ua) => [`User-agent: ${ua}`, "Disallow: /", ""]);
+  const blocked = [
+    "SemrushBot",
+    "DataForSeoBot",
+    "MJ12bot",
+    "AhrefsBot",
+    "Reflectionbot",
+    "ExaSearchBot",
+    "Applebot",
+    "Amazonbot",
+    "Amzn-SearchBot",
+    "YouBot",
+  ].flatMap((ua) => [`User-agent: ${ua}`, "Disallow: /", ""]);
   // Search crawlers we keep, but throttled (Claude-SearchBot alone was ~200k requests/week).
-  const throttled = ["Claude-SearchBot", "bingbot"].flatMap((ua) => [`User-agent: ${ua}`, "Crawl-delay: 10", "Disallow: /app/", "Disallow: /admin/", "Disallow: /api/", ""]);
+  const throttled = ["Claude-SearchBot", "bingbot"].flatMap((ua) => [
+    `User-agent: ${ua}`,
+    "Crawl-delay: 10",
+    "Disallow: /app/",
+    "Disallow: /admin/",
+    "Disallow: /api/",
+    "",
+  ]);
 
   const body = production
     ? [

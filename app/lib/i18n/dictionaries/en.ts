@@ -169,8 +169,7 @@ export const en = {
     faq5A:
       "No. Pokector is an independent project and is not affiliated with, endorsed by, or sponsored by Nintendo, The Pokémon Company, or Wizards of the Coast.",
     ctaHeading: "Start tracking your collection today",
-    ctaBody:
-      "Create a free account, add your first cards in minutes, and let Pokector keep score.",
+    ctaBody: "Create a free account, add your first cards in minutes, and let Pokector keep score.",
     ctaButton: "Create free account",
   },
 
@@ -272,11 +271,14 @@ export const en = {
       "No feature you have today is taken away. Prices always show their source and date — unpriced cards say “unpriced”, never “$0”.",
     faqHeading: "Pricing FAQ",
     faq1Q: "Is the free plan really enough?",
-    faq1A: "Yes. You can track your entire collection, complete sets, see values and P/L, and use the grading calculator for free. Pro adds scale (unlimited binders, alerts, graded cards…) and your full portfolio history.",
+    faq1A:
+      "Yes. You can track your entire collection, complete sets, see values and P/L, and use the grading calculator for free. Pro adds scale (unlimited binders, alerts, graded cards…) and your full portfolio history.",
     faq2Q: "Can I cancel anytime?",
-    faq2A: "Yes. Manage or cancel in one click via the secure Stripe customer portal. You keep Pro until the end of the period you already paid for.",
+    faq2A:
+      "Yes. Manage or cancel in one click via the secure Stripe customer portal. You keep Pro until the end of the period you already paid for.",
     faq3Q: "What happens to my data if I downgrade?",
-    faq3A: "Nothing is ever deleted. If you go over a free limit you simply can't add more of that item until you're back under it — everything you already have stays visible.",
+    faq3A:
+      "Nothing is ever deleted. If you go over a free limit you simply can't add more of that item until you're back under it — everything you already have stays visible.",
   },
 
   cards: {
@@ -517,8 +519,7 @@ export const en = {
 
   compare: {
     metaTitle: "Compare Pokémon Card Prices | Pokector",
-    metaDescription:
-      "Overlay the market price history of up to three Pokémon cards side by side.",
+    metaDescription: "Overlay the market price history of up to three Pokémon cards side by side.",
     breadcrumb: "Compare",
     heading: "Compare cards",
     intro: "Overlay the price history of up to 3 cards to see how they move against each other.",

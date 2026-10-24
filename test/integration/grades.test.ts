@@ -64,7 +64,13 @@ async function seed() {
     .onConflictDoNothing();
   await db
     .insert(schema.cardGradedPrices)
-    .values({ cardId: "g-charizard", grade: "psa10", currency: "USD", fromMinor: 90000, observedAt: new Date() })
+    .values({
+      cardId: "g-charizard",
+      grade: "psa10",
+      currency: "USD",
+      fromMinor: 90000,
+      observedAt: new Date(),
+    })
     .onConflictDoNothing();
 }
 
@@ -73,32 +79,42 @@ describe("grade-aware valuation", () => {
 
   it("values a raw entry by TCGplayer and a PSA 10 entry by the graded price", async () => {
     // Raw holofoil entry → $200.
-    await addEntry(db, USER, {
-      cardId: "g-charizard",
-      quantity: 1,
-      variant: "holofoil",
-      grade: "raw",
-      condition: "Near Mint",
-      language: "English",
-      purchasePriceMinor: null,
-      purchaseDate: null,
-      notes: null,
-    }, "us");
+    await addEntry(
+      db,
+      USER,
+      {
+        cardId: "g-charizard",
+        quantity: 1,
+        variant: "holofoil",
+        grade: "raw",
+        condition: "Near Mint",
+        language: "English",
+        purchasePriceMinor: null,
+        purchaseDate: null,
+        notes: null,
+      },
+      "us",
+    );
     let summary = await computeUserPortfolio(db, USER, "us");
     expect(summary.marketValueMinor).toBe(20000);
 
     // Add a PSA 10 entry → +$900 (graded price, NOT the raw $200).
-    await addEntry(db, USER, {
-      cardId: "g-charizard",
-      quantity: 1,
-      variant: "holofoil",
-      grade: "psa10",
-      condition: "Near Mint",
-      language: "English",
-      purchasePriceMinor: null,
-      purchaseDate: null,
-      notes: null,
-    }, "us");
+    await addEntry(
+      db,
+      USER,
+      {
+        cardId: "g-charizard",
+        quantity: 1,
+        variant: "holofoil",
+        grade: "psa10",
+        condition: "Near Mint",
+        language: "English",
+        purchasePriceMinor: null,
+        purchaseDate: null,
+        notes: null,
+      },
+      "us",
+    );
     summary = await computeUserPortfolio(db, USER, "us");
     expect(summary.marketValueMinor).toBe(20000 + 90000);
   });

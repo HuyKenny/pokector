@@ -1,6 +1,11 @@
 import { describe, expect, it } from "vitest";
 
-import { proceedsFor, realizedFor, summarizeSales, type SaleRow } from "~/lib/collection/sales.server";
+import {
+  proceedsFor,
+  realizedFor,
+  summarizeSales,
+  type SaleRow,
+} from "~/lib/collection/sales.server";
 
 function sale(over: Partial<SaleRow>): SaleRow {
   return {

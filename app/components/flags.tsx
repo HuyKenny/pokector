@@ -26,7 +26,9 @@ function Star({
   fill: string;
   rot?: number | string;
 }) {
-  return <path d={STAR} fill={fill} transform={`translate(${x} ${y}) scale(${s}) rotate(${rot})`} />;
+  return (
+    <path d={STAR} fill={fill} transform={`translate(${x} ${y}) scale(${s}) rotate(${rot})`} />
+  );
 }
 
 const FLAGS: Record<string, ReactNode> = {
@@ -132,7 +134,15 @@ const FLAGS: Record<string, ReactNode> = {
       <rect width="24" height="16" fill="#003399" />
       {Array.from({ length: 12 }).map((_, i) => {
         const a = (i * Math.PI) / 6;
-        return <Star key={i} x={12 + 4.7 * Math.sin(a)} y={8 - 4.7 * Math.cos(a)} s="0.9" fill="#FFCC00" />;
+        return (
+          <Star
+            key={i}
+            x={12 + 4.7 * Math.sin(a)}
+            y={8 - 4.7 * Math.cos(a)}
+            s="0.9"
+            fill="#FFCC00"
+          />
+        );
       })}
     </>
   ),

@@ -141,12 +141,7 @@ export interface EntryInput {
   notes: string | null;
 }
 
-export async function addEntry(
-  db: Database,
-  userId: string,
-  input: EntryInput,
-  market: Market,
-) {
+export async function addEntry(db: Database, userId: string, input: EntryInput, market: Market) {
   const [{ n }] = await db
     .select({ n: count() })
     .from(schema.collectionEntries)
@@ -315,10 +310,7 @@ export async function getUserCardState(
       .select({ cardId: schema.wishlistItems.cardId })
       .from(schema.wishlistItems)
       .where(
-        and(
-          eq(schema.wishlistItems.userId, userId),
-          inArray(schema.wishlistItems.cardId, cardIds),
-        ),
+        and(eq(schema.wishlistItems.userId, userId), inArray(schema.wishlistItems.cardId, cardIds)),
       ),
   ]);
 

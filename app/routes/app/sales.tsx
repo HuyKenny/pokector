@@ -116,12 +116,7 @@ export default function Sales({ loaderData }: Route.ComponentProps) {
         <div className="flex flex-wrap gap-2" role="group" aria-label="Filter by year">
           <YearChip label="All time" to="/app/sales" active={year === null} />
           {years.map((y) => (
-            <YearChip
-              key={y}
-              label={y}
-              to={`/app/sales?year=${y}`}
-              active={year === Number(y)}
-            />
+            <YearChip key={y} label={y} to={`/app/sales?year=${y}`} active={year === Number(y)} />
           ))}
         </div>
       ) : null}
@@ -158,9 +153,8 @@ export default function Sales({ loaderData }: Route.ComponentProps) {
 
           {summary.unpricedCount > 0 ? (
             <p className="text-xs text-fg-faint">
-              {summary.unpricedCount}{" "}
-              {summary.unpricedCount === 1 ? "sale is" : "sales are"} excluded from realized P/L
-              because no purchase price was recorded on the entry.
+              {summary.unpricedCount} {summary.unpricedCount === 1 ? "sale is" : "sales are"}{" "}
+              excluded from realized P/L because no purchase price was recorded on the entry.
             </p>
           ) : null}
 
@@ -234,8 +228,8 @@ export default function Sales({ loaderData }: Route.ComponentProps) {
           </div>
 
           <p className="text-xs text-fg-faint">
-            Realized P/L uses the purchase price recorded on each entry as its cost basis, snapshotted
-            at the time of sale. Values are in USD. This is not tax or financial advice.
+            Realized P/L uses the purchase price recorded on each entry as its cost basis,
+            snapshotted at the time of sale. Values are in USD. This is not tax or financial advice.
           </p>
         </>
       )}

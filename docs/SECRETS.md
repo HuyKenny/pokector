@@ -16,29 +16,29 @@ Never commit real secret values. Real values live only in:
 
 ## Optional secrets
 
-| Name                                        | Purpose                              | Status                                                        |
-| ------------------------------------------- | ------------------------------------ | ------------------------------------------------------------- |
-| `RESEND_API_KEY`                            | e-mail (verification, reset, alerts) | **not configured** → honest degraded mode (see DECISIONS D10) |
-| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                         | **not configured** → provider hidden                          |
-| `STRIPE_SECRET_KEY`                         | Stripe API (Checkout, Portal, subscription reads) | TEST in staging, LIVE in production. Absent → billing disabled (pricing page renders, checkout/portal off). **Never paste in chat/code — set via `wrangler secret put`.** |
-| `STRIPE_WEBHOOK_SECRET`                     | `/api/stripe/webhook` signature verify (`whsec_…`) | one per env (from the Stripe webhook endpoint). Absent → webhook fail-closed. |
-| `JUSTTCG_API_KEY`                           | JustTCG API (`x-api-key`) — Riftbound catalog + prices sync | Absent → Riftbound sync disabled (`/riftbound` catalog empty). Set via `wrangler secret put JUSTTCG_API_KEY --env <env>`. |
+| Name                                        | Purpose                                                     | Status                                                                                                                                                                    |
+| ------------------------------------------- | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `RESEND_API_KEY`                            | e-mail (verification, reset, alerts)                        | **not configured** → honest degraded mode (see DECISIONS D10)                                                                                                             |
+| `GOOGLE_CLIENT_ID` / `GOOGLE_CLIENT_SECRET` | Google OAuth                                                | **not configured** → provider hidden                                                                                                                                      |
+| `STRIPE_SECRET_KEY`                         | Stripe API (Checkout, Portal, subscription reads)           | TEST in staging, LIVE in production. Absent → billing disabled (pricing page renders, checkout/portal off). **Never paste in chat/code — set via `wrangler secret put`.** |
+| `STRIPE_WEBHOOK_SECRET`                     | `/api/stripe/webhook` signature verify (`whsec_…`)          | one per env (from the Stripe webhook endpoint). Absent → webhook fail-closed.                                                                                             |
+| `JUSTTCG_API_KEY`                           | JustTCG API (`x-api-key`) — Riftbound catalog + prices sync | Absent → Riftbound sync disabled (`/riftbound` catalog empty). Set via `wrangler secret put JUSTTCG_API_KEY --env <env>`.                                                 |
 
 ## Non-secret environment variables (wrangler.jsonc `vars`, per environment)
 
-| Name                     | Production value                             |
-| ------------------------ | -------------------------------------------- |
-| `APP_NAME`               | `Pokector`                                   |
-| `APP_URL`                | `https://pokector.com`                       |
-| `ENVIRONMENT`            | `production` / `staging` / `development`     |
-| `DEFAULT_CURRENCY`       | `USD`                                        |
-| `DEFAULT_LOCALE`         | `en-US`                                      |
-| `TURNSTILE_SITE_KEY`     | per-env widget sitekey (public, not secret)  |
-| `SUPPORT_EMAIL`          | `info@pokector.com`                          |
-| `LEGAL_OPERATOR_NAME`    | `Ha Duy Huy`                                 |
-| `LEGAL_CONTACT_EMAIL`    | `info@pokector.com`                          |
-| `LEGAL_OPERATOR_ADDRESS` | `Bartáková 36, 140 00 Praha, Czech Republic` |
-| `LEGAL_OPERATOR_ID`      | `IČO 07876823`                               |
+| Name                     | Production value                                               |
+| ------------------------ | -------------------------------------------------------------- |
+| `APP_NAME`               | `Pokector`                                                     |
+| `APP_URL`                | `https://pokector.com`                                         |
+| `ENVIRONMENT`            | `production` / `staging` / `development`                       |
+| `DEFAULT_CURRENCY`       | `USD`                                                          |
+| `DEFAULT_LOCALE`         | `en-US`                                                        |
+| `TURNSTILE_SITE_KEY`     | per-env widget sitekey (public, not secret)                    |
+| `SUPPORT_EMAIL`          | `info@pokector.com`                                            |
+| `LEGAL_OPERATOR_NAME`    | `Ha Duy Huy`                                                   |
+| `LEGAL_CONTACT_EMAIL`    | `info@pokector.com`                                            |
+| `LEGAL_OPERATOR_ADDRESS` | `Bartáková 36, 140 00 Praha, Czech Republic`                   |
+| `LEGAL_OPERATOR_ID`      | `IČO 07876823`                                                 |
 | `STRIPE_PRICE_MONTHLY`   | Stripe recurring Price ID, monthly (public, per-env TEST/LIVE) |
 | `STRIPE_PRICE_YEARLY`    | Stripe recurring Price ID, yearly (public, per-env TEST/LIVE)  |
 

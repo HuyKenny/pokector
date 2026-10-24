@@ -112,9 +112,7 @@ const ACTIVE_STATUSES = new Set(["active", "trialing", "past_due"]);
  * so a forgotten default can never outrank a paid plan.
  */
 function primarySubscription(subs: AutumnSubscription[]): AutumnSubscription | null {
-  const active = subs.filter(
-    (s) => s.add_on !== true && ACTIVE_STATUSES.has(s.status ?? ""),
-  );
+  const active = subs.filter((s) => s.add_on !== true && ACTIVE_STATUSES.has(s.status ?? ""));
   if (active.length === 0) return null;
   return active.find((s) => s.auto_enable !== true) ?? active[0];
 }

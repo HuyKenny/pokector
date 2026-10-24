@@ -264,11 +264,14 @@ const vi: Dict = {
       "Không tính năng nào bạn đang có bị lấy đi. Giá luôn hiển thị nguồn và ngày — thẻ chưa có giá ghi “chưa có giá”, không phải “0 $”.",
     faqHeading: "FAQ về giá",
     faq1Q: "Gói miễn phí có thực sự đủ không?",
-    faq1A: "Có. Bạn có thể theo dõi toàn bộ bộ sưu tập, hoàn thành bộ thẻ, xem giá trị và lãi/lỗ, và dùng máy tính grading miễn phí. Pro thêm quy mô (binder, cảnh báo, thẻ đã grade không giới hạn…) và toàn bộ lịch sử danh mục.",
+    faq1A:
+      "Có. Bạn có thể theo dõi toàn bộ bộ sưu tập, hoàn thành bộ thẻ, xem giá trị và lãi/lỗ, và dùng máy tính grading miễn phí. Pro thêm quy mô (binder, cảnh báo, thẻ đã grade không giới hạn…) và toàn bộ lịch sử danh mục.",
     faq2Q: "Tôi có thể hủy bất cứ lúc nào không?",
-    faq2A: "Có. Quản lý hoặc hủy chỉ bằng một cú nhấp qua cổng khách hàng Stripe an toàn. Bạn giữ Pro đến hết kỳ đã thanh toán.",
+    faq2A:
+      "Có. Quản lý hoặc hủy chỉ bằng một cú nhấp qua cổng khách hàng Stripe an toàn. Bạn giữ Pro đến hết kỳ đã thanh toán.",
     faq3Q: "Dữ liệu của tôi ra sao nếu hạ gói?",
-    faq3A: "Không có gì bị xóa. Nếu vượt giới hạn miễn phí, bạn chỉ đơn giản không thêm được mục đó nữa cho đến khi quay lại dưới giới hạn — mọi thứ đã có vẫn hiển thị.",
+    faq3A:
+      "Không có gì bị xóa. Nếu vượt giới hạn miễn phí, bạn chỉ đơn giản không thêm được mục đó nữa cho đến khi quay lại dưới giới hạn — mọi thứ đã có vẫn hiển thị.",
   },
 
   cards: {
@@ -323,8 +326,10 @@ const vi: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Vượt điểm hòa vốn",
     gradingNotWorth: "Dưới điểm hòa vốn",
-    gradingSoldNote: "Giá trị đã grade là trung vị của các giao dịch thật trên eBay (90 ngày qua). Phí PSA và vận chuyển là ước tính, thay đổi theo giá khai báo và thời gian xử lý.",
-    gradingListingDisclaimer: "Giá trị đã grade là trung vị giá rao bán hiện tại trên eBay (đã loại giá trị ngoại lai), không phải giao dịch thật — chỉ nên xem là tham khảo.",
+    gradingSoldNote:
+      "Giá trị đã grade là trung vị của các giao dịch thật trên eBay (90 ngày qua). Phí PSA và vận chuyển là ước tính, thay đổi theo giá khai báo và thời gian xử lý.",
+    gradingListingDisclaimer:
+      "Giá trị đã grade là trung vị giá rao bán hiện tại trên eBay (đã loại giá trị ngoại lai), không phải giao dịch thật — chỉ nên xem là tham khảo.",
     gradingFeeNote: "Phí PSA {fee} + vận chuyển ước tính {shipping}.",
     notFoundTitle: "Không tìm thấy thẻ | Pokector",
     notFoundDescription: "Không tìm thấy thẻ.",
@@ -485,10 +490,12 @@ const vi: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — mỗi Pokémon theo số lượng thẻ và giá trung bình | Pokector",
-    metaDescription: "Duyệt toàn bộ Pokédex Quốc gia: mỗi Pokémon với số hiệu, số lượng thẻ hiện có và giá thị trường trung bình.",
+    metaDescription:
+      "Duyệt toàn bộ Pokédex Quốc gia: mỗi Pokémon với số hiệu, số lượng thẻ hiện có và giá thị trường trung bình.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Mỗi Pokémon trong Pokédex Quốc gia kèm số lượng thẻ và giá thị trường trung bình. Chạm vào một Pokémon để xem các thẻ của nó.",
+    intro:
+      "Mỗi Pokémon trong Pokédex Quốc gia kèm số lượng thẻ và giá thị trường trung bình. Chạm vào một Pokémon để xem các thẻ của nó.",
     generationLabel: "Thế hệ {n}",
     colNumber: "Số",
     colCards: "Thẻ",

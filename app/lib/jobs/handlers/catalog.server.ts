@@ -301,7 +301,9 @@ export async function handleCatalogCardsPage(job: SyncJob, env: Env): Promise<vo
     return [
       // rowid = pokemon_cards.rowid (migration 0015). Deleting by the UNINDEXED
       // card_id column scanned the whole FTS table for every card (~20k rows).
-      env.DB.prepare("DELETE FROM card_search WHERE rowid = (SELECT rowid FROM pokemon_cards WHERE id = ?)").bind(v[0]),
+      env.DB.prepare(
+        "DELETE FROM card_search WHERE rowid = (SELECT rowid FROM pokemon_cards WHERE id = ?)",
+      ).bind(v[0]),
       env.DB.prepare(
         `INSERT INTO card_search
            (rowid, card_id, name, set_name, series, number, rarity, artist, dex, supertype)

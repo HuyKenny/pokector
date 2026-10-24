@@ -279,7 +279,9 @@ export default function Pokedex({ loaderData }: Route.ComponentProps) {
                         loading="lazy"
                         className={`h-16 w-16 object-contain ${hasCards ? "" : "opacity-50"}`}
                       />
-                      <span className="text-xs font-medium tabular-nums text-fg-faint">{number}</span>
+                      <span className="text-xs font-medium tabular-nums text-fg-faint">
+                        {number}
+                      </span>
                       <span className="truncate text-sm font-semibold text-fg" title={p.name}>
                         {p.name}
                       </span>

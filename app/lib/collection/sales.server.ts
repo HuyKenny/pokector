@@ -104,9 +104,7 @@ export function realizedFor(sale: {
   feeMinor: number | null;
 }): number | null {
   if (sale.purchasePriceMinor === null) return null;
-  return (
-    (sale.salePriceMinor - sale.purchasePriceMinor) * sale.quantity - (sale.feeMinor ?? 0)
-  );
+  return (sale.salePriceMinor - sale.purchasePriceMinor) * sale.quantity - (sale.feeMinor ?? 0);
 }
 
 /** Proceeds net of fees for a sale. */

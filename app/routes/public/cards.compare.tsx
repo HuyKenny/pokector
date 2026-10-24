@@ -2,15 +2,9 @@ import { useEffect, useRef, useState } from "react";
 import { Link, useFetcher, useNavigate } from "react-router";
 
 import type { Route } from "./+types/cards.compare";
-import {
-  MultiHistoryChart,
-  type CompareSeries,
-} from "~/components/multi-history-chart";
+import { MultiHistoryChart, type CompareSeries } from "~/components/multi-history-chart";
 import { type ChartRange } from "~/components/history-chart";
-import {
-  getCardPriceHistory,
-  getCardsBriefBySlugs,
-} from "~/lib/catalog/queries.server";
+import { getCardPriceHistory, getCardsBriefBySlugs } from "~/lib/catalog/queries.server";
 import { getCloudflare, getMarket } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
 import { getDict } from "~/lib/i18n/dictionaries.server";

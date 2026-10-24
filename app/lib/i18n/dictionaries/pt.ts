@@ -115,7 +115,8 @@ const pt: Dict = {
   },
 
   collectorsLanding: {
-    metaTitle: "Colecionadores de cartas Pokémon — rastreador de coleção e preços grátis | Pokector",
+    metaTitle:
+      "Colecionadores de cartas Pokémon — rastreador de coleção e preços grátis | Pokector",
     metaDescription:
       "O kit gratuito para colecionadores de cartas Pokémon: acompanhe sua coleção, preços do TCGplayer e Cardmarket, complete checklists de coleções, calcule o ROI de grading e veja lucro e prejuízo reais.",
     breadcrumb: "Para colecionadores",
@@ -265,11 +266,14 @@ const pt: Dict = {
       "Nenhum recurso que você já tem é removido. Os preços sempre mostram a fonte e a data — cartas sem preço dizem “sem preço”, nunca “0 $”.",
     faqHeading: "FAQ de preços",
     faq1Q: "O plano grátis é mesmo suficiente?",
-    faq1A: "Sim. Você pode acompanhar toda a sua coleção, completar coleções, ver valores e lucro/prejuízo e usar a calculadora de grading de graça. O Pro adiciona escala (fichários, alertas, cartas avaliadas ilimitados…) e o histórico completo do portfólio.",
+    faq1A:
+      "Sim. Você pode acompanhar toda a sua coleção, completar coleções, ver valores e lucro/prejuízo e usar a calculadora de grading de graça. O Pro adiciona escala (fichários, alertas, cartas avaliadas ilimitados…) e o histórico completo do portfólio.",
     faq2Q: "Posso cancelar quando quiser?",
-    faq2A: "Sim. Gerencie ou cancele com um clique no portal seguro de clientes do Stripe. Você mantém o Pro até o fim do período que já pagou.",
+    faq2A:
+      "Sim. Gerencie ou cancele com um clique no portal seguro de clientes do Stripe. Você mantém o Pro até o fim do período que já pagou.",
     faq3Q: "O que acontece com meus dados se eu fizer downgrade?",
-    faq3A: "Nada é apagado. Se você passar de um limite grátis, apenas não pode adicionar mais daquele item até voltar abaixo dele — tudo o que já tem continua visível.",
+    faq3A:
+      "Nada é apagado. Se você passar de um limite grátis, apenas não pode adicionar mais daquele item até voltar abaixo dele — tudo o que já tem continua visível.",
   },
 
   cards: {
@@ -325,8 +329,10 @@ const pt: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Acima do ponto de equilíbrio",
     gradingNotWorth: "Abaixo do ponto de equilíbrio",
-    gradingSoldNote: "Os valores gradeados são a mediana de vendas reais no eBay (últimos 90 dias). As taxas da PSA e o frete são estimativas e variam conforme o valor declarado e o prazo.",
-    gradingListingDisclaimer: "Os valores gradeados são a mediana dos preços pedidos atuais no eBay (sem outliers), não vendas reais — use apenas como referência aproximada.",
+    gradingSoldNote:
+      "Os valores gradeados são a mediana de vendas reais no eBay (últimos 90 dias). As taxas da PSA e o frete são estimativas e variam conforme o valor declarado e o prazo.",
+    gradingListingDisclaimer:
+      "Os valores gradeados são a mediana dos preços pedidos atuais no eBay (sem outliers), não vendas reais — use apenas como referência aproximada.",
     gradingFeeNote: "Taxa PSA {fee} + frete est. {shipping}.",
     notFoundTitle: "Carta não encontrada | Pokector",
     notFoundDescription: "Carta não encontrada.",
@@ -488,10 +494,12 @@ const pt: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — cada Pokémon por número de cartas e preço médio | Pokector",
-    metaDescription: "Explore a Pokédex Nacional completa: cada Pokémon com o seu número, quantas cartas existem e o preço médio de mercado.",
+    metaDescription:
+      "Explore a Pokédex Nacional completa: cada Pokémon com o seu número, quantas cartas existem e o preço médio de mercado.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Cada Pokémon da Pokédex Nacional com o número de cartas e o preço médio de mercado. Toque num Pokémon para ver as suas cartas.",
+    intro:
+      "Cada Pokémon da Pokédex Nacional com o número de cartas e o preço médio de mercado. Toque num Pokémon para ver as suas cartas.",
     generationLabel: "Geração {n}",
     colNumber: "N.º",
     colCards: "Cartas",

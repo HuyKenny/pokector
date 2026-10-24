@@ -101,9 +101,7 @@ export async function loader({ params: routeParams, request, context }: Route.Lo
         ? `${canonicalUrl(env.APP_URL, localePath(locale, "/cards"))}?page=${params.page}`
         : canonicalUrl(env.APP_URL, localePath(locale, "/cards")),
   };
-  return session
-    ? data(payload, { headers: { "Cache-Control": "private, no-cache" } })
-    : payload;
+  return session ? data(payload, { headers: { "Cache-Control": "private, no-cache" } }) : payload;
 }
 
 // Rarity option values are catalog data (DB query values) and stay English.

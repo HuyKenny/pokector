@@ -6,13 +6,7 @@ import { getCloudflare } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
-import {
-  breadcrumbJsonLd,
-  canonicalUrl,
-  faqPageJsonLd,
-  JsonLd,
-  pageMeta,
-} from "~/lib/seo/meta";
+import { breadcrumbJsonLd, canonicalUrl, faqPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({

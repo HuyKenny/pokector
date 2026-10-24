@@ -5,13 +5,7 @@ import { getCloudflare } from "~/lib/context";
 import { getDict } from "~/lib/i18n/dictionaries.server";
 import { localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
-import {
-  breadcrumbJsonLd,
-  canonicalUrl,
-  faqPageJsonLd,
-  JsonLd,
-  pageMeta,
-} from "~/lib/seo/meta";
+import { breadcrumbJsonLd, canonicalUrl, faqPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
   return pageMeta({
@@ -141,7 +135,10 @@ export default function Collectors({ loaderData }: Route.ComponentProps) {
         </h2>
         <dl className="flex flex-col gap-4">
           {faqs.map((faq) => (
-            <div key={faq.question} className="rounded-(--radius-card) border border-edge bg-surface p-6">
+            <div
+              key={faq.question}
+              className="rounded-(--radius-card) border border-edge bg-surface p-6"
+            >
               <dt className="font-semibold text-fg">{faq.question}</dt>
               <dd className="mt-2 text-sm text-fg-muted">{faq.answer}</dd>
             </div>

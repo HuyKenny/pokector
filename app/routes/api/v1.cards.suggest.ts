@@ -17,7 +17,10 @@ export interface SuggestItem {
  * GET /api/v1/cards/suggest?q= — typeahead for the header search. Public,
  * rate-limited by IP, min 2 chars, top 8 FTS-ranked cards (JSON `{ items }`).
  */
-export async function loader({ request, context }: Route.LoaderArgs): Promise<{ items: SuggestItem[] }> {
+export async function loader({
+  request,
+  context,
+}: Route.LoaderArgs): Promise<{ items: SuggestItem[] }> {
   const { env } = getCloudflare(context);
   const db = createDb(env.DB);
   const q = new URL(request.url).searchParams.get("q")?.trim() ?? "";

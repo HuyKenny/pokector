@@ -121,10 +121,9 @@ export default function MostValuablePokemonCards({ loaderData }: Route.Component
           Most Valuable <span className="text-accent">Pokémon Cards</span>
         </h1>
         <p className="max-w-3xl text-lg text-fg-muted">
-          The Pokémon cards worth the most money right now, ranked by live market value.
-          Prices come from the TCGplayer and Cardmarket aggregates and are updated daily —
-          so this is the current market, not a stale list. Values are for raw (ungraded)
-          single cards.
+          The Pokémon cards worth the most money right now, ranked by live market value. Prices come
+          from the TCGplayer and Cardmarket aggregates and are updated daily — so this is the
+          current market, not a stale list. Values are for raw (ungraded) single cards.
         </p>
       </section>
 
@@ -200,8 +199,7 @@ export default function MostValuablePokemonCards({ loaderData }: Route.Component
                     <td className="py-2 pe-3 text-end tabular-nums text-fg-faint">{i + 1}</td>
                     <th scope="row" className="py-2 pe-4 text-start font-medium">
                       <Link to={lp(`/cards/${c.slug}`)} className="text-fg hover:text-accent">
-                        {c.name}{" "}
-                        <span className="font-normal text-fg-faint">#{c.number}</span>
+                        {c.name} <span className="font-normal text-fg-faint">#{c.number}</span>
                       </Link>
                     </th>
                     <td className="py-2 pe-4 text-start text-fg-muted">{c.setName}</td>
@@ -215,8 +213,8 @@ export default function MostValuablePokemonCards({ loaderData }: Route.Component
             </table>
           </div>
           <p className="text-xs text-fg-faint">
-            Prices in {currency}, raw (ungraded) singles, updated daily. Source: TCGplayer
-            (US) / Cardmarket (EU) aggregates.
+            Prices in {currency}, raw (ungraded) singles, updated daily. Source: TCGplayer (US) /
+            Cardmarket (EU) aggregates.
           </p>
         </section>
       ) : null}
@@ -240,8 +238,8 @@ export default function MostValuablePokemonCards({ loaderData }: Route.Component
       <section className="flex flex-col items-start gap-3 border-t border-edge pt-8">
         <h2 className="text-lg font-semibold text-fg">Track your own cards' value</h2>
         <p className="max-w-3xl text-sm text-fg-muted">
-          Add your cards to a free Pokector collection to see the live market value of what you
-          own, spot the{" "}
+          Add your cards to a free Pokector collection to see the live market value of what you own,
+          spot the{" "}
           <Link to={lp("/price-movers")} className="text-accent hover:underline">
             biggest price movers
           </Link>

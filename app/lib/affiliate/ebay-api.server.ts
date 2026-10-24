@@ -61,7 +61,8 @@ const GRADED = /\b(psa|bgs|cgc|sgc|ace|tag|graded|gem\s?mint)\b/i;
 
 const nowSec = () => Math.floor(Date.now() / 1000);
 const isSandbox = (env: Env) => (env.EBAY_APP_ID ?? "").includes("-SBX-");
-const apiHost = (env: Env) => (isSandbox(env) ? "https://api.sandbox.ebay.com" : "https://api.ebay.com");
+const apiHost = (env: Env) =>
+  isSandbox(env) ? "https://api.sandbox.ebay.com" : "https://api.ebay.com";
 
 async function cacheGet(db: Database, key: string): Promise<string | null> {
   try {
@@ -88,7 +89,10 @@ async function cacheSet(db: Database, key: string, value: string, ttlSec: number
 }
 
 /** Request an OAuth client-credentials application token for `scope`. */
-async function requestAppToken(env: Env, scope: string): Promise<{ token: string; ttl: number } | null> {
+async function requestAppToken(
+  env: Env,
+  scope: string,
+): Promise<{ token: string; ttl: number } | null> {
   if (!env.EBAY_APP_ID || !env.EBAY_CERT_ID) return null;
   const basic = btoa(`${env.EBAY_APP_ID}:${env.EBAY_CERT_ID}`);
   const res = await fetch(`${apiHost(env)}/identity/v1/oauth2/token`, {

@@ -20,7 +20,8 @@ export async function action({ request, context }: Route.ActionArgs) {
   await enforceRateLimit(db, "apiWrite", session.user.id);
 
   const parsed = BodySchema.safeParse(Object.fromEntries(await request.formData()));
-  if (!parsed.success) return Response.json({ ok: false, message: "Invalid Pokémon." }, { status: 400 });
+  if (!parsed.success)
+    return Response.json({ ok: false, message: "Invalid Pokémon." }, { status: 400 });
 
   const favorited = await togglePokedexFavorite(db, session.user.id, parsed.data.dex);
   return Response.json({ ok: true, dex: parsed.data.dex, favorited });

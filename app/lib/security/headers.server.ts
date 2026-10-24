@@ -38,7 +38,6 @@ const PAYMENT_HOSTS = [
   "https://billing.stripe.com",
 ];
 
-
 /** Google Analytics 4 (gtag.js). Loaded only in production (see app/root.tsx),
  * so these origins are added to the CSP only when `production` is set. */
 const GA_SCRIPT_HOST = "https://www.googletagmanager.com";

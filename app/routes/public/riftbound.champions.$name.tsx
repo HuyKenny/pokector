@@ -72,7 +72,9 @@ export default function RiftboundChampionHub({ loaderData }: Route.ComponentProp
             name: `${name} Riftbound Cards`,
             description: `Every ${name} Riftbound card with live market prices.`,
             path: `/riftbound/champions/${slug}`,
-            items: cards.slice(0, 25).map((c) => ({ name: c.name, path: `/riftbound/cards/${c.slug}` })),
+            items: cards
+              .slice(0, 25)
+              .map((c) => ({ name: c.name, path: `/riftbound/cards/${c.slug}` })),
           }),
         ]}
       />
@@ -105,7 +107,10 @@ export default function RiftboundChampionHub({ loaderData }: Route.ComponentProp
           <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
             {cards.map((c) => (
               <li key={c.id}>
-                <Link to={lp(`/riftbound/cards/${c.slug}`)} className="group flex h-full flex-col gap-2">
+                <Link
+                  to={lp(`/riftbound/cards/${c.slug}`)}
+                  className="group flex h-full flex-col gap-2"
+                >
                   <CardImage
                     src={c.imageSmallUrl}
                     alt={`${c.name} — ${c.setName} #${c.number}`}
@@ -129,7 +134,10 @@ export default function RiftboundChampionHub({ loaderData }: Route.ComponentProp
       )}
 
       {/* Sibling champions — interlinking */}
-      <section aria-label="Other champions" className="flex flex-col gap-3 border-t border-edge pt-8">
+      <section
+        aria-label="Other champions"
+        className="flex flex-col gap-3 border-t border-edge pt-8"
+      >
         <h2 className="text-lg font-semibold text-fg">Other Riftbound champions</h2>
         <ul className="flex flex-wrap gap-2 text-sm">
           {siblings.map(([s, c]) => (

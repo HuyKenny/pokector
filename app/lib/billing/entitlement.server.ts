@@ -14,12 +14,18 @@ export interface EntitlementProfile {
 }
 
 /** Premium iff the paid period has not yet elapsed. `now` is injectable for tests. */
-export function isPremium(profile: EntitlementProfile | null | undefined, now: number = Date.now()): boolean {
+export function isPremium(
+  profile: EntitlementProfile | null | undefined,
+  now: number = Date.now(),
+): boolean {
   const until = profile?.premiumUntil;
   return until != null && until.getTime() > now;
 }
 
-export function planOf(profile: EntitlementProfile | null | undefined, now: number = Date.now()): Plan {
+export function planOf(
+  profile: EntitlementProfile | null | undefined,
+  now: number = Date.now(),
+): Plan {
   return isPremium(profile, now) ? "pro" : "free";
 }
 

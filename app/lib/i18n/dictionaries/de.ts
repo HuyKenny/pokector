@@ -264,11 +264,14 @@ const de: Dict = {
       "Keine Funktion, die du heute hast, wird entfernt. Preise zeigen immer Quelle und Datum — Karten ohne Preis sagen „kein Preis“, nie „0 $“.",
     faqHeading: "Preis-FAQ",
     faq1Q: "Reicht der kostenlose Plan wirklich?",
-    faq1A: "Ja. Du kannst deine gesamte Sammlung verfolgen, Sets vervollständigen, Werte und G/V sehen und den Grading-Rechner kostenlos nutzen. Pro bringt Umfang (unbegrenzte Ordner, Alarme, gegradete Karten…) und deine volle Portfolio-Historie.",
+    faq1A:
+      "Ja. Du kannst deine gesamte Sammlung verfolgen, Sets vervollständigen, Werte und G/V sehen und den Grading-Rechner kostenlos nutzen. Pro bringt Umfang (unbegrenzte Ordner, Alarme, gegradete Karten…) und deine volle Portfolio-Historie.",
     faq2Q: "Kann ich jederzeit kündigen?",
-    faq2A: "Ja. Verwalte oder kündige mit einem Klick über das sichere Stripe-Kundenportal. Pro bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv.",
+    faq2A:
+      "Ja. Verwalte oder kündige mit einem Klick über das sichere Stripe-Kundenportal. Pro bleibt bis zum Ende des bereits bezahlten Zeitraums aktiv.",
     faq3Q: "Was passiert mit meinen Daten bei einem Downgrade?",
-    faq3A: "Es wird nie etwas gelöscht. Wenn du ein kostenloses Limit überschreitest, kannst du davon einfach nichts mehr hinzufügen, bis du wieder darunter bist — alles Vorhandene bleibt sichtbar.",
+    faq3A:
+      "Es wird nie etwas gelöscht. Wenn du ein kostenloses Limit überschreitest, kannst du davon einfach nichts mehr hinzufügen, bis du wieder darunter bist — alles Vorhandene bleibt sichtbar.",
   },
 
   cards: {
@@ -310,7 +313,8 @@ const de: Dict = {
     ownedVariants: " ({variants})",
     onWishlistBadge: "Auf deiner Wunschliste",
     manageInCollection: "In Sammlung verwalten ↗",
-    addRequiresAccount: "Melde dich an, um diese Karte in deiner Sammlung oder Wunschliste zu verfolgen.",
+    addRequiresAccount:
+      "Melde dich an, um diese Karte in deiner Sammlung oder Wunschliste zu verfolgen.",
     gradingHeading: "Lohnt sich das Grading?",
     gradingTierLabel: "PSA-Service",
     gradingTierValue: "Value",
@@ -324,8 +328,10 @@ const de: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Über Break-even",
     gradingNotWorth: "Unter Break-even",
-    gradingSoldNote: "Graded-Werte sind der Median echter eBay-Verkäufe (letzte 90 Tage). PSA-Gebühren und Versand sind Schätzungen und variieren je nach Warenwert und Bearbeitungszeit.",
-    gradingListingDisclaimer: "Graded-Werte sind der Median aktueller eBay-Angebotspreise (Ausreißer entfernt), keine echten Verkäufe – nur als grober Anhaltspunkt.",
+    gradingSoldNote:
+      "Graded-Werte sind der Median echter eBay-Verkäufe (letzte 90 Tage). PSA-Gebühren und Versand sind Schätzungen und variieren je nach Warenwert und Bearbeitungszeit.",
+    gradingListingDisclaimer:
+      "Graded-Werte sind der Median aktueller eBay-Angebotspreise (Ausreißer entfernt), keine echten Verkäufe – nur als grober Anhaltspunkt.",
     gradingFeeNote: "PSA-Gebühr {fee} + gesch. Versand {shipping}.",
     notFoundTitle: "Karte nicht gefunden | Pokector",
     notFoundDescription: "Karte nicht gefunden.",
@@ -488,10 +494,12 @@ const de: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — jedes Pokémon nach Kartenanzahl & Durchschnittspreis | Pokector",
-    metaDescription: "Durchstöbere den kompletten National-Pokédex: jedes Pokémon mit Nummer, Anzahl der Karten und durchschnittlichem Marktpreis.",
+    metaDescription:
+      "Durchstöbere den kompletten National-Pokédex: jedes Pokémon mit Nummer, Anzahl der Karten und durchschnittlichem Marktpreis.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Jedes Pokémon im National-Pokédex mit Kartenanzahl und durchschnittlichem Kartenmarktpreis. Tippe auf ein Pokémon, um seine Karten zu sehen.",
+    intro:
+      "Jedes Pokémon im National-Pokédex mit Kartenanzahl und durchschnittlichem Kartenmarktpreis. Tippe auf ein Pokémon, um seine Karten zu sehen.",
     generationLabel: "Generation {n}",
     colNumber: "Nr.",
     colCards: "Karten",
@@ -509,10 +517,12 @@ const de: Dict = {
 
   compare: {
     metaTitle: "Pokémon-Kartenpreise vergleichen | Pokector",
-    metaDescription: "Vergleiche den Marktpreisverlauf von bis zu drei Pokémon-Karten nebeneinander.",
+    metaDescription:
+      "Vergleiche den Marktpreisverlauf von bis zu drei Pokémon-Karten nebeneinander.",
     breadcrumb: "Vergleichen",
     heading: "Karten vergleichen",
-    intro: "Überlagere den Preisverlauf von bis zu 3 Karten und sieh, wie sie sich zueinander entwickeln.",
+    intro:
+      "Überlagere den Preisverlauf von bis zu 3 Karten und sieh, wie sie sich zueinander entwickeln.",
     addLabel: "Karte hinzufügen",
     addPlaceholder: "Nach Name oder Nummer suchen…",
     addAnother: "Weitere Karte hinzufügen",

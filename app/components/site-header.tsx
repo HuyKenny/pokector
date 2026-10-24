@@ -413,7 +413,10 @@ function AccountMenu({
                 {item.label}
               </NavLink>
             ))}
-            <Link to="/app/notifications" className="px-4 py-2 text-sm text-fg hover:bg-surface-raised">
+            <Link
+              to="/app/notifications"
+              className="px-4 py-2 text-sm text-fg hover:bg-surface-raised"
+            >
               Notifications{unread > 0 ? ` (${unread > 9 ? "9+" : unread})` : ""}
             </Link>
             {isAdmin ? (
@@ -542,7 +545,11 @@ function GameSwitcher({
 }) {
   return (
     <details className="group relative">
-      <summary aria-label={`${label}: ${GAME_NAME[current]}`} className={SWITCHER_SUMMARY} title={GAME_NAME[current]}>
+      <summary
+        aria-label={`${label}: ${GAME_NAME[current]}`}
+        className={SWITCHER_SUMMARY}
+        title={GAME_NAME[current]}
+      >
         <span aria-hidden="true">🎴</span>
         <ChevronIcon />
       </summary>

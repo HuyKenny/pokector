@@ -3,7 +3,12 @@ import { Link } from "react-router";
 
 import type { Route } from "./+types/riftbound.cards.$slug";
 import { CardImage } from "~/components/card-image";
-import { carryForward, HistoryChart, rangeStartDate, type ChartRange } from "~/components/history-chart";
+import {
+  carryForward,
+  HistoryChart,
+  rangeStartDate,
+  type ChartRange,
+} from "~/components/history-chart";
 import { buildEbaySearchUrl } from "~/lib/affiliate/ebay";
 import { getCloudflare } from "~/lib/context";
 import { createDb } from "~/lib/db/index.server";
@@ -59,7 +64,10 @@ export async function loader({ params, context }: Route.LoaderArgs) {
     ebayPsa10Url,
     tcgplayerUrl,
     locale,
-    canonical: canonicalUrl(env.APP_URL, localePath(locale, `/riftbound/cards/${detail.card.slug}`)),
+    canonical: canonicalUrl(
+      env.APP_URL,
+      localePath(locale, `/riftbound/cards/${detail.card.slug}`),
+    ),
     appUrl: env.APP_URL,
   };
 }
@@ -246,7 +254,10 @@ export default function RiftboundCardDetail({ loaderData }: Route.ComponentProps
         </div>
       </div>
 
-      <section aria-label="Price history" className="rounded-(--radius-card) border border-edge bg-surface p-5">
+      <section
+        aria-label="Price history"
+        className="rounded-(--radius-card) border border-edge bg-surface p-5"
+      >
         <HistoryChart
           title="Price history"
           points={points}
@@ -295,12 +306,7 @@ function Fact({ label, value }: { label: string; value: string }) {
 /** eBay wordmark (inline SVG — CSP allows no external images). */
 function EbayLogo({ className }: { className?: string }) {
   return (
-    <svg
-      viewBox="0 0 1000 400.75098"
-      className={className}
-      aria-hidden="true"
-      focusable="false"
-    >
+    <svg viewBox="0 0 1000 400.75098" className={className} aria-hidden="true" focusable="false">
       <path
         fill="#ffbc13"
         d="m 633.07803,212.53323 c -45.43873,1.48929 -73.6715,9.689 -73.6715,39.61897 0,19.37591 15.44713,40.38162 54.66334,40.38162 52.57698,0 80.64259,-28.65902 80.64259,-75.66331 l 0.003,-5.16994 c -18.43302,0 -41.16414,0.16089 -61.63704,0.83266 z m 111.75103,62.10248 c 0,14.58313 0.42155,28.9782 1.69406,41.94092 h -46.61408 c -1.24325,-10.67368 -1.6972,-21.27945 -1.6972,-31.56656 -25.20195,30.97941 -55.17735,39.88537 -96.76149,39.88537 -61.67674,0 -94.70072,-32.59982 -94.70072,-70.30689 0,-54.61215 44.91583,-73.86739 122.89013,-75.65391 21.32332,-0.48686 45.27419,-0.55894 65.07531,-0.55894 l -0.003,-5.33606 c 0,-36.56098 -23.44364,-51.59335 -64.06765,-51.59335 -30.15876,0 -52.38579,12.48057 -54.6764,34.0468 h -52.65168 c 5.57217,-53.77165 62.06643,-67.37115 111.74005,-67.37115 59.50837,0 109.77228,21.17288 109.77228,84.11481 z"

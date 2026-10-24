@@ -58,5 +58,8 @@ export function buildEbaySearchUrl(
 /** Search phrase for a card: name + set (+ "Pokémon" to keep off-category
  * listings out for generically-named cards like "Bill" or "Energy"). */
 export function ebayCardQuery(cardName: string, setName: string): string {
-  return [cardName, setName, "Pokémon"].map((s) => s.trim()).filter(Boolean).join(" ");
+  return [cardName, setName, "Pokémon"]
+    .map((s) => s.trim())
+    .filter(Boolean)
+    .join(" ");
 }

@@ -5,10 +5,7 @@
  * catalog MVP — no collection/portfolio coupling.
  */
 import { createDb, schema, type Database } from "../../db/index.server";
-import {
-  JustTcgClient,
-  RIFTBOUND_CARDS_PAGE_SIZE,
-} from "../../justtcg/client.server";
+import { JustTcgClient, RIFTBOUND_CARDS_PAGE_SIZE } from "../../justtcg/client.server";
 import { log } from "../../log.server";
 import {
   normalizeRiftboundCard,

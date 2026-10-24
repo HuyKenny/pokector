@@ -115,7 +115,8 @@ const fr: Dict = {
   },
 
   collectorsLanding: {
-    metaTitle: "Collectionneurs de cartes Pokémon — suivi de collection et de prix gratuit | Pokector",
+    metaTitle:
+      "Collectionneurs de cartes Pokémon — suivi de collection et de prix gratuit | Pokector",
     metaDescription:
       "La boîte à outils gratuite pour les collectionneurs de cartes Pokémon : suivez votre collection, les prix TCGplayer et Cardmarket, complétez les checklists de sets, calculez le ROI de gradation et voyez vos gains et pertes réels.",
     breadcrumb: "Pour les collectionneurs",
@@ -265,11 +266,14 @@ const fr: Dict = {
       "Aucune fonction dont vous disposez aujourd'hui n'est retirée. Les prix affichent toujours leur source et leur date — les cartes sans prix indiquent « sans prix », jamais « 0 $ ».",
     faqHeading: "FAQ tarifs",
     faq1Q: "L'offre gratuite suffit-elle vraiment ?",
-    faq1A: "Oui. Vous pouvez suivre toute votre collection, compléter des sets, voir les valeurs et le P/L, et utiliser le calculateur de gradation gratuitement. Pro ajoute l'échelle (classeurs, alertes, cartes gradées illimités…) et votre historique de portefeuille complet.",
+    faq1A:
+      "Oui. Vous pouvez suivre toute votre collection, compléter des sets, voir les valeurs et le P/L, et utiliser le calculateur de gradation gratuitement. Pro ajoute l'échelle (classeurs, alertes, cartes gradées illimités…) et votre historique de portefeuille complet.",
     faq2Q: "Puis-je annuler à tout moment ?",
-    faq2A: "Oui. Gérez ou annulez en un clic via le portail client sécurisé de Stripe. Vous gardez Pro jusqu'à la fin de la période déjà payée.",
+    faq2A:
+      "Oui. Gérez ou annulez en un clic via le portail client sécurisé de Stripe. Vous gardez Pro jusqu'à la fin de la période déjà payée.",
     faq3Q: "Qu'arrive-t-il à mes données si je rétrograde ?",
-    faq3A: "Rien n'est jamais supprimé. Si vous dépassez une limite gratuite, vous ne pouvez simplement plus en ajouter tant que vous n'êtes pas repassé en dessous — tout ce que vous avez déjà reste visible.",
+    faq3A:
+      "Rien n'est jamais supprimé. Si vous dépassez une limite gratuite, vous ne pouvez simplement plus en ajouter tant que vous n'êtes pas repassé en dessous — tout ce que vous avez déjà reste visible.",
   },
 
   cards: {
@@ -311,7 +315,8 @@ const fr: Dict = {
     ownedVariants: " ({variants})",
     onWishlistBadge: "Dans votre liste de souhaits",
     manageInCollection: "Gérer dans la collection ↗",
-    addRequiresAccount: "Connectez-vous pour suivre cette carte dans votre collection ou liste de souhaits.",
+    addRequiresAccount:
+      "Connectez-vous pour suivre cette carte dans votre collection ou liste de souhaits.",
     gradingHeading: "Vaut-il la peine d'être gradé ?",
     gradingTierLabel: "Service PSA",
     gradingTierValue: "Value",
@@ -325,8 +330,10 @@ const fr: Dict = {
     gradingColRoi: "ROI",
     gradingWorthIt: "Au-dessus du seuil de rentabilité",
     gradingNotWorth: "Sous le seuil de rentabilité",
-    gradingSoldNote: "Les valeurs gradées sont la médiane des ventes réelles eBay (90 derniers jours). Les frais PSA et l'expédition sont des estimations et varient selon la valeur déclarée et le délai.",
-    gradingListingDisclaimer: "Les valeurs gradées sont la médiane des prix demandés actuels sur eBay (valeurs aberrantes exclues), pas des ventes réelles — à titre indicatif seulement.",
+    gradingSoldNote:
+      "Les valeurs gradées sont la médiane des ventes réelles eBay (90 derniers jours). Les frais PSA et l'expédition sont des estimations et varient selon la valeur déclarée et le délai.",
+    gradingListingDisclaimer:
+      "Les valeurs gradées sont la médiane des prix demandés actuels sur eBay (valeurs aberrantes exclues), pas des ventes réelles — à titre indicatif seulement.",
     gradingFeeNote: "Frais PSA {fee} + expédition est. {shipping}.",
     notFoundTitle: "Carte introuvable | Pokector",
     notFoundDescription: "Carte introuvable.",
@@ -373,7 +380,8 @@ const fr: Dict = {
     ebayPsa9From: "PSA 9 : à partir de {price}",
     psaFromEbay:
       "Les prix PSA sont la médiane des prix demandés actuels sur eBay (US), valeurs aberrantes exclues — une indication approximative, pas des ventes conclues.",
-    psaSoldMedian: "Les prix PSA correspondent à la médiane des ventes réelles sur eBay (90 derniers jours).",
+    psaSoldMedian:
+      "Les prix PSA correspondent à la médiane des ventes réelles sur eBay (90 derniers jours).",
     psaSampleCount: "· {count} vendus",
     psaSampleListings: "· {count} annonces",
     ebayFrom: "eBay : à partir de {price}",
@@ -489,10 +497,12 @@ const fr: Dict = {
 
   pokedex: {
     metaTitle: "Pokédex — chaque Pokémon par nombre de cartes et prix moyen | Pokector",
-    metaDescription: "Parcourez le Pokédex National complet : chaque Pokémon avec son numéro, le nombre de cartes existantes et le prix moyen du marché.",
+    metaDescription:
+      "Parcourez le Pokédex National complet : chaque Pokémon avec son numéro, le nombre de cartes existantes et le prix moyen du marché.",
     breadcrumb: "Pokédex",
     heading: "Pokédex",
-    intro: "Chaque Pokémon du Pokédex National avec son nombre de cartes et le prix moyen du marché. Touchez un Pokémon pour voir ses cartes.",
+    intro:
+      "Chaque Pokémon du Pokédex National avec son nombre de cartes et le prix moyen du marché. Touchez un Pokémon pour voir ses cartes.",
     generationLabel: "Génération {n}",
     colNumber: "N°",
     colCards: "Cartes",
@@ -513,7 +523,8 @@ const fr: Dict = {
     metaDescription: "Superposez l'historique des prix de marché de jusqu'à trois cartes Pokémon.",
     breadcrumb: "Comparer",
     heading: "Comparer les cartes",
-    intro: "Superposez l'historique des prix de jusqu'à 3 cartes pour voir leur évolution relative.",
+    intro:
+      "Superposez l'historique des prix de jusqu'à 3 cartes pour voir leur évolution relative.",
     addLabel: "Ajouter une carte",
     addPlaceholder: "Rechercher par nom ou numéro…",
     addAnother: "Ajouter une autre carte",

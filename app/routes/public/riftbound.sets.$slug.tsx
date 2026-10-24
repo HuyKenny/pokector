@@ -11,8 +11,7 @@ import { getRiftboundSetBySlug } from "~/lib/riftbound/queries.server";
 import { canonicalUrl, pageMeta } from "~/lib/seo/meta";
 
 export function meta({ loaderData: data }: Route.MetaArgs) {
-  if (!data)
-    return pageMeta({ title: "Riftbound set | Pokector", description: "", noindex: true });
+  if (!data) return pageMeta({ title: "Riftbound set | Pokector", description: "", noindex: true });
   return pageMeta({
     title: `Riftbound ${data.set.name} — Card List & Prices | Pokector`,
     description: `Every card in the Riftbound ${data.set.name} set (${data.cards.length} cards) with live TCGplayer market prices, updated daily.`,
@@ -58,14 +57,10 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
 
   const rarities = [
     ...new Set(
-      cards
-        .map((c) => c.rarity)
-        .filter((r): r is string => !!r && r.toLowerCase() !== "none"),
+      cards.map((c) => c.rarity).filter((r): r is string => !!r && r.toLowerCase() !== "none"),
     ),
   ].sort();
-  const visibleCards = rarityFilter
-    ? cards.filter((c) => c.rarity === rarityFilter)
-    : cards;
+  const visibleCards = rarityFilter ? cards.filter((c) => c.rarity === rarityFilter) : cards;
 
   const setRarity = (value: string | null) => {
     const next = new URLSearchParams(searchParams);
@@ -99,7 +94,8 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
               Estimated full-set market value:{" "}
               <strong className="text-fg">{money(estimatedValueMinor)}</strong>{" "}
               <span className="text-fg-faint">
-                (sum of cheapest priced variant for {pricedCount} of {cards.length} cards; raw cards)
+                (sum of cheapest priced variant for {pricedCount} of {cards.length} cards; raw
+                cards)
               </span>
             </p>
           ) : (
@@ -109,15 +105,22 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
       </div>
 
       <p className="max-w-3xl text-sm text-fg-muted">
-        The full Riftbound {set.name} card list, with a live TCGplayer market price on every
-        card. Sort by rarity to find the set's chase cards, or open any card for its price
-        history.
+        The full Riftbound {set.name} card list, with a live TCGplayer market price on every card.
+        Sort by rarity to find the set's chase cards, or open any card for its price history.
       </p>
 
       {/* Rarity filters */}
       {rarities.length > 1 ? (
-        <div className="flex flex-wrap items-center gap-2 text-sm" role="group" aria-label="Rarity filter">
-          <FilterChip active={rarityFilter === null} onClick={() => setRarity(null)} label="Any rarity" />
+        <div
+          className="flex flex-wrap items-center gap-2 text-sm"
+          role="group"
+          aria-label="Rarity filter"
+        >
+          <FilterChip
+            active={rarityFilter === null}
+            onClick={() => setRarity(null)}
+            label="Any rarity"
+          />
           {rarities.map((r) => (
             <FilterChip
               key={r}
@@ -136,7 +139,10 @@ export default function RiftboundSetDetail({ loaderData }: Route.ComponentProps)
       <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
         {visibleCards.map((c) => (
           <li key={c.id}>
-            <Link to={lp(`/riftbound/cards/${c.slug}`)} className="group flex h-full flex-col gap-2">
+            <Link
+              to={lp(`/riftbound/cards/${c.slug}`)}
+              className="group flex h-full flex-col gap-2"
+            >
               <CardImage
                 src={c.imageSmallUrl}
                 alt={`${c.name} #${c.number}`}

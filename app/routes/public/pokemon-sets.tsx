@@ -123,7 +123,8 @@ export default function PokemonSetsIndex({ loaderData }: Route.ComponentProps) {
       {eras.map((era) => (
         <section key={era.series} aria-label={era.series} className="flex flex-col gap-3">
           <h2 className="text-xl font-semibold text-fg">
-            {era.series} <span className="text-sm font-normal text-fg-faint">({era.sets.length})</span>
+            {era.series}{" "}
+            <span className="text-sm font-normal text-fg-faint">({era.sets.length})</span>
           </h2>
           <ul className="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
             {era.sets.map((s) => (
@@ -150,7 +151,10 @@ export default function PokemonSetsIndex({ loaderData }: Route.ComponentProps) {
       ))}
 
       {/* FAQ */}
-      <section aria-labelledby="faq-heading" className="flex flex-col gap-4 border-t border-edge pt-8">
+      <section
+        aria-labelledby="faq-heading"
+        className="flex flex-col gap-4 border-t border-edge pt-8"
+      >
         <h2 id="faq-heading" className="text-xl font-semibold text-fg">
           Pokémon TCG sets — FAQ
         </h2>

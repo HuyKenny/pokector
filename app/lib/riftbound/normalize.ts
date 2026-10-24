@@ -67,9 +67,7 @@ function num(obj: JustTcgRow, ...keys: string[]): number | null {
 function stripGameId(id: string, gameId?: string): string {
   if (!gameId) return id;
   const g = gameId.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return id
-    .replace(new RegExp(`^${g}-`), "")
-    .replace(new RegExp(`-${g}$`), "");
+  return id.replace(new RegExp(`^${g}-`), "").replace(new RegExp(`-${g}$`), "");
 }
 
 /** TCGplayer product image (JustTCG doesn't return image URLs). Hotlinkable;
@@ -182,7 +180,10 @@ export function normalizeRiftboundCard(
       chosen.set(printing, v);
       continue;
     }
-    if (NEAR_MINT.test(str(v, "condition") ?? "") && !NEAR_MINT.test(str(prev, "condition") ?? "")) {
+    if (
+      NEAR_MINT.test(str(v, "condition") ?? "") &&
+      !NEAR_MINT.test(str(prev, "condition") ?? "")
+    ) {
       chosen.set(printing, v);
     }
   }

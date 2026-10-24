@@ -73,7 +73,9 @@ export interface FtsCardInput {
 }
 
 /** The nine `card_search` column values for a card (order matches the table). */
-export function ftsRowValues(c: FtsCardInput): [string, string, string, string, string, string, string, string, string] {
+export function ftsRowValues(
+  c: FtsCardInput,
+): [string, string, string, string, string, string, string, string, string] {
   const dex = parseJsonArray(c.nationalPokedexNumbersJson).join(" ");
   const subtypes = parseJsonArray(c.subtypesJson).join(" ");
   // "4" plus the set total ("102") so collectors can type "4/102".

@@ -17,9 +17,9 @@ describe("resolveRiftboundGameId", () => {
         { id: GAME, name: "Riftbound: League of Legends Trading Card Game" },
       ]),
     ).toBe(GAME);
-    expect(
-      resolveRiftboundGameId([{ id: "lol-tcg", name: "League of Legends TCG" }]),
-    ).toBe("lol-tcg");
+    expect(resolveRiftboundGameId([{ id: "lol-tcg", name: "League of Legends TCG" }])).toBe(
+      "lol-tcg",
+    );
   });
   it("returns null when no game matches", () => {
     expect(resolveRiftboundGameId([{ id: "mtg", name: "Magic" }])).toBeNull();
@@ -60,7 +60,14 @@ describe("normalizeRiftboundCard", () => {
         tcgplayerId: "653094",
         variants: [
           { printing: "Normal", condition: "Lightly Played", price: 5 },
-          { printing: "Normal", condition: "Near Mint", price: 12.5, minPrice7d: 10, avgPrice: 12, maxPrice7d: 15 },
+          {
+            printing: "Normal",
+            condition: "Near Mint",
+            price: 12.5,
+            minPrice7d: 10,
+            avgPrice: 12,
+            maxPrice7d: 15,
+          },
           { printing: "Foil", condition: "Near Mint", price: 40 },
         ],
       },

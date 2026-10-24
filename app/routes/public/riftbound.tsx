@@ -13,7 +13,13 @@ import {
   listRiftboundSets,
   listRiftboundTopValueCards,
 } from "~/lib/riftbound/queries.server";
-import { canonicalUrl, collectionPageJsonLd, faqPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
+import {
+  canonicalUrl,
+  collectionPageJsonLd,
+  faqPageJsonLd,
+  JsonLd,
+  pageMeta,
+} from "~/lib/seo/meta";
 
 /** Riftbound landing — a real, indexable hub targeting the head terms
  * "riftbound tcg" / "riftbound cards" / "riftbound card list" (all near-zero
@@ -102,9 +108,9 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
           Riftbound TCG <span className="text-accent">Card List & Prices</span>
         </h1>
         <p className="max-w-2xl text-lg text-fg-muted">
-          The complete Riftbound: League of Legends Trading Card Game card list.
-          Track {totalCards.toLocaleString("en-US")} cards across {sets.length} sets —
-          live market prices from TCGplayer, updated daily.
+          The complete Riftbound: League of Legends Trading Card Game card list. Track{" "}
+          {totalCards.toLocaleString("en-US")} cards across {sets.length} sets — live market prices
+          from TCGplayer, updated daily.
         </p>
         <div className="flex flex-wrap items-center justify-center gap-3">
           <Link
@@ -225,12 +231,11 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
           The complete Riftbound card list &amp; price guide
         </h2>
         <p className="max-w-3xl">
-          Pokector tracks the live secondary-market value of every card in Riot Games'
-          Riftbound: League of Legends Trading Card Game. Prices come from the TCGplayer
-          marketplace aggregate and are refreshed daily, with a price-history chart on each
-          card so you can see how values move over time. Riftbound is sold in booster boxes
-          and starter decks — Pokector follows single-card prices for every card you can
-          pull from them.
+          Pokector tracks the live secondary-market value of every card in Riot Games' Riftbound:
+          League of Legends Trading Card Game. Prices come from the TCGplayer marketplace aggregate
+          and are refreshed daily, with a price-history chart on each card so you can see how values
+          move over time. Riftbound is sold in booster boxes and starter decks — Pokector follows
+          single-card prices for every card you can pull from them.
         </p>
         <p className="max-w-3xl">
           Jump straight into a set:{" "}
@@ -239,10 +244,7 @@ export default function RiftboundLanding({ loaderData }: Route.ComponentProps) {
             .slice(0, 6)
             .map((s, i, arr) => (
               <span key={s.id}>
-                <Link
-                  to={lp(`/riftbound/sets/${s.slug}`)}
-                  className="text-accent hover:underline"
-                >
+                <Link to={lp(`/riftbound/sets/${s.slug}`)} className="text-accent hover:underline">
                   Riftbound {s.name}
                 </Link>
                 {i < arr.length - 1 ? ", " : "."}
