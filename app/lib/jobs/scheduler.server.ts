@@ -30,6 +30,8 @@ import { handlePortfolioSnapshots } from "./handlers/portfolio.server";
 import {
   handleRiftboundCatalogCardsPage,
   handleRiftboundCatalogSets,
+  handleRiftboundTcgcsvSet,
+  handleRiftboundTcgcsvSets,
 } from "./handlers/riftbound.server";
 import {
   claimNextJob,
@@ -68,6 +70,8 @@ const HANDLERS: Partial<Record<SyncJobType, JobHandler>> = {
   ebay_graded_seed: handleEbayGradedSeed,
   riftbound_catalog_sets: handleRiftboundCatalogSets,
   riftbound_catalog_cards_page: handleRiftboundCatalogCardsPage,
+  riftbound_tcgcsv_sets: handleRiftboundTcgcsvSets,
+  riftbound_tcgcsv_set: handleRiftboundTcgcsvSet,
   tcgcsv_prices_sets: handleTcgcsvPricesSets,
   tcgcsv_prices_set: handleTcgcsvPricesSet,
 };
@@ -154,15 +158,13 @@ export async function enqueueDailyJobs(env: Env): Promise<void> {
     }
   }
 
-  // Riftbound catalog + prices (JustTCG) — small catalog, safe to refresh daily.
-  // Idempotent per day; the sets job chains its card pages via wake-ups.
-  if (env.JUSTTCG_API_KEY) {
-    await enqueueJob(db, {
-      type: "riftbound_catalog_sets",
-      idempotencyKey: `riftbound:auto:${today}`,
-      runAfter: new Date(Date.now() + 60 * 1000),
-    });
-  }
+  // Riftbound catalog + prices (TCGCSV, no key; ~30 requests). Once per TCGCSV
+  // build; the sets job chains one job per TCGplayer group via wake-ups.
+  await enqueueJob(db, {
+    type: "riftbound_tcgcsv_sets",
+    idempotencyKey: `riftbound-tcgcsv:auto:${today}`,
+    runAfter: new Date(Date.now() + 60 * 1000),
+  });
 
   // Proactively seed eBay graded (PSA) prices for the most valuable cards so PSA
   // history builds without needing card views. Before price_history_record (+3h)

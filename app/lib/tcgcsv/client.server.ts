@@ -1,6 +1,6 @@
 /**
  * Minimal TCGCSV client (https://tcgcsv.com — a free daily mirror of TCGplayer's
- * catalog and prices; Pokémon is category 3). No key. Usage rules we follow
+ * catalog and prices; Pokémon is category 3, Riftbound 89). No key. Usage rules we follow
  * (tcgcsv.com/docs): identifiable User-Agent, check last-updated.txt before
  * syncing, at most one sync per build (~350 requests/day vs. their 10k cap), and
  * product lists — the bulk of the bandwidth — are cached for a week (see
@@ -10,7 +10,8 @@
 import type { TcgcsvGroup, TcgcsvPrice, TcgcsvProduct } from "./match";
 
 const API_BASE = "https://tcgcsv.com";
-const POKEMON_CATEGORY = 3;
+export const POKEMON_CATEGORY = 3;
+export const RIFTBOUND_CATEGORY = 89;
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_ATTEMPTS = 3;
 const USER_AGENT = "Pokector/1.0 (+https://pokector.com; price sync)";
@@ -73,10 +74,11 @@ export async function getBuildDate(): Promise<string> {
   return match[1];
 }
 
-export const listGroups = () => results<TcgcsvGroup>(`/tcgplayer/${POKEMON_CATEGORY}/groups`);
+export const listGroups = (category = POKEMON_CATEGORY) =>
+  results<TcgcsvGroup>(`/tcgplayer/${category}/groups`);
 
-export const listProducts = (groupId: number) =>
-  results<TcgcsvProduct>(`/tcgplayer/${POKEMON_CATEGORY}/${groupId}/products`);
+export const listProducts = (groupId: number, category = POKEMON_CATEGORY) =>
+  results<TcgcsvProduct>(`/tcgplayer/${category}/${groupId}/products`);
 
-export const listPrices = (groupId: number) =>
-  results<TcgcsvPrice>(`/tcgplayer/${POKEMON_CATEGORY}/${groupId}/prices`);
+export const listPrices = (groupId: number, category = POKEMON_CATEGORY) =>
+  results<TcgcsvPrice>(`/tcgplayer/${category}/${groupId}/prices`);

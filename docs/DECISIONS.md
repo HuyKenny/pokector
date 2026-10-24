@@ -566,3 +566,21 @@ catalog/prices, Pokémon = category 3):
 future `runAfter` (retries, the +3 h history snapshot) had no one to wake them and waited for
 the next day. `runJobBatch` now sends a delayed queue message (≤ 12 h) for the earliest
 not-yet-due job when nothing is due right now (`nextJobDueAt`).
+
+### D30. Riftbound catalog + prices from TCGCSV (2026-10-24)
+
+**Why.** JustTCG's Free plan (100 requests/day, 1,000/month) ran out on 2026-10-16: every
+daily Riftbound run since then ended in HTTP 429, so prices froze and the new set Radiance
+(released 2026-10-23) stayed at 17 of its 234 cards.
+
+**What.** TCGCSV category 89 replaces JustTCG for the daily run (~30 requests):
+
+- `riftbound_tcgcsv_sets` — once per TCGCSV build: upsert one set per TCGplayer group (id =
+  `{slug(group name)}-{game id}`, the same ids JustTCG used), enqueue one job per group.
+- `riftbound_tcgcsv_set` — products + prices of one group. Known cards are matched by
+  `tcgplayer_id` (all 1,650 JustTCG cards had one, all are on TCGCSV), so ids and URLs stay.
+  New products get a JustTCG-shaped id/slug (`{set}-{name}-{rarity}`, product id appended on
+  a collision). Prices: one row per printing ("Normal"/"Foil" → `normal`/`foil`), market →
+  mid → low, dated with the build; history replaces today's point.
+- The JustTCG handlers remain registered for manual runs; the daily schedule no longer queues
+  them.

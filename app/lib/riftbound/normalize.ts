@@ -72,7 +72,7 @@ function stripGameId(id: string, gameId?: string): string {
 
 /** TCGplayer product image (JustTCG doesn't return image URLs). Hotlinkable;
  * a handful of promo/sealed products 404 → the UI shows a "No image" tile. */
-function tcgplayerImage(tcgId: string | null, size: "small" | "large"): string | null {
+export function tcgplayerImage(tcgId: string | null, size: "small" | "large"): string | null {
   if (!tcgId) return null;
   const dim = size === "large" ? "1000x1000" : "400x400";
   return `https://tcgplayer-cdn.tcgplayer.com/product/${tcgId}_in_${dim}.jpg`;

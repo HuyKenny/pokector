@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  RIFTBOUND_GAME_ID,
+  riftboundCardFromProduct,
+  riftboundPriceRows,
+  riftboundSetFromGroup,
+} from "~/lib/riftbound/tcgcsv";
+import {
   buildPriceRows,
   matchCardsToProducts,
   matchSetsToGroups,
@@ -168,5 +174,53 @@ describe("matchCardsToProducts + buildPriceRows", () => {
       "2026-10-23",
     );
     expect(rows.map((r) => r.price.variant)).toEqual(["firstEditionNormal", "normal", "holofoil"]);
+  });
+});
+
+describe("Riftbound rows from TCGCSV", () => {
+  const set = { id: `radiance-${RIFTBOUND_GAME_ID}`, slug: "radiance", name: "Radiance" };
+
+  it("maps a group to the JustTCG-style set id", () => {
+    expect(
+      riftboundSetFromGroup(
+        { groupId: 24439, name: "Origins: Proving Grounds", abbreviation: "OGS" },
+        new Date(0),
+      ),
+    ).toMatchObject({
+      id: `origins-proving-grounds-${RIFTBOUND_GAME_ID}`,
+      slug: "origins-proving-grounds",
+      code: "OGS",
+    });
+  });
+
+  it("builds JustTCG-shaped ids and appends the product id on a collision", () => {
+    const taken = { ids: new Set<string>(), slugs: new Set(["radiance-yasuo-rare"]) };
+    const p = (productId: number): TcgcsvProduct => ({
+      productId,
+      name: "Yasuo",
+      extendedData: [
+        { name: "Number", value: "010/167" },
+        { name: "Rarity", value: "Rare" },
+      ],
+    });
+    const card = riftboundCardFromProduct(p(1), set, taken, new Date(0));
+    expect(card.slug).toBe("radiance-yasuo-rare-1");
+    expect(card.id).toBe(`${RIFTBOUND_GAME_ID}-radiance-yasuo-rare-1`);
+    expect(card.imageSmallUrl).toContain("/product/1_in_400x400.jpg");
+    expect(riftboundCardFromProduct(p(2), set, taken, new Date(0)).slug).toBe(
+      "radiance-yasuo-rare-2",
+    );
+  });
+
+  it("emits one row per printing with JustTCG's variant names", () => {
+    const rows = riftboundPriceRows(
+      [price(1, "Normal", 0.12), price(1, "Foil", null), price(2, "Normal", null)],
+      "2026-10-23",
+    );
+    expect(rows.get(1)?.map((r) => [r.variant, r.normalizedPriceMinor])).toEqual([
+      ["normal", 12],
+      ["foil", 20],
+    ]);
+    expect(rows.get(2)?.[0].normalizedPriceMinor).toBe(20);
   });
 });

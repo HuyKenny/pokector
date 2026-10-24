@@ -656,6 +656,8 @@ export const SYNC_JOB_TYPES = [
   "autumn_sync",
   "riftbound_catalog_sets",
   "riftbound_catalog_cards_page",
+  "riftbound_tcgcsv_sets",
+  "riftbound_tcgcsv_set",
   "tcgcsv_prices_sets",
   "tcgcsv_prices_set",
 ] as const;
