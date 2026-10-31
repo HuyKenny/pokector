@@ -125,7 +125,7 @@
       "triggers": {
         // Daily only (owner, 2026-10-22: cut Workers bill). The orchestrator tick runs one job
         // and chains the rest through queue wake-ups, so */5 is not needed.
-        "crons": ["17 5 * * *"],
+        "crons": ["17 5 * * 1"],
       },
       // Custom domains (parking DNS replaced 2026-07-17). Both apex and www hit
       // the worker; www→apex 301 is handled in workers/app.ts (canonicalRedirect).

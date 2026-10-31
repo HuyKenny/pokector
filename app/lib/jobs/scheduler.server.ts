@@ -49,7 +49,7 @@ import { PtcgApiError } from "../ptcg/client.server";
 import { TcgcsvError } from "../tcgcsv/client.server";
 import { TcgdexError } from "../tcgdex/client.server";
 
-const DAILY_ORCHESTRATOR_CRON = "17 5 * * *";
+const DAILY_ORCHESTRATOR_CRON = "17 5 * * 1"; // weekly (Monday), owner 2026-10-31 cost cut
 
 /** Minimum age of the last full catalog sync before a new one is enqueued.
  * Back to weekly (owner, 2026-10-02: Pokector does not need frequent refreshes;
