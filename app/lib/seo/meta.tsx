@@ -231,6 +231,14 @@ export function organizationJsonLd(input: {
     name: SITE_NAME,
     url: input.appUrl,
     logo: new URL(input.logo, input.appUrl).toString(),
+    founder: {
+      "@type": "Person",
+      "@id": "https://huy.cz/#kenny",
+      name: "Ha Duy Huy",
+      alternateName: "Kenny",
+      url: "https://huy.cz/",
+      jobTitle: "SEO konzultant",
+    },
   };
   if (input.sameAs && input.sameAs.length > 0) node.sameAs = input.sameAs;
   return node;

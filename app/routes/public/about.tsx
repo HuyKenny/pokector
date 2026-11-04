@@ -59,6 +59,15 @@ export default function About() {
           names are trademarks of Nintendo. We're simply collectors building the tool we wanted to
           use.
         </p>
+        <h2 className="text-xl font-semibold text-fg">Who runs this site</h2>
+        <p>
+          Pokector is built and run by Ha Duy Huy (Kenny), an SEO consultant from Prague. More
+          about him and his other projects at{" "}
+          <a href="https://huy.cz/" rel="nofollow" className="text-accent hover:underline">
+            huy.cz
+          </a>
+          .
+        </p>
       </div>
       <div className="flex gap-3">
         <Link
