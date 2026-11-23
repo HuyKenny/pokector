@@ -11,7 +11,7 @@ Last updated: 2026-07-17 (Phase 10 — deployed to production)
 - [x] Node.js: system v20.20.2 (EOL) → installed user-local Node v22.23.1 LTS at `~/.local/node/` (see DECISIONS #7)
 - [x] Package manager: pnpm 11.13.1 via corepack (Node 22)
 - [x] Cloudflare MCP: not connected → wrangler + CF REST API instead
-- [x] Wrangler auth: OAuth, account `huy.kenny@gmail.com` (7dcd021a0f64e56889505c60c878f3ab)
+- [x] Wrangler auth: OAuth, account `the huy.kenny Cloudflare login (credentials/.cloudflare-credentials.env)` (7dcd021a0f64e56889505c60c878f3ab)
 - [x] Zone pokector.com exists in account (Free plan, zone 37a0953c5759fbbff63b2da27250b099); currently WEDOS parking DNS (A/AAAA apex+www+wildcard → 185.8.237.22). Owner approved replacing parking records at domain-attach time.
 - [x] No existing Pokector resources; unrelated resources identified (4 workers, KV `REDIRECTS`) — will not touch
 - [x] Cloudflare Queues unavailable (Free plan) → D1-backed job queue fallback (spec-compliant)

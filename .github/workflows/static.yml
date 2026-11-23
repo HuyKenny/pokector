@@ -1,0 +1,89 @@
+name: Static rebuild
+
+# pokector.com is static since 2026-11-23 (Cloudflare Workers Free: assets only, no D1/KV/Queues/cron;
+# the logged-in app is paused). Every night the old scheduled jobs (TCGCSV prices, TCGdex Cardmarket
+# prices, Riftbound catalog + prices, weekly PTCG catalog sync, price history, eBay PSA seed) run over
+# the encrypted SQLite state, the local app renders the public pages and they are deployed as static
+# assets of pokector-production. See scripts/static/static.py.
+# PUBLIC repo: logs print counts only; secrets come from GitHub Secrets (scripts/static/setup-actions.py).
+on:
+  schedule:
+    - cron: "17 1 * * *"
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Quick fix: no jobs, render from the saved data (CSS/JS/template/text fixes)"
+        type: boolean
+        default: false
+      deploy:
+        description: "Deploy to pokector.com"
+        type: boolean
+        default: true
+
+concurrency:
+  group: static-rebuild
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  rebuild:
+    runs-on: ubuntu-latest
+    timeout-minutes: 330
+    permissions:
+      contents: write # release asset with the encrypted state
+    env:
+      QUICK: ${{ github.event_name == 'workflow_dispatch' && inputs.quick && '--quick' || '' }}
+      NO_DEPLOY: ${{ github.event_name == 'workflow_dispatch' && !inputs.deploy && '--no-deploy' || '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Cost guard - the repo must stay public (private repos share 2 000 free minutes)
+        run: |
+          [ "$(gh api repos/${{ github.repository }} --jq .private)" = "false" ] || { echo "repo is private - stopping"; exit 1; }
+        env:
+          GH_TOKEN: ${{ github.token }}
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - name: Install (frozen lockfile)
+        run: pnpm install --frozen-lockfile
+
+      - name: Build (static env)
+        run: CLOUDFLARE_ENV=static pnpm build > /dev/null
+
+      - name: Restore state (encrypted)
+        run: scripts/static/state.sh pull
+        env:
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Jobs + render + deploy
+        run: python3 scripts/static/static.py run $QUICK $NO_DEPLOY
+        env:
+          PK_CRAWL_WORKERS: "8"
+          POKEMON_TCG_API_KEY: ${{ secrets.POKEMON_TCG_API_KEY }}
+          EBAY_APP_ID: ${{ secrets.EBAY_APP_ID }}
+          EBAY_CERT_ID: ${{ secrets.EBAY_CERT_ID }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+
+      - name: Save state (encrypted)
+        if: always()
+        run: |
+          if [ -f .static-work/state-updated ]; then scripts/static/state.sh push; else echo "state unchanged"; fi
+        env:
+          STATE_KEY: ${{ secrets.STATE_KEY }}
+          GH_TOKEN: ${{ github.token }}
+
+      - name: Smoke test (live)
+        if: success() && env.NO_DEPLOY == ''
+        run: python3 scripts/static/smoke.py https://pokector.com --changed .static-work/changed.json

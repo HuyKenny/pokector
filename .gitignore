@@ -18,3 +18,8 @@ worker-configuration.d.ts
 /test-results/
 /playwright-report/
 /.playwright/
+
+# Static rebuild (scripts/static/): state + work dir, never committed
+/data/
+/.static-work/
+__pycache__/

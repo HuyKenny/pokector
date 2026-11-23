@@ -1,5 +1,38 @@
 # Pokector — Deployment
 
+## Since 2026-11-23: static site, rebuilt nightly (Cloudflare Workers Free)
+
+Production no longer runs the SSR Worker. `pokector-production` (+ shard `pokector-production-z01`) serves the
+public pages as **static assets**; D1, KV, the queue and the crons are deleted; the logged-in app (accounts,
+collections, binders, compare) is paused — those paths serve a static "app is paused" page. Localized detail
+pages (`/<lang>/{cards,sets,riftbound,pokemon}/*`) 301 to the English page via a zone Single Redirect rule.
+
+**Nightly rebuild** — `.github/workflows/static.yml` (01:17 UTC, public repo = free minutes):
+
+1. `CLOUDFLARE_ENV=static pnpm build` — env `static` in `wrangler.jsonc`: production vars, local-only D1/KV,
+   no queue, `STATIC_RUNNER=1` (no HTML cache, no popularity bumps from the crawler).
+2. `scripts/static/state.sh pull` — `data/state.db` (SQLite with the D1 schema: catalog, prices, history, job
+   queue; no account data) from the encrypted release asset `state` (secret `STATE_KEY`).
+3. `scripts/static/static.py run` — runs the app under `wrangler dev --local` over that state, sends the old
+   weekly orchestrator tick (`17 5 * * 1`: TCGCSV prices, TCGdex Cardmarket prices, Riftbound, PTCG catalog
+   sync when older than 6.5 days, price history, eBay PSA seed) and then `static-drain` ticks until the job
+   queue is empty (runAfter waits are skipped, order kept — `pullNextJobForward`), freezes the sitemap pages
+   (`scripts/static/zmraz.py crawl --base http://127.0.0.1:8850 --extra-until 0`, ~24 k pages), adds the paused
+   pages (`paused.py`), checks every sitemap URL has a file (deploy gate) and no secret is in the output, then
+   `zmraz.py deploy pokector.com --worker pokector-production --strip-scripts` (only changed files upload).
+4. `state.sh push` (only after a run with jobs) and `scripts/static/smoke.py` (live checks; a WAF challenge
+   from the runner's IP counts as "not checked").
+
+Manual run: Actions → Static rebuild → Run workflow (`quick` = no jobs, for template/CSS/text fixes). On the
+Pi the same `static.py run` works with credentials from `/home/kenny/ai/credentials` (global CF key).
+Secrets + scoped CF token: `scripts/static/setup-actions.py`. First state: `scripts/static/state-init.py`
+from the D1 export `backups/d1-2026-11-23/pokector-production.sql.gz` (indexes + FTS rebuilt from migrations).
+Rollback to SSR is not possible without a D1 (re-create it from the full export first).
+
+---
+
+Historical (SSR era, 2026-07 → 2026-11-23):
+
 Last updated: 2026-07-17 (Phase 0 — plan; statuses updated in Phase 10)
 
 ## Environments & resources
@@ -12,7 +45,7 @@ Last updated: 2026-07-17 (Phase 0 — plan; statuses updated in Phase 10)
 | URL      | workers.dev (noindex)    | `https://pokector.com`      |
 | Crons    | none (manual triggers)   | `17 5 * * *`                |
 
-Account: huy.kenny@gmail.com (`7dcd021a0f64e56889505c60c878f3ab`), zone
+Account: the huy.kenny Cloudflare login (credentials/.cloudflare-credentials.env) (`7dcd021a0f64e56889505c60c878f3ab`), zone
 `pokector.com` (`37a0953c5759fbbff63b2da27250b099`, Free plan).
 
 ## Order (per SPEC §28)
