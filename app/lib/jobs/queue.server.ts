@@ -237,6 +237,8 @@ export async function addJobLog(
 /** Fire a queue wake-up so the next invocation continues promptly (best effort).
  * `delaySeconds` defers delivery (Queues cap it at 12 h). */
 export async function wakeUp(env: Env, reason: string, delaySeconds?: number): Promise<void> {
+  // The `static` build has no queue: its local runner drives the jobs itself.
+  if (!env.JOBS_QUEUE) return;
   try {
     await env.JOBS_QUEUE.send(
       { kind: "wakeup", reason },
