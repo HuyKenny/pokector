@@ -301,10 +301,10 @@ def current_routes(worker):
     acc = account_id()
     out = []
     for z in cf_api("/zones?per_page=100")["result"]:
-        for r in cf_api(f"/zones/{z['id']}/workers/routes")["result"]:
+        for r in cf_api(f"/zones/{z['id']}/workers/routes").get("result") or []:   # a scoped token sees only its own zone
             if r.get("script") == worker:
                 out.append({"pattern": r["pattern"], "zone_name": z["name"]})
-    for d in cf_api(f"/accounts/{acc}/workers/domains")["result"]:
+    for d in cf_api(f"/accounts/{acc}/workers/domains").get("result") or []:
         if d.get("service") == worker:
             out.append({"pattern": d["hostname"], "custom_domain": True})
     return out
@@ -540,7 +540,7 @@ def main():
         # (pokector 23. 11.: stale -z02 kept /cards/c* and /cards/compare 404ed) -> delete them
         keep = {n for n, *_ in jobs}
         acc = account_id()
-        for sc in cf_api(f"/accounts/{acc}/workers/scripts")["result"]:
+        for sc in cf_api(f"/accounts/{acc}/workers/scripts").get("result") or []:
             if re.fullmatch(re.escape(a.worker) + r"-z\d\d", sc["id"]) and sc["id"] not in keep:
                 r = cf_api(f"/accounts/{acc}/workers/scripts/{sc['id']}?force=true", "DELETE")
                 print(f"starý shard {sc['id']} smazán" if r.get("success") else f"starý shard {sc['id']}: {r.get('errors')}")
