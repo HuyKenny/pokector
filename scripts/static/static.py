@@ -42,7 +42,8 @@ HERE = APP / 'scripts' / 'static'
 BUILD = APP / 'build'
 CFG = BUILD / 'server' / 'wrangler.json'
 WORK = Path(os.environ.get('PK_WORK', APP / '.static-work')).resolve()
-PERSIST = WORK / 'wrangler-state'
+# PK_PERSIST: the local D1 on a RAM disk when the work dir is on a slow SD card (Kenny's Pi)
+PERSIST = Path(os.environ.get('PK_PERSIST', WORK / 'wrangler-state')).resolve()
 DATA = APP / 'data'
 STATE_DB = DATA / 'state.db'
 PORT = int(os.environ.get('PK_PORT', '8850'))
