@@ -34,6 +34,9 @@ interface Env {
   /** JustTCG API key (x-api-key) for the Riftbound catalog + prices sync. Absent
    * → the Riftbound sync is disabled (the /riftbound catalog stays empty). */
   JUSTTCG_API_KEY?: string;
+  /** "1" only in the `static` build (scripts/static/build.sh): the local runner
+   * drives the job chain itself (no queue, no waiting for runAfter). */
+  STATIC_RUNNER?: string;
 }
 
 // Newer `wrangler types` no longer derives the global Env from Cloudflare.Env, so

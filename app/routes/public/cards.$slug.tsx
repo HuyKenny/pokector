@@ -104,7 +104,10 @@ export async function loader({ params, request, context }: Route.LoaderArgs) {
   }
 
   // Popularity signal for history tracking — off the response critical path.
-  ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
+  // Not from the static rebuild: its crawler renders every card once a night.
+  if (env.STATIC_RUNNER !== "1") {
+    ctx.waitUntil(bumpCardPopularity(db, detail.card.id).catch(() => undefined));
+  }
 
   // Everything below is independent of each other (only needs the card id/name),
   // so run it as a single parallel batch instead of serial round-trips: the

@@ -145,6 +145,28 @@ export async function nextJobDueAt(db: Database): Promise<Date | null> {
   return row?.at != null ? new Date(row.at) : null;
 }
 
+/**
+ * Static rebuild only (see runScheduledTick): when nothing is due, make the job
+ * that would run next due now — the earliest future runAfter, or a running job
+ * whose lease has not expired (left by an interrupted run). Order is preserved;
+ * only the waiting is skipped. Returns false when no job is waiting at all.
+ */
+export async function pullNextJobForward(db: Database): Promise<boolean> {
+  if (await hasDueJobs(db)) return true;
+  const dueAt = await nextJobDueAt(db);
+  if (!dueAt) return false;
+  const now = new Date();
+  await db
+    .update(schema.syncJobs)
+    .set({ runAfter: now })
+    .where(and(eq(schema.syncJobs.status, "pending"), eq(schema.syncJobs.runAfter, dueAt)));
+  await db
+    .update(schema.syncJobs)
+    .set({ lockedUntil: now })
+    .where(and(eq(schema.syncJobs.status, "running"), eq(schema.syncJobs.lockedUntil, dueAt)));
+  return true;
+}
+
 export async function completeJob(db: Database, jobId: string): Promise<void> {
   await db
     .update(schema.syncJobs)

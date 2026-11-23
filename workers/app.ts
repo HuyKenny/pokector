@@ -51,7 +51,9 @@ export default {
       // cannot do this for us — see the header of workers/html-cache.ts. The
       // same predicate gates reading and writing, so a request we declined to
       // read is never stored either.
-      const cacheable = isCacheable(request, url);
+      // The static rebuild (env `static`, scripts/static/) renders every page
+      // exactly once into files; a local Cache API copy would only fill the disk.
+      const cacheable = env.STATIC_RUNNER !== "1" && isCacheable(request, url);
       if (cacheable) {
         const hit = await readCache(request);
         if (hit) {

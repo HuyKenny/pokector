@@ -119,6 +119,47 @@
         ],
       },
     },
+    // Static rebuild (Cloudflare Workers Free since 2026-11-23): this build never
+    // deploys. scripts/static/build.sh runs it under `wrangler dev --local` over
+    // the SQLite state, runs the scheduled jobs and freezes the public pages into
+    // assets of pokector-production. Production values, local-only bindings, no
+    // queue (wakeUp() is best-effort; the local runner drives the jobs itself).
+    "static": {
+      "name": "pokector-static",
+      "workers_dev": false,
+      "triggers": {
+        "crons": [],
+      },
+      "vars": {
+        "APP_NAME": "Pokector",
+        "APP_URL": "https://pokector.com",
+        "ENVIRONMENT": "production",
+        "DEFAULT_CURRENCY": "USD",
+        "DEFAULT_LOCALE": "en-US",
+        "EBAY_CAMPAIGN_ID": "5339136550",
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAD33n0rHJcspIYG9",
+        "SUPPORT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_NAME": "Ha Duy Huy",
+        "LEGAL_CONTACT_EMAIL": "info@pokector.com",
+        "LEGAL_OPERATOR_ADDRESS": "Bartáková 36, 140 00 Praha, Czech Republic",
+        "LEGAL_OPERATOR_ID": "IČO 07876823",
+        "STATIC_RUNNER": "1",
+      },
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "pokector-static",
+          "database_id": "00000000-0000-0000-0000-000000000000",
+          "migrations_dir": "./drizzle/migrations",
+        },
+      ],
+      "kv_namespaces": [
+        {
+          "binding": "KV",
+          "id": "00000000000000000000000000000000",
+        },
+      ],
+    },
     "production": {
       "name": "pokector-production",
       "workers_dev": true,

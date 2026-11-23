@@ -41,6 +41,7 @@ import {
   failJob,
   hasDueJobs,
   nextJobDueAt,
+  pullNextJobForward,
   wakeUp,
   type SyncJob,
   type SyncJobType,
@@ -56,6 +57,16 @@ const DAILY_ORCHESTRATOR_CRON = "17 5 * * 1"; // weekly (Monday), owner 2026-10-
  * the account should fit the D1 free limits). A run is ~120k row writes — above the
  * free 100k/day — so it must not run daily. 6.5 days so the daily 05:17 tick catches it. */
 const CATALOG_SYNC_INTERVAL_MS = 6.5 * 24 * 60 * 60 * 1000;
+
+/**
+ * Static rebuild (Cloudflare Workers Free since 2026-11-23): GitHub Actions runs
+ * this app locally (`static` env, no queue) and scripts/static/run-jobs.py calls
+ * the scheduled handler with this cron until no job is left. Each tick runs one
+ * job; when none is due, the next scheduled one is pulled forward, so the whole
+ * day's chain (orchestrator → TCGCSV/TCGdex/Riftbound → history) finishes in one
+ * run, in the same order as on Cloudflare.
+ */
+export const STATIC_DRAIN_CRON = "static-drain";
 
 type JobHandler = (job: SyncJob, env: Env) => Promise<void>;
 
@@ -86,6 +97,10 @@ export function registerJobHandler(type: SyncJobType, handler: JobHandler): void
 export async function runScheduledTick(cron: string, env: Env): Promise<void> {
   if (cron === DAILY_ORCHESTRATOR_CRON) {
     await enqueueDailyJobs(env);
+  }
+  if (cron === STATIC_DRAIN_CRON) {
+    if (env.STATIC_RUNNER !== "1") return;
+    await pullNextJobForward(createDb(env.DB));
   }
   await runJobBatch(env);
 }
