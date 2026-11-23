@@ -70,7 +70,8 @@ def loc(target):
 
 
 home = check("/", 200, has("Pokector", "</html>"))
-check("/robots.txt", 200, has("Sitemap:"))
+# behind the WAF challenge (runner IPs) Cloudflare answers robots.txt with its managed AI-bot block only
+check("/robots.txt", 200, None if home is None and waf else has("Sitemap:"))
 check("/sitemap.xml", 200, has("<sitemapindex"))
 cards_map = check("/sitemap-cards/1", 200, has("<loc>"), "card sitemap")
 check("/sitemap-static.xml", 200, has("<loc>"))
