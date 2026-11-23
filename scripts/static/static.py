@@ -128,6 +128,8 @@ def get(path, timeout=120):
             return r.status, r.read()
     except urllib.error.HTTPError as e:
         return e.code, b''
+    except (urllib.error.URLError, TimeoutError, ConnectionError):
+        return 0, b''       # a slow job or a restarting server: the drain loop just ticks again
 
 
 class Server:
