@@ -18,9 +18,11 @@ those assets from the data the old cron jobs kept fresh:
       --quick      no jobs (render from the restored data) - template/CSS/text fixes, a few minutes
       --no-deploy  build + freeze only (local checks)
       --limit N    stop the crawl at N files (local tests on the Pi)
+      --resume     keep the pages an interrupted run already froze (only with --quick over the same state)
 Prints counts only (public Actions logs): never secrets or response bodies.
 """
 import argparse
+import contextlib
 import html
 import json
 import os
@@ -168,16 +170,21 @@ class Server:
         self.stop()
 
 
+@contextlib.contextmanager
 def ro(db_file):
-    return sqlite3.connect(f'file:{db_file}?mode=ro', uri=True, timeout=30)
+    db = sqlite3.connect(f'file:{db_file}?mode=ro', uri=True, timeout=30)
+    try:
+        yield db
+    finally:
+        db.close()
 
 
 def snapshot(db_file, dest):
     """Consistent copy of the live local D1 (the server keeps a WAL open)."""
-    src, dst = ro(db_file), sqlite3.connect(dest)
-    src.backup(dst)
-    src.close()
-    dst.close()
+    with ro(db_file) as src:
+        dst = sqlite3.connect(dest)
+        src.backup(dst)
+        dst.close()
 
 
 # ---------- jobs ----------
@@ -246,13 +253,13 @@ PAUSED = HERE / 'paused.py'
 NONCE = re.compile(rb'nonce="[A-Za-z0-9+/=]{8,}"')
 
 
-def freeze(out, limit):
-    if out.exists():
+def freeze(out, limit, resume=False):
+    if out.exists() and not resume:
         shutil.rmtree(out)
     cmd = [sys.executable, str(HERE / 'zmraz.py'), 'crawl', DOMAIN, '--out', str(out), '--base', ORIGIN,
            '--extra-until', '0', '--workers', os.environ.get('PK_CRAWL_WORKERS', '6')]
-    if limit:
-        cmd += ['--limit', str(limit)]
+    # zmraz's default --limit (19 500) is one Worker's file cap; deploy shards by prefix, so allow the whole site
+    cmd += ['--limit', str(limit or 60_000)]
     t = time.time()
     r = subprocess.run(cmd)
     if r.returncode:
@@ -323,6 +330,7 @@ def main():
     ap.add_argument('--quick', action='store_true')
     ap.add_argument('--no-deploy', action='store_true')
     ap.add_argument('--limit', type=int, default=0)
+    ap.add_argument('--resume', action='store_true', help='keep pages frozen by an interrupted run (same state only)')
     ap.add_argument('--worker', default=WORKER)
     ap.add_argument('--out', default=str(WORK / 'out'))
     a = ap.parse_args()
@@ -347,7 +355,7 @@ def main():
             changed_card(db_file, before)
             endgroup()
         group('freeze pages')
-        meta = freeze(out, a.limit)
+        meta = freeze(out, a.limit, a.resume)
         endgroup()
         # the state after the render: includes eBay prices refreshed while card pages were rendered
         tmp = WORK / 'state.db'
