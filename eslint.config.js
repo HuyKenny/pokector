@@ -66,5 +66,19 @@ export default tseslint.config(
       },
     },
   },
+  {
+    // public/static-site.js: plain browser script of the static build (no bundler, no imports)
+    files: ["public/**/*.js"],
+    languageOptions: {
+      globals: {
+        document: "readonly",
+        location: "readonly",
+        fetch: "readonly",
+        URLSearchParams: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
+      },
+    },
+  },
   prettier,
 );
