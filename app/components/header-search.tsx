@@ -111,6 +111,9 @@ export function HeaderSearch({
         aria-autocomplete="list"
         aria-label={label}
         placeholder={placeholder}
+        // read by /static-site.js, which runs this search on the frozen static site (no React there)
+        data-view-all={viewAll}
+        data-no-results={noResults}
         value={value}
         onChange={(e) => onChange(e.target.value)}
         onKeyDown={onKeyDown}

@@ -58,7 +58,10 @@ def fetch(url, tries=3):
             if e.code in (429, 500, 502, 503, 504) and i < tries - 1:
                 time.sleep(2 * (i + 1))
                 continue
-            return e.code, e.headers, e.read() if e.fp else b""
+            b = e.read() if e.fp else b""
+            if b and (e.headers.get("Content-Encoding") == "gzip" or b[:2] == b"\x1f\x8b"):
+                b = gzip.decompress(b)      # error pages are gzipped too (the frozen 404.html was gzip bytes)
+            return e.code, e.headers, b
         except Exception:
             if i == tries - 1:
                 return 0, {}, b""

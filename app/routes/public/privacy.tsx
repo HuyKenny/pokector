@@ -32,7 +32,7 @@ export default function Privacy({ loaderData }: Route.ComponentProps) {
   return (
     <article className="mx-auto flex max-w-3xl flex-col gap-5 text-sm leading-relaxed text-fg-muted">
       <h1 className="text-3xl font-bold text-fg">Privacy Policy</h1>
-      <p className="text-xs text-fg-faint">Last updated: July 17, 2026</p>
+      <p className="text-xs text-fg-faint">Last updated: November 24, 2026</p>
 
       <H2>1. Who we are</H2>
       <p>
@@ -80,7 +80,7 @@ export default function Privacy({ loaderData }: Route.ComponentProps) {
       </ul>
       <p>
         We do not sell personal data and we do not use third-party advertising or marketing
-        trackers.
+        trackers. With your consent we measure visits with Google Analytics (see Cookies).
       </p>
 
       <H2>4. Legal bases</H2>
@@ -119,11 +119,18 @@ export default function Privacy({ loaderData }: Route.ComponentProps) {
         .
       </p>
 
-      <H2>8. Cookies</H2>
+      <H2 id="cookies">8. Cookies</H2>
       <p>
-        Pokector uses only strictly necessary cookies: a session cookie for signing you in and a
-        Turnstile challenge cookie for bot protection. There are no analytics or advertising
-        cookies, so no cookie banner is required.
+        Strictly necessary cookies: a session cookie for signing you in and a Turnstile challenge
+        cookie for bot protection. They need no consent.
+      </p>
+      <p>
+        Analytics: we use Google Analytics 4 (Google Ireland Ltd. / Google LLC) to count visits and
+        see which pages are useful. Its cookies are set only after you click “Accept” in the cookie
+        bar; until then Google Analytics runs in consent mode without cookies and without
+        identifiers. Your choice is stored in your browser (localStorage key <code>pk_consent</code>
+        ); to change it, clear this site&apos;s data and choose again. There are no advertising
+        cookies.
       </p>
 
       <H2>9. Changes</H2>
@@ -135,6 +142,10 @@ export default function Privacy({ loaderData }: Route.ComponentProps) {
   );
 }
 
-function H2({ children }: { children: React.ReactNode }) {
-  return <h2 className="mt-2 text-lg font-semibold text-fg">{children}</h2>;
+function H2({ children, id }: { children: React.ReactNode; id?: string }) {
+  return (
+    <h2 id={id} className="mt-2 scroll-mt-20 text-lg font-semibold text-fg">
+      {children}
+    </h2>
+  );
 }

@@ -70,63 +70,67 @@ export default function RiftboundCards({ loaderData }: Route.ComponentProps) {
         </button>
       </Form>
 
-      {items.length === 0 ? (
-        <p className="rounded-lg border border-edge bg-surface p-6 text-sm text-fg-muted">
-          No Riftbound cards yet — the catalog is syncing. Check back shortly.
-        </p>
-      ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {items.map((c) => (
-            <li key={c.id}>
-              <Link
-                to={lp(`/riftbound/cards/${c.slug}`)}
-                className="group flex h-full flex-col gap-2"
-              >
-                <CardImage
-                  src={c.imageSmallUrl}
-                  alt={`${c.name} — ${c.setName} #${c.number}`}
-                  imgClassName="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
-                  fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint"
-                />
-                <div>
-                  <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
-                    {c.name}
-                  </p>
-                  <p className="truncate text-xs text-fg-faint">
-                    {c.setName} · #{c.number}
-                    {c.rarity ? ` · ${c.rarity}` : ""}
-                    {c.priceMinor !== null ? ` · ${formatMinor(c.priceMinor, "USD")}` : ""}
-                  </p>
-                </div>
-              </Link>
-            </li>
-          ))}
-        </ul>
-      )}
+      {/* data-rb-results: on the frozen static site /static-site.js redraws this part for ?q= / ?page=
+          from /static-data/riftbound-cards.json (same markup). */}
+      <div className="contents" data-rb-results>
+        {items.length === 0 ? (
+          <p className="rounded-lg border border-edge bg-surface p-6 text-sm text-fg-muted">
+            No Riftbound cards yet — the catalog is syncing. Check back shortly.
+          </p>
+        ) : (
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {items.map((c) => (
+              <li key={c.id}>
+                <Link
+                  to={lp(`/riftbound/cards/${c.slug}`)}
+                  className="group flex h-full flex-col gap-2"
+                >
+                  <CardImage
+                    src={c.imageSmallUrl}
+                    alt={`${c.name} — ${c.setName} #${c.number}`}
+                    imgClassName="aspect-[63/88] w-full rounded-lg border border-edge object-cover group-hover:border-accent"
+                    fallbackClassName="flex aspect-[63/88] items-center justify-center rounded-lg border border-edge bg-surface-raised text-xs text-fg-faint"
+                  />
+                  <div>
+                    <p className="truncate text-sm font-medium text-fg group-hover:text-accent">
+                      {c.name}
+                    </p>
+                    <p className="truncate text-xs text-fg-faint">
+                      {c.setName} · #{c.number}
+                      {c.rarity ? ` · ${c.rarity}` : ""}
+                      {c.priceMinor !== null ? ` · ${formatMinor(c.priceMinor, "USD")}` : ""}
+                    </p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
 
-      {pageCount > 1 ? (
-        <nav aria-label="Pagination" className="flex items-center justify-center gap-3 text-sm">
-          {page > 1 ? (
-            <Link
-              to={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page - 1) })}`}
-              className="rounded-lg border border-edge px-4 py-2"
-            >
-              ← Previous
-            </Link>
-          ) : null}
-          <span className="text-fg-muted">
-            Page {page} / {pageCount}
-          </span>
-          {page < pageCount ? (
-            <Link
-              to={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page + 1) })}`}
-              className="rounded-lg border border-edge px-4 py-2"
-            >
-              Next →
-            </Link>
-          ) : null}
-        </nav>
-      ) : null}
+        {pageCount > 1 ? (
+          <nav aria-label="Pagination" className="flex items-center justify-center gap-3 text-sm">
+            {page > 1 ? (
+              <Link
+                to={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page - 1) })}`}
+                className="rounded-lg border border-edge px-4 py-2"
+              >
+                ← Previous
+              </Link>
+            ) : null}
+            <span className="text-fg-muted">
+              Page {page} / {pageCount}
+            </span>
+            {page < pageCount ? (
+              <Link
+                to={`?${new URLSearchParams({ ...(q ? { q } : {}), page: String(page + 1) })}`}
+                className="rounded-lg border border-edge px-4 py-2"
+              >
+                Next →
+              </Link>
+            ) : null}
+          </nav>
+        ) : null}
+      </div>
     </div>
   );
 }

@@ -36,7 +36,61 @@ export function loader({ context }: Route.LoaderArgs) {
   return {
     nonce: context.get(nonceContext),
     gaId: env.ENVIRONMENT === "production" ? GA_MEASUREMENT_ID : null,
+    // The nightly static build (scripts/static/static.py) renders pokector.com as plain files without the
+    // React client: the page then needs /static-site.js for query-string pages and GET-only switchers.
+    staticSite: env.STATIC_RUNNER === "1",
   };
+}
+
+/** localStorage key of the analytics choice ("1" granted, "0" denied; absent = not asked yet). */
+const CONSENT_KEY = "pk_consent";
+
+/** GA4 Consent Mode v2: analytics cookies stay off until the visitor agrees (same pattern as Kenny's other
+ * sites). Runs before gtag's config, so the first hit already carries the consent state. */
+const GA_CONSENT_DEFAULT = `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}(function(){var g='denied';try{if(localStorage.getItem('${CONSENT_KEY}')==='1')g='granted';}catch(e){}gtag('consent','default',{ad_storage:'denied',ad_user_data:'denied',ad_personalization:'denied',analytics_storage:g,functionality_storage:'granted',security_storage:'granted',wait_for_update:500});})();`;
+
+/** Banner wiring in plain JS: the frozen static site ships no React client, so no hydrated handlers. */
+const CONSENT_SCRIPT = `(function(){var K='${CONSENT_KEY}',b=document.getElementById('pk-consent');if(!b)return;var v=null;try{v=localStorage.getItem(K);}catch(e){}if(v===null)b.hidden=false;b.addEventListener('click',function(e){var t=e.target.closest&&e.target.closest('[data-pk-consent]');if(!t)return;var yes=t.getAttribute('data-pk-consent')==='1';try{localStorage.setItem(K,yes?'1':'0');}catch(e){}if(window.gtag)gtag('consent','update',{analytics_storage:yes?'granted':'denied'});b.hidden=true;});})();`;
+
+/** Cookie consent for GA4 — fixed bar at the bottom, hidden until the script finds no stored choice. */
+function ConsentBanner({ nonce }: { nonce?: string }) {
+  return (
+    <>
+      <div
+        id="pk-consent"
+        hidden
+        role="dialog"
+        aria-live="polite"
+        aria-label="Analytics cookies"
+        className="fixed inset-x-3 bottom-3 z-50 mx-auto flex max-w-2xl flex-wrap items-center gap-3 rounded-(--radius-card) border border-edge bg-surface p-4 text-sm text-fg shadow-(--shadow-card)"
+      >
+        <p className="min-w-52 flex-1 text-fg-muted">
+          We use Google Analytics to see which pages help collectors. It sets cookies only if you
+          agree.{" "}
+          <a href="/privacy#cookies" className="text-accent hover:underline">
+            Privacy
+          </a>
+        </p>
+        <div className="flex gap-2">
+          <button
+            type="button"
+            data-pk-consent="1"
+            className="min-h-11 rounded-lg bg-accent px-4 font-medium text-(color:--color-on-accent) hover:bg-accent-strong"
+          >
+            Accept
+          </button>
+          <button
+            type="button"
+            data-pk-consent="0"
+            className="min-h-11 rounded-lg border border-edge px-4 hover:bg-surface-raised"
+          >
+            Decline
+          </button>
+        </div>
+      </div>
+      <script nonce={nonce} dangerouslySetInnerHTML={{ __html: CONSENT_SCRIPT }} />
+    </>
+  );
 }
 
 export function Layout({ children }: { children: React.ReactNode }) {
@@ -81,7 +135,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
             <script
               nonce={nonce}
               dangerouslySetInnerHTML={{
-                __html: `window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','${gaId}');`,
+                __html: `${GA_CONSENT_DEFAULT}gtag('js',new Date());gtag('config','${gaId}');`,
               }}
             />
           </>
@@ -89,6 +143,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
       </head>
       <body className="min-h-screen bg-canvas font-sans text-fg antialiased">
         {children}
+        {gaId ? <ConsentBanner nonce={nonce} /> : null}
+        {data?.staticSite ? <script nonce={nonce} src="/static-site.js" defer /> : null}
         <ScrollRestoration nonce={nonce} />
         <Scripts nonce={nonce} />
       </body>

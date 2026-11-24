@@ -15,6 +15,7 @@ import { getDict } from "~/lib/i18n/dictionaries.server";
 import { LANG_TAGS, localePath, resolveLocale } from "~/lib/i18n/locales";
 import { useLocalePath } from "~/lib/i18n/react";
 import { interpolate } from "~/lib/i18n/t";
+import { useStaticSite } from "~/lib/static-site";
 import { canonicalUrl, collectionPageJsonLd, JsonLd, pageMeta } from "~/lib/seo/meta";
 import { clientIp, enforceRateLimit } from "~/lib/security/rate-limit.server";
 
@@ -112,6 +113,28 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
   const [searchParams] = useSearchParams();
   const lp = useLocalePath();
   const langTag = LANG_TAGS[locale];
+  // Frozen static site: the query string is answered in the browser by /static-site.js from
+  // /static-data/cards.json; it needs this page's strings and marks (data-cards-*) to draw the same markup.
+  const staticSite = useStaticSite();
+  const staticStrings = staticSite
+    ? JSON.stringify({
+        base: lp("/cards"),
+        cardBase: lp("/cards/"),
+        langTag,
+        resultCountMatching: t.resultCountMatching,
+        resultCountPlain: t.resultCountPlain,
+        emptyTitle: t.emptyTitle,
+        emptyBody: t.emptyBody,
+        didYouMean: t.didYouMean,
+        paginationAria: t.paginationAria,
+        metaTitle: t.metaTitle,
+        metaTitleSuffix: t.metaTitleSuffix,
+        pageShort: c.pageShort,
+        previous: c.previous,
+        next: c.next,
+        noImage: c.noImage,
+      }).replace(/</g, "\\u003c")
+    : null;
 
   function pageLink(page: number): string {
     const next = new URLSearchParams(searchParams);
@@ -235,85 +258,94 @@ export default function Cards({ loaderData }: Route.ComponentProps) {
         </button>
       </Form>
 
-      <p className="text-sm text-fg-muted" role="status">
-        {q
-          ? interpolate(t.resultCountMatching, {
-              count: result.total.toLocaleString(langTag),
-              q,
-              page: result.page,
-              pageCount: result.pageCount,
-            })
-          : interpolate(t.resultCountPlain, {
-              count: result.total.toLocaleString(langTag),
-              page: result.page,
-              pageCount: result.pageCount,
-            })}
-      </p>
-
-      {result.items.length === 0 ? (
-        <div className="flex flex-col gap-6">
-          <div className="rounded-(--radius-card) border border-edge bg-surface p-10 text-center">
-            <p className="mb-2 text-lg font-medium text-fg">{t.emptyTitle}</p>
-            <p className="text-sm text-fg-muted">{t.emptyBody}</p>
-          </div>
-          {suggestions.length > 0 ? (
-            <div className="flex flex-col gap-3">
-              <h2 className="text-sm font-semibold text-fg-muted">{t.didYouMean}</h2>
-              <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-                {suggestions.map((card) => (
-                  <li key={card.id}>
-                    <CardTile
-                      card={card}
-                      to={lp(`/cards/${card.slug}`)}
-                      noImage={c.noImage}
-                      owned={ownedState[card.id]?.ownedQuantity ?? 0}
-                      ownedAria={t.ownedBadgeAria}
-                    />
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ) : null}
-        </div>
-      ) : (
-        <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
-          {result.items.map((card) => (
-            <li key={card.id}>
-              <CardTile
-                card={card}
-                to={lp(`/cards/${card.slug}`)}
-                noImage={c.noImage}
-                owned={ownedState[card.id]?.ownedQuantity ?? 0}
-                ownedAria={t.ownedBadgeAria}
-              />
-            </li>
-          ))}
-        </ul>
-      )}
-
-      {result.pageCount > 1 && result.items.length > 0 ? (
-        <nav aria-label={t.paginationAria} className="flex items-center justify-center gap-2">
-          {result.page > 1 ? (
-            <Link
-              to={pageLink(result.page - 1)}
-              className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
-            >
-              {c.previous}
-            </Link>
-          ) : null}
-          <span className="px-2 text-sm text-fg-muted">
-            {interpolate(c.pageShort, { page: result.page, pageCount: result.pageCount })}
-          </span>
-          {result.page < result.pageCount ? (
-            <Link
-              to={pageLink(result.page + 1)}
-              className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
-            >
-              {c.next}
-            </Link>
-          ) : null}
-        </nav>
+      {staticStrings ? (
+        <script
+          type="application/json"
+          id="pk-cards-static"
+          dangerouslySetInnerHTML={{ __html: staticStrings }}
+        />
       ) : null}
+      <div className="contents" data-cards-results>
+        <p className="text-sm text-fg-muted" role="status">
+          {q
+            ? interpolate(t.resultCountMatching, {
+                count: result.total.toLocaleString(langTag),
+                q,
+                page: result.page,
+                pageCount: result.pageCount,
+              })
+            : interpolate(t.resultCountPlain, {
+                count: result.total.toLocaleString(langTag),
+                page: result.page,
+                pageCount: result.pageCount,
+              })}
+        </p>
+
+        {result.items.length === 0 ? (
+          <div className="flex flex-col gap-6">
+            <div className="rounded-(--radius-card) border border-edge bg-surface p-10 text-center">
+              <p className="mb-2 text-lg font-medium text-fg">{t.emptyTitle}</p>
+              <p className="text-sm text-fg-muted">{t.emptyBody}</p>
+            </div>
+            {suggestions.length > 0 ? (
+              <div className="flex flex-col gap-3">
+                <h2 className="text-sm font-semibold text-fg-muted">{t.didYouMean}</h2>
+                <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+                  {suggestions.map((card) => (
+                    <li key={card.id}>
+                      <CardTile
+                        card={card}
+                        to={lp(`/cards/${card.slug}`)}
+                        noImage={c.noImage}
+                        owned={ownedState[card.id]?.ownedQuantity ?? 0}
+                        ownedAria={t.ownedBadgeAria}
+                      />
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ) : null}
+          </div>
+        ) : (
+          <ul className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6">
+            {result.items.map((card) => (
+              <li key={card.id}>
+                <CardTile
+                  card={card}
+                  to={lp(`/cards/${card.slug}`)}
+                  noImage={c.noImage}
+                  owned={ownedState[card.id]?.ownedQuantity ?? 0}
+                  ownedAria={t.ownedBadgeAria}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {result.pageCount > 1 && result.items.length > 0 ? (
+          <nav aria-label={t.paginationAria} className="flex items-center justify-center gap-2">
+            {result.page > 1 ? (
+              <Link
+                to={pageLink(result.page - 1)}
+                className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
+              >
+                {c.previous}
+              </Link>
+            ) : null}
+            <span className="px-2 text-sm text-fg-muted">
+              {interpolate(c.pageShort, { page: result.page, pageCount: result.pageCount })}
+            </span>
+            {result.page < result.pageCount ? (
+              <Link
+                to={pageLink(result.page + 1)}
+                className="rounded-lg border border-edge px-4 py-2 text-sm hover:bg-surface-raised"
+              >
+                {c.next}
+              </Link>
+            ) : null}
+          </nav>
+        ) : null}
+      </div>
     </div>
   );
 }

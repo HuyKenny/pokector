@@ -280,6 +280,63 @@ def freeze(out, limit, resume=False):
     return meta
 
 
+def static_data(out, db_file):
+    """Catalog indexes for /static-site.js: the frozen pages ignore query strings, so search, filters, sort and
+    pagination of /cards (+ localized) and /riftbound/cards run in the browser over these files (loaded only when a
+    visitor actually searches or pages). Mirrors app/lib/catalog/queries.server.ts and riftbound/queries.server.ts.
+
+    cards.json rows: [slug tail, name, number, number_sort (null = int(number)), set index, rarity index, supertype
+    index, image (''= pokemontcg <set>/<number>.png, p… pokemontcg path, s… scrydex path, u… full URL), updated index
+    (0 = newest), extra search words (artist, dex numbers, subtypes)]; default order = name, number."""
+    d = out / 'static-data'
+    d.mkdir(exist_ok=True)
+    P, S = 'https://images.pokemontcg.io/', 'https://images.scrydex.com/pokemon/'
+    with ro(db_file) as db:
+        sets = db.execute("SELECT id, name, series, printed_total, substr(release_date, 1, 4) FROM pokemon_sets "
+                          "ORDER BY id").fetchall()
+        rows = db.execute(
+            "SELECT k.slug, k.name, k.number, k.number_sort, k.set_id, k.rarity, k.supertype, k.image_small_url, "
+            "k.subtypes_json, k.national_pokedex_numbers_json, k.artist, COALESCE(k.source_updated_at, '') "
+            "FROM pokemon_cards k JOIN pokemon_sets s ON s.id = k.set_id WHERE k.active = 1 "
+            "ORDER BY k.name_normalized ASC, k.number_sort ASC").fetchall()
+        rb = db.execute(
+            "SELECT c.slug, c.name, c.number, s.name, c.rarity, c.image_small_url, "
+            "(SELECT MIN(p.normalized_price_minor) FROM riftbound_prices_current p WHERE p.card_id = c.id "
+            "AND p.currency = 'USD'), c.search_text FROM riftbound_cards c JOIN riftbound_sets s ON s.id = c.set_id "
+            "WHERE c.active = 1 ORDER BY c.name_normalized ASC").fetchall()
+    si = {x[0]: i for i, x in enumerate(sets)}
+    rar = sorted({r[5] for r in rows if r[5]})
+    sup = sorted({r[6] for r in rows if r[6]})
+    dates = sorted({r[11] for r in rows}, reverse=True)
+    ri, pi, di = ({v: i for i, v in enumerate(x)} for x in (rar, sup, dates))
+
+    def jl(v):
+        try:
+            return [str(x) for x in json.loads(v or '[]')]
+        except ValueError:
+            return []
+    cards = []
+    for slug, name, num, ns, sid, r, st, img, sub, dex, art, upd in rows:
+        if img and img == f'{P}{sid}/{num}.png':
+            im = ''
+        elif img and img.startswith(P):
+            im = 'p' + img[len(P):]
+        elif img and img.startswith(S):
+            im = 's' + img[len(S):]
+        else:
+            im = 'u' + (img or '')
+        pre = f'{sid}-{num}-'.lower()
+        tail = slug[len(pre):] if slug.startswith(pre) else '/' + slug
+        words = ' '.join(x for x in (art or '', ' '.join(jl(dex)), ' '.join(jl(sub))) if x)
+        cards.append([tail, name, num, None if str(ns) == num else ns, si[sid], ri.get(r, -1), pi.get(st, -1), im,
+                      di[upd], words])
+    doc = {'v': 1, 'sets': [list(x) for x in sets], 'rarities': rar, 'supertypes': sup, 'cards': cards}
+    (d / 'cards.json').write_text(json.dumps(doc, ensure_ascii=False, separators=(',', ':')), encoding='utf-8')
+    (d / 'riftbound-cards.json').write_text(json.dumps({'v': 1, 'cards': [list(x) for x in rb]}, ensure_ascii=False,
+                                                       separators=(',', ':')), encoding='utf-8')
+    log(f'static data: {len(cards)} Pokémon cards, {len(sets)} sets, {len(rb)} Riftbound cards')
+
+
 def check_out(out, meta, limit):
     """Deploy gate: the sitemap pages must be there (a broken render must never replace the live site)."""
     sm = out / 'sitemap.xml'
@@ -360,6 +417,7 @@ def main():
         # the state after the render: includes eBay prices refreshed while card pages were rendered
         tmp = WORK / 'state.db'
         snapshot(db_file, tmp)
+    static_data(out, tmp)
     check_out(out, meta, a.limit)
     os.replace(tmp, STATE_DB)
     if not a.quick:

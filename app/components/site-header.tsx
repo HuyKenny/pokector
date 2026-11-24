@@ -8,8 +8,12 @@ import { GAME_NAME, GAMES, type Game, gameFromPathname, gamePath } from "~/lib/g
 import type { Dict } from "~/lib/i18n/dictionaries.server";
 import { LOCALE_NAMES, LOCALES, type Locale, localePath } from "~/lib/i18n/locales";
 import { MARKET_CURRENCY, MARKETS, type Market } from "~/lib/market/market";
+import { useStaticSite } from "~/lib/static-site";
 
 type LayoutDict = Dict["layout"];
+
+const SWITCHER_ITEM =
+  "flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised";
 
 /** Shared look for the market / game / language dropdown triggers: a compact
  * bordered pill with a chevron that flips when the <details> is open. Keeping
@@ -499,6 +503,7 @@ function LanguageSwitcher({
   barePath: string;
   label: string;
 }) {
+  const staticSite = useStaticSite();
   return (
     <details className="group relative">
       <summary aria-label={label} className={SWITCHER_SUMMARY}>
@@ -507,25 +512,43 @@ function LanguageSwitcher({
         <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 max-h-80 w-44 overflow-auto rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
-        {LOCALES.map((l) => (
-          <li key={l}>
-            <form method="post" action="/locale">
-              <input type="hidden" name="locale" value={l} />
-              <input type="hidden" name="redirectTo" value={barePath} />
-              <button
-                type="submit"
+        {LOCALES.map((l) =>
+          staticSite ? (
+            <li key={l}>
+              <a
+                href={localePath(l, barePath)}
+                hrefLang={l}
                 lang={l}
                 aria-current={l === current ? "true" : undefined}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
-                  l === current ? "font-semibold text-accent" : "text-fg"
-                }`}
+                className={`${SWITCHER_ITEM} ${l === current ? "font-semibold text-accent" : "text-fg"}`}
               >
                 <Flag code={l} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
                 {LOCALE_NAMES[l]}
-              </button>
-            </form>
-          </li>
-        ))}
+              </a>
+            </li>
+          ) : (
+            <li key={l}>
+              <form method="post" action="/locale">
+                <input type="hidden" name="locale" value={l} />
+                <input type="hidden" name="redirectTo" value={barePath} />
+                <button
+                  type="submit"
+                  lang={l}
+                  aria-current={l === current ? "true" : undefined}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                    l === current ? "font-semibold text-accent" : "text-fg"
+                  }`}
+                >
+                  <Flag
+                    code={l}
+                    className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40"
+                  />
+                  {LOCALE_NAMES[l]}
+                </button>
+              </form>
+            </li>
+          ),
+        )}
       </ul>
     </details>
   );
@@ -543,6 +566,7 @@ function GameSwitcher({
   locale: Locale;
   label: string;
 }) {
+  const staticSite = useStaticSite();
   return (
     <details className="group relative">
       <summary
@@ -554,23 +578,39 @@ function GameSwitcher({
         <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-44 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
-        {GAMES.map((g) => (
-          <li key={g}>
-            <form method="post" action="/game">
-              <input type="hidden" name="game" value={g} />
-              <input type="hidden" name="redirectTo" value={localePath(locale, gamePath(g, "/"))} />
-              <button
-                type="submit"
+        {GAMES.map((g) =>
+          staticSite ? (
+            <li key={g}>
+              <a
+                href={localePath(locale, gamePath(g, "/"))}
                 aria-current={g === current ? "true" : undefined}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
-                  g === current ? "font-semibold text-accent" : "text-fg"
-                }`}
+                className={`${SWITCHER_ITEM} ${g === current ? "font-semibold text-accent" : "text-fg"}`}
               >
                 {GAME_NAME[g]}
-              </button>
-            </form>
-          </li>
-        ))}
+              </a>
+            </li>
+          ) : (
+            <li key={g}>
+              <form method="post" action="/game">
+                <input type="hidden" name="game" value={g} />
+                <input
+                  type="hidden"
+                  name="redirectTo"
+                  value={localePath(locale, gamePath(g, "/"))}
+                />
+                <button
+                  type="submit"
+                  aria-current={g === current ? "true" : undefined}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                    g === current ? "font-semibold text-accent" : "text-fg"
+                  }`}
+                >
+                  {GAME_NAME[g]}
+                </button>
+              </form>
+            </li>
+          ),
+        )}
       </ul>
     </details>
   );
@@ -589,6 +629,7 @@ function MarketSwitcher({
   label: string;
   regionLabel: Record<Market, string>;
 }) {
+  const staticSite = useStaticSite();
   return (
     <details className="group relative">
       <summary aria-label={label} className={SWITCHER_SUMMARY}>
@@ -597,25 +638,62 @@ function MarketSwitcher({
         <ChevronIcon />
       </summary>
       <ul className="absolute end-0 z-50 mt-1 w-48 overflow-hidden rounded-lg border border-edge bg-surface py-1 shadow-(--shadow-card)">
-        {MARKETS.map((m) => (
-          <li key={m}>
-            <form method="post" action="/market">
-              <input type="hidden" name="market" value={m} />
-              <input type="hidden" name="redirectTo" value={redirectTo} />
-              <button
-                type="submit"
-                aria-current={m === current ? "true" : undefined}
-                className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
-                  m === current ? "font-semibold text-accent" : "text-fg"
-                }`}
-              >
-                <Flag code={m} className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40" />
-                <span>{regionLabel[m]}</span>
-                <span className="ms-auto text-xs text-fg-faint">{MARKET_CURRENCY[m]}</span>
-              </button>
-            </form>
-          </li>
-        ))}
+        {MARKETS.map((m) =>
+          staticSite ? (
+            // The static site is rendered in the default (US) market only; Cardmarket EUR prices are shown on
+            // every card page, so the other market is listed but not selectable.
+            <li key={m}>
+              {m === current ? (
+                <a
+                  href={redirectTo}
+                  aria-current="true"
+                  className={`${SWITCHER_ITEM} font-semibold text-accent`}
+                >
+                  <Flag
+                    code={m}
+                    className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40"
+                  />
+                  <span>{regionLabel[m]}</span>
+                  <span className="ms-auto text-xs text-fg-faint">{MARKET_CURRENCY[m]}</span>
+                </a>
+              ) : (
+                <span
+                  aria-disabled="true"
+                  title={`${MARKET_CURRENCY[m]} prices are listed on each card page`}
+                  className={`${SWITCHER_ITEM} cursor-not-allowed text-fg-faint hover:bg-transparent`}
+                >
+                  <Flag
+                    code={m}
+                    className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40 opacity-60"
+                  />
+                  <span>{regionLabel[m]}</span>
+                  <span className="ms-auto text-xs">{MARKET_CURRENCY[m]} · on cards</span>
+                </span>
+              )}
+            </li>
+          ) : (
+            <li key={m}>
+              <form method="post" action="/market">
+                <input type="hidden" name="market" value={m} />
+                <input type="hidden" name="redirectTo" value={redirectTo} />
+                <button
+                  type="submit"
+                  aria-current={m === current ? "true" : undefined}
+                  className={`flex w-full items-center gap-2 px-3 py-2 text-start text-sm hover:bg-surface-raised ${
+                    m === current ? "font-semibold text-accent" : "text-fg"
+                  }`}
+                >
+                  <Flag
+                    code={m}
+                    className="h-3.5 w-5 shrink-0 rounded-[2px] border border-edge/40"
+                  />
+                  <span>{regionLabel[m]}</span>
+                  <span className="ms-auto text-xs text-fg-faint">{MARKET_CURRENCY[m]}</span>
+                </button>
+              </form>
+            </li>
+          ),
+        )}
       </ul>
     </details>
   );
