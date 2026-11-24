@@ -110,6 +110,28 @@ export function stripLocalePrefix(pathname: string): string {
 }
 
 /**
+ * Unprefixed paths that still have localized pages. Since the static freeze (2026-11-23) only these
+ * are built per locale; every other /xx/... URL (card, set, pokemon, riftbound, blog detail) answers a
+ * zone 301 to the English page or a 404, so hreflang and the language switcher must not point at them.
+ */
+export const LOCALIZED_PATHS: ReadonlySet<string> = new Set([
+  "/",
+  "/cards",
+  "/sets",
+  "/price-movers",
+  "/pokedex",
+  "/pokemon-card-collectors",
+  "/pokemon-card-grading-calculator",
+  "/pricing",
+]);
+
+/** True when `path` (unprefixed) has a localized page in every locale. */
+export function hasLocalizedPage(path: string): boolean {
+  const clean = path.length > 1 ? path.replace(/\/+$/, "") : path;
+  return LOCALIZED_PATHS.has(clean || "/");
+}
+
+/**
  * hreflang alternates for one unprefixed path: every locale + x-default, as
  * `{ hreflang, href }` pairs for building `<xhtml:link>` sitemap entries or
  * `<link rel=alternate>` tags. `origin` is the site origin (no trailing slash).
@@ -121,6 +143,7 @@ export function localeAlternates(
   // Root keeps its trailing slash so the sitemap homepage <loc>/hreflang match
   // the on-page canonical (canonicalUrl keeps "/" for root).
   const href = (p: string) => `${origin}${p === "/" ? "/" : p}`;
+  if (!hasLocalizedPage(path)) return [];
   return [
     ...LOCALES.map((l) => ({ hreflang: LANG_TAGS[l], href: href(localePath(l, path)) })),
     { hreflang: "x-default", href: href(path) },

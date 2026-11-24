@@ -3,7 +3,7 @@
  * Open Graph + Twitter cards, JSON-LD structured data, noindex helpers.
  */
 
-import { LANG_TAGS, LOCALES, localePath } from "~/lib/i18n/locales";
+import { LANG_TAGS, LOCALES, hasLocalizedPage, localePath } from "~/lib/i18n/locales";
 
 export const SITE_NAME = "Pokector";
 export const DEFAULT_OG_IMAGE = "/brand/pokector-og.png";
@@ -83,7 +83,7 @@ export function pageMeta(input: PageMetaInput): MetaDescriptor[] {
   }
   if (input.noindex) {
     meta.push({ name: "robots", content: "noindex, nofollow" });
-  } else if (input.alternates) {
+  } else if (input.alternates && hasLocalizedPage(input.alternates.path)) {
     // Bidirectional hreflang: every locale (incl. English) lists all locales +
     // x-default. x-default points at the unprefixed English URL.
     const { appUrl, path } = input.alternates;

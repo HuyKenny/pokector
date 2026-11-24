@@ -6,7 +6,14 @@ import { Flag } from "~/components/flags";
 import { HeaderSearch } from "~/components/header-search";
 import { GAME_NAME, GAMES, type Game, gameFromPathname, gamePath } from "~/lib/game/game";
 import type { Dict } from "~/lib/i18n/dictionaries.server";
-import { LOCALE_NAMES, LOCALES, type Locale, localePath } from "~/lib/i18n/locales";
+import {
+  DEFAULT_LOCALE,
+  hasLocalizedPage,
+  LOCALE_NAMES,
+  LOCALES,
+  type Locale,
+  localePath,
+} from "~/lib/i18n/locales";
 import { MARKET_CURRENCY, MARKETS, type Market } from "~/lib/market/market";
 import { useStaticSite } from "~/lib/static-site";
 
@@ -516,7 +523,11 @@ function LanguageSwitcher({
           staticSite ? (
             <li key={l}>
               <a
-                href={localePath(l, barePath)}
+                href={
+                  l === DEFAULT_LOCALE || hasLocalizedPage(barePath)
+                    ? localePath(l, barePath)
+                    : localePath(l, "/")
+                }
                 hrefLang={l}
                 lang={l}
                 aria-current={l === current ? "true" : undefined}
