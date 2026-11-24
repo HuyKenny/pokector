@@ -593,7 +593,11 @@ function GameSwitcher({
           staticSite ? (
             <li key={g}>
               <a
-                href={localePath(locale, gamePath(g, "/"))}
+                href={
+                  hasLocalizedPage(gamePath(g, "/"))
+                    ? localePath(locale, gamePath(g, "/"))
+                    : gamePath(g, "/")
+                }
                 aria-current={g === current ? "true" : undefined}
                 className={`${SWITCHER_ITEM} ${g === current ? "font-semibold text-accent" : "text-fg"}`}
               >
